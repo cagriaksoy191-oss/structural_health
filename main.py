@@ -600,3 +600,8 @@ def risk_hesapla(req: RiskRequest):
         aiEtiket=fuzzy_label,
         aiYorum=aciklama
     )
+# V12 Titanium CI/CD Testi Başarılı!
+if __name__ == "__main__":
+    import uvicorn
+    # CI/CD Testi: Bekçi burayı kontrol ediyor mu? (Test 1)
+    uvicorn.run(app, host="127.0.0.1", port=8000)
