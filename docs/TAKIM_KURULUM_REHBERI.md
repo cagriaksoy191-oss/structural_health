@@ -123,9 +123,9 @@ Expand-Archive -Path actions-runner.zip -DestinationPath .
 ### 5.2 Runner'ı Etiketle (Önemli!)
 
 Yapılandırma sırasında runner'a **benzersiz bir isim** ver:
-- Ahmet: `ahmet-pc`
-- Mehmet: `mehmet-pc`
-- Ayşe: `ayse-pc`
+- Emine: `emine-pc`
+- Talha: `talha-pc`
+- Baha: `baha-pc`
 
 Bu sayede kimin runner'ı çalıştığı belli olur.
 
@@ -191,8 +191,9 @@ git push origin main
 | Kişi | Push Yapar | Kimin Runner'ı Çalışır? |
 |------|------------|-------------------------|
 | Çağrı | ✅ | Çağrı'nın PC'si (eğer açıksa) |
-| Ahmet | ✅ | Ahmet'in PC'si (eğer açıksa) |
-| Mehmet | ✅ | **İlk müsait olan runner!** |
+| Emine | ✅ | Emine'nin PC'si (eğer açıksa) |
+| Talha | ✅ | Talha'nın PC'si (eğer açıksa) |
+| Baha | ✅ | **İlk müsait olan runner!** |
 
 ### Önemli Notlar:
 - Tüm runner'lar aynı repoya bağlı
