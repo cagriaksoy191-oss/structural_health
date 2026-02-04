@@ -6,9 +6,10 @@
 ## 📋 İçindekiler
 1. [CI/CD Nedir?](#cicd-nedir)
 2. [Nasıl Çalışır?](#nasıl-çalışır)
-3. [Self-Hosted Runner](#self-hosted-runner)
-4. [Sıkça Sorulan Sorular](#sıkça-sorulan-sorular)
-5. [Komutlar ve Kullanım](#komutlar-ve-kullanım)
+3. [Antigravity Komutları](#antigravity-komutları)
+4. [Self-Hosted Runner](#self-hosted-runner)
+5. [Sıkça Sorulan Sorular](#sıkça-sorulan-sorular)
+6. [İleri Düzey: Manuel Komutlar](#ileri-düzey-manuel-komutlar)
 
 ---
 
@@ -16,10 +17,25 @@
 
 **CI/CD** = Continuous Integration / Continuous Deployment (Sürekli Entegrasyon / Sürekli Dağıtım)
 
-Bu sistem:
-- ✅ Kod değişikliklerini **otomatik olarak test** eder
-- ✅ Hataları erken aşamada **tespit** eder
-- ✅ Kodun her zaman çalışır durumda olduğunu **garanti** eder
+### Gerçek Hayat Örneği
+
+Düşün ki grup ödevi yapıyorsunuz:
+
+### ❌ CI/CD OLMADAN:
+```
+1. Emine kod yazar, "çalışıyor" der
+2. Talha çeker, ÇALIŞMIYOR! 😱
+3. 2 saat hata aranır...
+4. Sonunda: Bir kütüphane eksikmiş 🤦
+```
+
+### ✅ CI/CD İLE:
+```
+1. Emine kod yazar, "/gonder" der
+2. 30 saniye sonra: ❌ HATA VAR!
+3. Emine hemen düzeltir, tekrar "/gonder"
+4. ✅ BAŞARILI! Artık herkes kullanabilir 🎉
+```
 
 ### ⚠️ Önemli Not
 CI/CD sistemi **sürekli çalışmaz!** Sadece:
@@ -40,7 +56,7 @@ CI/CD sistemi **sürekli çalışmaz!** Sadece:
 │                                                              │
 │   1. Kod Yazarsın                                            │
 │         ↓                                                    │
-│   2. GitHub'a Push Edersin                                   │
+│   2. /gonder yazarsın (Antigravity'de)                      │
 │         ↓                                                    │
 │   3. GitHub Actions Tetiklenir                               │
 │         ↓                                                    │
@@ -48,9 +64,9 @@ CI/CD sistemi **sürekli çalışmaz!** Sadece:
 │         ↓                                                    │
 │   5. Testler Çalışır (30-60 saniye)                         │
 │         ↓                                                    │
-│   6. Sonuç:                                                  │
+│   6. /kontrol ile sonucu görürsün:                          │
 │      ✅ Başarılı = Her şey yolunda                          │
-│      ❌ Başarısız = Bir hata var, düzelt                    │
+│      ❌ Başarısız = Hata var, düzelt                        │
 │                                                              │
 └─────────────────────────────────────────────────────────────┘
 ```
@@ -68,6 +84,29 @@ CI/CD sistemi **sürekli çalışmaz!** Sadece:
 | 7. Complete | Başarı mesajı | ~1 sn |
 
 **Toplam: ~1 dakika**
+
+---
+
+## 🚀 Antigravity Komutları
+
+Antigravity IDE kullanarak CI/CD işlemlerini kolayca yapabilirsin:
+
+| Komut | Ne Yapar | Ne Zaman Kullan |
+|-------|----------|-----------------|
+| `/sabah` | Git pull + venv aktif | Günün başında |
+| `/gonder` | Git add/commit/push | Kod bitince |
+| `/kontrol` | GitHub Actions durumu | Push'tan sonra |
+| `/test` | Lokal health check | Test etmek için |
+| `/runner` | Runner başlat | PC açıldığında |
+
+### Günlük Rutin (3 Adım)
+
+```
+☀️ Sabah:     /sabah    → Hazır ol
+💻 Çalış:     (kod yaz)
+📤 Bitince:   /gonder   → Gönder
+✅ Bekle:     /kontrol  → Sonucu gör
+```
 
 ---
 
@@ -89,14 +128,16 @@ Self-hosted runner, **senin bilgisayarında** çalışan bir GitHub Actions iste
 | **Test Çalışırken** | %10-30 | ~500 MB | 30-60 saniye sürer |
 | **Kapalı** | %0 | 0 MB | Testler beklemede kalır |
 
-### Başlatma ve Durdurma
+### Başlatma
 
+**Antigravity ile:**
+```
+/runner
+```
+
+**Manuel (PowerShell ile):**
 ```powershell
-# Runner'ı Başlat (Ayrı pencerede)
 C:\actions-runner\run.cmd
-
-# veya PowerShell'den
-Start-Process -FilePath "C:\actions-runner\run.cmd" -WorkingDirectory "C:\actions-runner"
 ```
 
 **Durdurmak için:** Runner penceresinde `Ctrl+C` bas veya pencereyi kapat.
@@ -117,62 +158,38 @@ Start-Process -FilePath "C:\actions-runner\run.cmd" -WorkingDirectory "C:\action
 
 ### S: Hataları otomatik düzeltir mi?
 **C:** Hayır! Sadece **uyarır**. Düzeltme senin işin.
-- ✅ geçerse: Kod çalışıyor demek
-- ❌ geçmezse: Bir sorun var, logları incele
 
-### S: İnternet olmadan çalışır mı?
-**C:** Hayır. GitHub'a bağlanması gerekir.
-
-### S: Runner'ı kapatırsam projeme bir şey olur mu?
-**C:** Hayır! Proje dosyaların güvende. Sadece otomatik testler çalışmaz.
+### S: Antigravity şart mı?
+**C:** Hayır! Antigravity olmadan da PowerShell ile aynı işleri yapabilirsin. Ama Antigravity daha kolay.
 
 ---
 
-## 🛠️ Komutlar ve Kullanım
+## 🛠️ İleri Düzey: Manuel Komutlar
+
+Antigravity kullanmak istemezsen, PowerShell ile:
 
 ### Git Komutları
 
 ```powershell
-# Değişiklikleri göster
-git status
+# Son değişiklikleri çek (/sabah yerine)
+cd C:\Projects\structural_health
+git pull origin main
+.\venv\Scripts\Activate
 
-# Dosyaları ekle
+# Değişiklikleri gönder (/gonder yerine)
 git add .
-
-# Commit yap
 git commit -m "Açıklama mesajı"
-
-# GitHub'a gönder (CI/CD tetiklenir!)
 git push origin main
-
-# Son commitleri göster
-git log --oneline -5
-```
-
-### Runner Komutları
-
-```powershell
-# Runner'ı başlat
-C:\actions-runner\run.cmd
-
-# Runner durumunu kontrol et (loglar)
-Get-Content "C:\actions-runner\_diag\Runner_*.log" -Tail 20
-
-# Çalışan processler
-Get-Process | Where-Object { $_.ProcessName -like "*Runner*" }
 ```
 
 ### Test Komutları
 
 ```powershell
-# Health check testini manuel çalıştır
+# Health check (/test yerine)
 py -3.11 tests/health_check.py
 
 # Backend sunucuyu başlat
 py -3.11 main.py
-
-# API'yi test et
-Invoke-RestMethod -Uri http://127.0.0.1:8000/
 ```
 
 ---
@@ -180,42 +197,47 @@ Invoke-RestMethod -Uri http://127.0.0.1:8000/
 ## 📁 Proje Yapısı
 
 ```
-V12_Titanium/
+structural_health/
 ├── .github/
 │   └── workflows/
-│       └── main.yml          # CI/CD workflow tanımı
+│       └── main.yml           # CI/CD workflow tanımı
+├── .agent/
+│   └── workflows/             # Antigravity slash komutları
+│       ├── sabah.md
+│       ├── gonder.md
+│       ├── kontrol.md
+│       ├── test.md
+│       └── runner.md
 ├── tests/
-│   └── health_check.py       # Otomatik test scripti
+│   └── health_check.py        # Otomatik test scripti
 ├── docs/
+│   ├── GUNLUK_KULLANIM_REHBERI.md
+│   ├── TAKIM_KURULUM_REHBERI.md
 │   └── CI_CD_DOKUMANTASYONU.md  # Bu dosya
-├── main.py                   # FastAPI backend
-├── index.html                # Web arayüzü
-├── requirements.txt          # Python bağımlılıkları
-├── .gitignore               # Git'ten hariç tutulanlar
-└── [model dosyaları]         # .gitignore'da, GitHub'a yüklenmez
+├── main.py                    # FastAPI backend
+├── index.html                 # Web arayüzü
+└── requirements.txt           # Python bağımlılıkları
 ```
 
 ---
 
 ## 🔗 Faydalı Linkler
 
-- **GitHub Actions Sayfası:** `https://github.com/[kullanıcı]/structural_health/actions`
+- **GitHub Actions Sayfası:** https://github.com/cagriaksoy191-oss/structural_health/actions
 - **Workflow Dosyası:** `.github/workflows/main.yml`
-- **Test Scripti:** `tests/health_check.py`
+- **Antigravity Komutları:** `.agent/workflows/`
 
 ---
 
 ## 📝 Notlar
 
-1. **Model Dosyaları:** `.joblib`, `.pth`, `.pkl` dosyaları `.gitignore`'da. GitHub'a yüklenmezler. Runner'da manuel olarak bulunmalılar.
+1. **Model Dosyaları:** `.joblib`, `.pth`, `.pkl` dosyaları `.gitignore`'da. GitHub'a yüklenmezler.
 
-2. **Secrets (Gizli Anahtarlar):** API anahtarları GitHub Secrets'ta saklanmalı:
-   - Repository → Settings → Secrets → Actions → New repository secret
+2. **Secrets (Gizli Anahtarlar):** API anahtarları GitHub Secrets'ta saklanmalı.
 
-3. **Workflow Tetikleme:** `workflow_dispatch` aktif, GitHub'dan manuel tetikleme yapılabilir:
-   - Actions → V12 Titanium CI/CD → Run workflow
+3. **Workflow Tetikleme:** Manuel tetikleme için: Actions → V12 Titanium CI/CD → Run workflow
 
 ---
 
-*Son Güncelleme: 4 Şubat 2026*
+*Son Güncelleme: 5 Şubat 2026*
 *V12 Titanium - Yapısal Sağlık İzleme Sistemi*
