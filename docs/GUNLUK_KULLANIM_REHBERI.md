@@ -1,241 +1,283 @@
-# 📅 V12 Titanium - Günlük Kullanım Rehberi
-## Her Gün Projede Çalışmak İçin Yapman Gerekenler
+# 🎮 GÜNLÜK ÇALIŞMA REHBERİ
+## (Lise Öğrencisi Bile Anlayabilir Sürümü)
 
 ---
 
-# ☀️ SABAH - BİLGİSAYARI AÇTIĞINDA
+# 📍 BAŞLAMADAN ÖNCE
 
-## ADIM 1: Runner'ı Başlat (CI/CD için)
+Düşün ki bu proje bir **Google Docs dosyası** gibi. Ama Google Docs'tan farklı olarak, değişiklikler **otomatik kaydedilmiyor**. Sen elle "kaydet" ve "paylaş" demen lazım.
 
-### Ne yapacaksın?
-GitHub'dan gelen test komutlarını alan programı başlatacaksın.
+**3 önemli kavram:**
+- `git pull` = İnternetten indir (arkadaşların yaptıklarını al)
+- `git push` = İnternete yükle (senin yaptıklarını paylaş)
+- `runner` = GitHub'ın senin bilgisayarındaki temsilcisi
 
-### Nasıl yapacaksın?
+---
 
-**1.** Windows tuşuna bas
+# ADIM 1: RUNNER'I BAŞLAT 🏃
 
-**2.** "PowerShell" yaz
+## Bu Ne?
+**Runner = GitHub'ın senin bilgisayarındaki temsilcisi.** 
 
-**3.** "Windows PowerShell" uygulamasına tıkla
+Onu açmazsan, GitHub seninle konuşamaz. Kod gönderdiğinde testlerin çalışması için runner'ın açık olması lazım.
 
-**4.** Şu komutu yaz ve Enter'a bas:
+## Nasıl Yapılır?
+
+**1.** Klavyeden **Windows tuşu + R** bas
+
+**2.** Açılan küçük kutuya şunu yaz:
 ```
-C:\actions-runner\run.cmd
+powershell
 ```
 
-**5.** Şunu görmelisin:
+**3.** **Enter** bas. Mavi/siyah bir pencere açılacak.
+
+**4.** O pencereye şunu yaz ve **Enter** bas:
+```powershell
+cd C:\actions-runner
+```
+> 💡 `cd` = "buraya git" demek. actions-runner klasörüne gidiyorsun.
+
+**5.** Sonra şunu yaz ve **Enter** bas:
+```powershell
+.\run.cmd
+```
+
+**6.** Şunu görmelisin:
 ```
 √ Connected to GitHub
 Listening for Jobs
 ```
 
-**6.** ⚠️ **ÖNEMLİ:** Bu pencereyi KAPATMA! Açık kalsın.
+✅ **Görüyorsan:** Tebrikler! Runner çalışıyor.
+
+❌ **Görmüyorsan:** Çağrı'yı ara.
+
+> ⚠️ **ÖNEMLİ:** Bu pencereyi **KAPATMA!** Küçült ve öyle bırak.
 
 ---
 
-## ADIM 2: En Son Değişiklikleri Al
+# ADIM 2: YENİ BİR PENCERE AÇ VE SON DEĞİŞİKLİKLERİ ÇEK 📥
 
-### Ne yapacaksın?
-Arkadaşların değişiklik yapmış olabilir. Onları kendi bilgisayarına çekeceksin.
+## Bu Ne?
+Arkadaşların dün gece bir şeyler yazmış olabilir. Onları kendi bilgisayarına indiriyorsun.
 
-### Nasıl yapacaksın?
+## Nasıl Yapılır?
 
-**1.** YENİ bir PowerShell penceresi aç (ADIM 1'deki pencereyi kapatma!)
+**1.** **Windows tuşu + R** bas
 
-**2.** Şu komutları SIRAYLA yaz (her birinden sonra Enter bas):
+**2.** `powershell` yaz, **Enter** bas (yeni bir pencere açılır)
 
-```
-cd C:\Projects\structural_health
-```
-↑ Bu komut: Proje klasörüne gir
-
-```
-git pull origin main
-```
-↑ Bu komut: En son değişiklikleri GitHub'dan çek
-
-**3.** Şunlardan birini göreceksin:
-- `Already up to date.` → Değişiklik yok, her şey güncel
-- `Updating...` → Yeni değişiklikler indirildi
-
----
-
-## ADIM 3: Projeyi Çalıştır (İstersen)
-
-### Ne yapacaksın?
-Web arayüzünü test etmek istiyorsan backend sunucuyu başlatacaksın.
-
-### Nasıl yapacaksın?
-
-**1.** Aynı PowerShell penceresinde şu komutları yaz:
-
-```
-.\venv\Scripts\Activate
-```
-↑ Bu komut: Python ortamını aktif et
-
-**(venv) yazısı görünecek terminalin başında**
-
-```
-py -3.11 main.py
-```
-↑ Bu komut: Sunucuyu başlat
-
-**2.** Şunu görmelisin:
-```
-INFO:     Uvicorn running on http://127.0.0.1:8000
-```
-
-**3.** Artık `index.html` dosyasını açıp test edebilirsin!
-
----
-
-# ✍️ KOD YAZDIĞINDA
-
-## ADIM 4: Değişiklikleri Kaydet
-
-### Ne yapacaksın?
-Yaptığın değişiklikleri git'e kaydedeceksin.
-
-### Nasıl yapacaksın?
-
-**1.** BAŞKA bir PowerShell penceresi aç
-
-**2.** Proje klasörüne git:
-```
-cd C:\Projects\structural_health
-```
-
-**3.** Tüm değişiklikleri ekle:
-```
-git add .
-```
-↑ Bu komut: Tüm dosya değişikliklerini hazırla
-
-**4.** Bir açıklama yaz ve kaydet:
-```
-git commit -m "Ne yaptığını kısaca yaz"
-```
-
-**Örnek açıklamalar:**
-- `git commit -m "Buton rengi degistirildi"`
-- `git commit -m "Yeni fonksiyon eklendi"`
-- `git commit -m "Hata duzeltildi"`
-
----
-
-## ADIM 5: GitHub'a Gönder
-
-### Ne yapacaksın?
-Kaydettiğin değişiklikleri GitHub'a yükleyeceksin. Bunu yapınca CI/CD otomatik test başlatacak!
-
-### Nasıl yapacaksın?
-
-**1.** Şu komutu yaz:
-```
-git push origin main
-```
-
-**2.** 30-60 saniye bekle
-
-**3.** Sonucu kontrol et:
-   - ADIM 1'de açtığın runner penceresine bak
-   - "Job completed" yazısını göreceksin
-
-**4.** GitHub'dan kontrol et (opsiyonel):
-   - https://github.com/cagriaksoy191-oss/structural_health/actions adresine git
-   - ✅ Yeşil tik = Başarılı, her şey OK!
-   - ❌ Kırmızı X = Hata var, tıklayıp logları oku
-
----
-
-# 🌙 AKŞAM - İŞİN BİTTİĞİNDE
-
-## ADIM 6: Her Şeyi Kapat
-
-**1.** main.py çalışan pencerede: `Ctrl + C` bas (sunucu durur)
-
-**2.** Runner penceresinde: `Ctrl + C` bas veya pencereyi kapat
-
-**3.** Bilgisayarını kapat
-
----
-
-# 📋 HIZLI ÖZET - KOPYALA YAPIŞTIR
-
-## Sabah Başlangıç:
-```powershell
-# 1. Runner başlat (ayrı pencerede)
-C:\actions-runner\run.cmd
-
-# 2. Başka pencerede:
-cd C:\Projects\structural_health
-git pull origin main
-.\venv\Scripts\Activate
-py -3.11 main.py
-```
-
-## Kod Yazdıktan Sonra:
+**3.** Şunu yaz ve **Enter** bas:
 ```powershell
 cd C:\Projects\structural_health
+```
+> 💡 Proje klasörüne gidiyorsun.
+
+**4.** Şunu yaz ve **Enter** bas:
+```powershell
+git pull origin main
+```
+> 💡 `git pull` = "internetten son değişiklikleri indir" demek.
+
+**5.** Şunlardan birini göreceksin:
+
+| Mesaj | Anlamı |
+|-------|--------|
+| `Already up to date.` | Zaten güncelsin, yeni bir şey yok |
+| `Updating...` + dosya listesi | Yeni dosyalar indirildi |
+| `CONFLICT` | ⚠️ Sorun var! Çağrı'yı ara |
+
+---
+
+# ADIM 3: SANAL ORTAMI AKTİF ET 🔋
+
+## Bu Ne?
+Düşün ki projenin özel bir **"pili"** var. Onu açmazsan proje çalışmaz.
+
+## Nasıl Yapılır?
+
+**1.** **AYNI pencerede** (az önce `git pull` yaptığın yerde) şunu yaz:
+```powershell
+.\venv\Scripts\Activate
+```
+
+**2.** **Enter** bas.
+
+**3.** Terminalin başında `(venv)` yazısı çıkacak:
+```
+(venv) PS C:\Projects\structural_health>
+```
+
+✅ **(venv) görüyorsan:** Pil takılı! Devam et.
+
+❌ **Görmüyorsan:** Kurulum eksik. Çağrı'yı ara.
+
+---
+
+# ADIM 4: KOD YAZ VE ÇALIŞ 💻
+
+## Bu Ne?
+Asıl iş burada! Kodunu yaz, tasarımını yap, ne yapacaksan yap.
+
+## Nasıl Yapılır?
+
+**1.** VS Code veya hangi editörü kullanıyorsan aç
+
+**2.** `C:\Projects\structural_health` klasörünü aç
+
+**3.** İstediğin dosyayı düzenle
+
+**4.** Kaydet (**CTRL + S**)
+
+> 💡 Bu aşamada istediğin kadar zaman harca. 5 dakika da olabilir, 5 saat de.
+
+---
+
+# ADIM 5: DEĞİŞİKLİKLERİ KAYDET VE PAYLAŞ 📤
+
+## Bu Ne?
+Senin yaptığın değişiklikleri internete yüklüyorsun ki arkadaşların da görsün.
+
+## Nasıl Yapılır?
+
+**1.** PowerShell penceresine dön (venv aktif olan pencere)
+
+**2.** Şunu yaz ve **Enter** bas:
+```powershell
 git add .
-git commit -m "Aciklama yaz"
+```
+> 💡 `git add .` = "bütün değişiklikleri paketle" demek. **Sonundaki nokta önemli!**
+
+**3.** Şunu yaz ve **Enter** bas:
+```powershell
+git commit -m "buraya ne yaptığını yaz"
+```
+> 💡 **Örnek:** `git commit -m "login sayfasına buton ekledim"`
+> 
+> Tırnak işaretleri önemli! İçine Türkçe karakter yazabilirsin.
+
+**4.** Şunu yaz ve **Enter** bas:
+```powershell
 git push origin main
+```
+> 💡 `git push` = "paketi internete gönder" demek.
+
+**5.** İşlem bittikten sonra:
+- https://github.com/cagriaksoy191-oss/structural_health adresine git
+- **"Actions"** sekmesine tıkla
+- ✅ **Yeşil tik** görüyorsan = Her şey çalışıyor
+- ❌ **Kırmızı X** görüyorsan = Bir hata var, tıklayıp bak
+
+---
+
+# 📋 TEK SAYFA ÖZET (YAZDIR VE DUVARA AS)
+
+| Sıra | Ne Yapıyorsun | Komut |
+|------|---------------|-------|
+| 1️⃣ | Runner'ı başlat | `cd C:\actions-runner` sonra `.\run.cmd` |
+| 2️⃣ | Proje klasörüne git | `cd C:\Projects\structural_health` |
+| 3️⃣ | Son değişiklikleri çek | `git pull origin main` |
+| 4️⃣ | Sanal ortamı aç | `.\venv\Scripts\Activate` |
+| 5️⃣ | Kod yaz | *(editörde çalış)* |
+| 6️⃣ | Değişiklikleri paketle | `git add .` |
+| 7️⃣ | Açıklama ekle | `git commit -m "ne yaptın"` |
+| 8️⃣ | İnternete gönder | `git push origin main` |
+
+---
+
+# 🎨 GÖRSEL AKIŞ ŞEMASI
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                     GÜNLÜK İŞ AKIŞI                          │
+├─────────────────────────────────────────────────────────────┤
+│                                                              │
+│   ☀️ BİLGİSAYARI AÇINCA:                                    │
+│   ┌─────────────┐                                           │
+│   │ 1. Runner   │ → cd C:\actions-runner                    │
+│   │    Başlat   │ → .\run.cmd                               │
+│   └──────┬──────┘ → "Listening for Jobs" gör                │
+│          │         → PENCEREYİ KAPATMA!                      │
+│          ↓                                                   │
+│   ┌─────────────┐                                           │
+│   │ 2. Yeni     │ → cd C:\Projects\structural_health        │
+│   │    Pencere  │ → git pull origin main                    │
+│   └──────┬──────┘                                           │
+│          │                                                   │
+│          ↓                                                   │
+│   ┌─────────────┐                                           │
+│   │ 3. Ortamı   │ → .\venv\Scripts\Activate                 │
+│   │    Aktif Et │ → (venv) yazısını gör                     │
+│   └──────┬──────┘                                           │
+│          │                                                   │
+│          ↓                                                   │
+│   ✍️ KOD YAZ (editörde)                                     │
+│          │                                                   │
+│          ↓                                                   │
+│   ┌─────────────┐                                           │
+│   │ 4. Kaydet   │ → git add .                               │
+│   │    ve       │ → git commit -m "açıklama"                │
+│   │    Gönder   │ → git push origin main                    │
+│   └──────┬──────┘                                           │
+│          │                                                   │
+│          ↓                                                   │
+│   ✅ GitHub Actions'da yeşil tik gör                        │
+│                                                              │
+└─────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-# ❓ SORUN ÇIKTIĞINDA
+# 🆘 BİR ŞEY YANLIŞ GİDERSE
 
-## "error: Your local changes would be overwritten"
-**Çözüm:**
-```
-git stash
-git pull origin main
-git stash pop
-```
-
-## "fatal: not a git repository"
-**Çözüm:** Yanlış klasördesin. Şunu yaz:
-```
-cd C:\Projects\structural_health
-```
-
-## "Push rejected"
-**Çözüm:** Önce pull yap:
-```
-git pull origin main
-git push origin main
-```
-
-## Runner "Listening" yazmıyor
-**Çözüm:** İnternet bağlantını kontrol et, sonra tekrar başlat.
+| Hata | Çözüm |
+|------|-------|
+| `"git is not recognized"` | Git yüklü değil, Çağrı'yı ara |
+| `"failed to push"` | Önce `git pull origin main` yap, sonra tekrar push |
+| `"venv not found"` | Yanlış klasördesin, `cd C:\Projects\structural_health` yaz |
+| `"Listening for Jobs"` gelmedi | Runner bozuk, Çağrı'yı ara |
+| `"Permission denied"` | GitHub davetini kabul etmemişsin, e-postanı kontrol et |
+| `"CONFLICT"` mesajı | Çağrı'yı ara, birlikte çözelim |
 
 ---
 
-# 🎯 TEK SAYFA ÖZET
+# 💡 İPUÇLARI
 
+## Commit mesajı nasıl yazılır?
 ```
-┌─────────────────────────────────────────────┐
-│           GÜNLÜK İŞ AKIŞI                   │
-├─────────────────────────────────────────────┤
-│                                             │
-│  ☀️ SABAH:                                  │
-│  1. run.cmd başlat (kapatma!)               │
-│  2. git pull origin main                    │
-│  3. py -3.11 main.py (istersen)             │
-│                                             │
-│  ✍️ KOD YAZINCA:                            │
-│  4. git add .                               │
-│  5. git commit -m "açıklama"                │
-│  6. git push origin main                    │
-│  7. 30 sn bekle, sonucu gör                 │
-│                                             │
-│  🌙 AKŞAM:                                  │
-│  8. Ctrl+C ile kapat                        │
-│                                             │
-└─────────────────────────────────────────────┘
+❌ KÖTÜ: git commit -m "değişiklik"
+❌ KÖTÜ: git commit -m "fix"
+✅ İYİ: git commit -m "Buton rengini maviye cevirdim"
+✅ İYİ: git commit -m "Login hatasini duzeltim"
+✅ İYİ: git commit -m "Yeni grafik eklendi"
 ```
+
+## Ne zaman push yapmalıyım?
+- Küçük bir özellik bitirdiğinde
+- Bir hatayı düzelttiğinde
+- Ara verip bilgisayarı kapatmadan önce
+
+## Push yapmadan önce kontrol listesi:
+1. ✅ Kod çalışıyor mu? (test ettim mi?)
+2. ✅ Dosyaları kaydettim mi? (CTRL+S)
+3. ✅ Commit mesajı anlaşılır mı?
+
+---
+
+# 📱 ACİL DURUMLAR İÇİN
+
+**Sırayla dene:**
+1. 📖 Bu rehberi tekrar oku
+2. 🔍 Hata mesajını Google'a yaz
+3. 🤖 ChatGPT'ye sor
+4. 💬 WhatsApp grubuna yaz
+5. 📞 Çağrı'yı ara
+
+---
+
+*Bu rehberi ister yazdır ister telefonuna kaydet.*
+*Takıldığın yerde bana veya Çağrı'ya sor!* 🚀
 
 ---
 
