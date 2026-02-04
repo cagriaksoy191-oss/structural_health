@@ -1,0 +1,48 @@
+name: V12 Titanium CI/CD
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:  # Manuel tetikleme
+
+jobs:
+  build-and-test:
+    runs-on: self-hosted
+    
+    env:
+      # GitHub Secrets üzerinden tanımlanacak değişkenler
+      OLLAMA_URL: ${{ secrets.OLLAMA_URL }}
+      
+    steps:
+    # 1. Kodu çek
+    - name: 📥 Checkout Code
+      uses: actions/checkout@v4
+
+    # 2. Python ortamını kur
+    - name: 🐍 Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+        cache: 'pip'
+
+    # 3. pip güncelle
+    - name: ⬆️ Upgrade pip
+      run: python -m pip install --upgrade pip
+
+    # 4. Bağımlılıkları yükle
+    - name: 📦 Install Dependencies
+      run: pip install -r requirements.txt
+
+    # 5. Health Check Testi
+    - name: 🔬 Run Health Check
+      run: python tests/health_check.py
+
+    # 6. İsteğe bağlı: FastAPI syntax kontrolü
+    - name: ✅ Verify Main Module
+      run: python -c "import main; print('✅ main.py başarıyla import edildi')"
+
+    # 7. Sonuç bildirimi
+    - name: 🎉 Pipeline Complete
+      run: echo "✅ V12 Titanium CI/CD Pipeline başarıyla tamamlandı!"
