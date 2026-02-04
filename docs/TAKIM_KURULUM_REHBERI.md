@@ -25,11 +25,11 @@ Düşün ki bir ödev yapıyorsun. Her değişiklik yaptığında hoca gelip "do
 
 ### ✅ CI/CD İLE (Bizim Sistem):
 ```
-1. Emine kod yazar, push yapar
-2. 30 saniye sonra GitHub'dan bildirim: ❌ TEST BAŞARISIZ!
+1. Emine kod yazar, "/gonder" der
+2. 30 saniye sonra Antigravity: ❌ TEST BAŞARISIZ!
 3. Emine hemen görür: "Ha, kütüphane eksik"
-4. Düzeltir, tekrar push yapar
-5. GitHub: ✅ TEST BAŞARILI!
+4. Düzeltir, tekrar "/gonder"
+5. Antigravity: ✅ TEST BAŞARILI!
 6. Artık Talha çektiğinde sorunsuz çalışır 🎉
 ```
 
@@ -50,16 +50,12 @@ Düşün ki bir ödev yapıyorsun. Her değişiklik yaptığında hoca gelip "do
 
 **Eğer Çağrı isen:** Bu rehberi zaten biliyorsun, sen kurdun! 😎
 
-**Eğer Emine, Talha veya Baha isen:** Aşağıdaki adımları sırasıyla yap. Her adımı tamamla, sonra diğerine geç.
+**Eğer Emine, Talha veya Baha isen:** Aşağıdaki adımları sırasıyla yap.
 
 ---
 
 # ADIM 1: GitHub Davetini Kabul Et ✉️
 
-## Ne Yapacaksın?
-Çağrı sana e-posta ile davet gönderdi. Bunu kabul etmen lazım.
-
-## Adımlar:
 1. **E-postanı aç** (GitHub'a kayıtlı olan)
 2. **"You've been invited..."** başlıklı maili bul
 3. **Yeşil butona tıkla:** "Accept invitation"
@@ -68,16 +64,10 @@ Düşün ki bir ödev yapıyorsun. Her değişiklik yaptığında hoca gelip "do
 ## ✅ Kontrol:
 - https://github.com/cagriaksoy191-oss/structural_health adresine git
 - Sayfayı görebiliyorsan → TAMAM! ✅
-- "404 Not Found" görüyorsan → Daveti kabul etmemişsin, e-postanı kontrol et
 
 ---
 
 # ADIM 2: Projeyi Bilgisayarına İndir 📥
-
-## Ne Yapacaksın?
-GitHub'daki projeyi kendi bilgisayarına kopyalayacaksın.
-
-## Adımlar:
 
 ### 2.1 Klasör Oluştur
 ```
@@ -94,300 +84,184 @@ GitHub'daki projeyi kendi bilgisayarına kopyalayacaksın.
 ```
 
 ### 2.3 Komutları Çalıştır
-Terminale şunları SIRAYLA yaz (her birinden sonra Enter bas):
-
 ```powershell
 cd C:\Projects
-```
-```powershell
 git clone https://github.com/cagriaksoy191-oss/structural_health.git
-```
-```powershell
 cd structural_health
 ```
 
 ## ✅ Kontrol:
-```powershell
-dir
-```
-yazınca `main.py`, `index.html` gibi dosyaları görüyorsan → TAMAM! ✅
+`dir` yazınca `main.py` gibi dosyaları görüyorsan → TAMAM! ✅
 
 ---
 
 # ADIM 3: Python Kur 🐍
 
-## Ne Yapacaksın?
-Projemiz Python ile çalışıyor. Python 3.11 lazım.
-
-## Adımlar:
-
 ### 3.1 Python Var mı Kontrol Et
-Terminale yaz:
 ```powershell
 py --version
 ```
-- "Python 3.11.x" yazıyorsa → ADIM 3.2'yi ATLA, ADIM 3.3'e geç
+- "Python 3.11.x" yazıyorsa → ADIM 3.2'yi ATLA
 - Hata veriyorsa → ADIM 3.2'yi yap
 
 ### 3.2 Python İndir ve Kur
 1. https://www.python.org/downloads/ adresine git
 2. "Download Python 3.11.x" butonuna tıkla
-3. İndirilen dosyayı çalıştır
-4. ⚠️ **ÖNEMLİ:** "Add Python to PATH" kutusunu İŞARETLE!
-5. "Install Now" tıkla
-6. Bilgisayarı YENIDEN BAŞLAT
+3. ⚠️ **ÖNEMLİ:** "Add Python to PATH" kutusunu İŞARETLE!
+4. "Install Now" tıkla
+5. Bilgisayarı YENIDEN BAŞLAT
 
 ### 3.3 Sanal Ortam Oluştur
-Terminale şunları SIRAYLA yaz:
-
 ```powershell
 cd C:\Projects\structural_health
-```
-```powershell
 py -3.11 -m venv venv
-```
-```powershell
 .\venv\Scripts\Activate
-```
-
-Terminalin başında `(venv)` yazısı görünecek. Bu doğru demek!
-
-### 3.4 Kütüphaneleri Yükle
-```powershell
 pip install -r requirements.txt
 ```
-Bu 2-3 dakika sürebilir, bekle.
-
-## ✅ Kontrol:
-```powershell
-py -3.11 -c "import pandas; print('OK')"
-```
-"OK" yazıyorsa → TAMAM! ✅
 
 ---
 
 # ADIM 4: Ollama Kur (Yapay Zeka İçin) 🤖
 
-## Ne Yapacaksın?
-Projemiz yerel yapay zeka kullanıyor. Bunun için Ollama lazım.
-
-## Adımlar:
-
-### 4.1 Ollama İndir
 1. https://ollama.ai adresine git
-2. "Download" butonuna tıkla
-3. Windows sürümünü indir
-4. İndirilen dosyayı çalıştır ve kur
-
-### 4.2 Qwen Modelini İndir
-YENİ bir PowerShell penceresi aç ve yaz:
+2. "Download" butonuna tıkla ve kur
+3. YENİ bir PowerShell aç ve yaz:
 ```powershell
 ollama pull qwen3:8b
 ```
-⚠️ Bu 5-10 GB indirecek! İnternet hızına göre 10-30 dakika sürebilir.
+⚠️ Bu 5-10 GB indirecek! 10-30 dakika sürebilir.
 
-### 4.3 Test Et
+## ✅ Kontrol:
 ```powershell
 ollama list
 ```
-"qwen3:8b" görünüyorsa → TAMAM! ✅
+"qwen3:8b" görünüyorsan → TAMAM! ✅
 
 ---
 
 # ADIM 5: Model Dosyalarını Al 📁
 
-## Ne Yapacaksın?
-Bazı dosyalar çok büyük olduğu için GitHub'da yok. Çağrı'dan alman lazım.
+Bazı dosyalar çok büyük olduğu için GitHub'da yok. Çağrı'dan al:
+- `concrete_model.joblib`
+- `risk_model.joblib`
+- `anfis_model_agirliklari.pth`
 
-## İhtiyacın Olan Dosyalar:
-```
-concrete_model.joblib      (4 MB)
-risk_model.joblib          (8 MB)
-anfis_model_agirliklari.pth
-```
-
-## Nasıl Alacaksın?
-- **Seçenek 1:** Çağrı USB ile verir
-- **Seçenek 2:** Google Drive/Dropbox linki ister
-- **Seçenek 3:** WhatsApp'tan ister
-
-## Nereye Koyacaksın?
-Bu dosyaları `C:\Projects\structural_health` klasörüne kopyala.
-(Yani main.py ile aynı yere)
-
-## ✅ Kontrol:
-```powershell
-cd C:\Projects\structural_health
-dir *.joblib
-```
-`concrete_model.joblib` ve `risk_model.joblib` görünüyorsa → TAMAM! ✅
+Bu dosyaları `C:\Projects\structural_health` klasörüne koy.
 
 ---
 
 # ADIM 6: Self-Hosted Runner Kur 🏃
 
-## Ne Yapacaksın?
-Bu, GitHub'dan test komutlarını alan program. Push yaptığında kendi bilgisayarında test çalışır.
-
-## ⚠️ ÖNEMLİ:
-Her kişi KENDİ runner'ını kurar. Böylece:
-- Emine push yapınca → Emine'nin bilgisayarı test çalıştırır
-- Talha push yapınca → Talha'nın bilgisayarı test çalıştırır
-- Kimse kimsenin bilgisayarını kullanmaz!
-
-## Adımlar:
+## Bu Ne?
+GitHub'dan test komutlarını alan program. Push yaptığında kendi bilgisayarında test çalışır.
 
 ### 6.1 GitHub'dan Token Al
-1. https://github.com/cagriaksoy191-oss/structural_health/settings/actions/runners/new adresine git
-2. "Windows" seçeneğini tıkla
-3. Sayfadaki komutları GÖR (aşağıda açıklıyorum)
+https://github.com/cagriaksoy191-oss/structural_health/settings/actions/runners/new adresine git.
 
 ### 6.2 Runner Klasörü Oluştur
-PowerShell'de:
 ```powershell
 mkdir C:\actions-runner
 cd C:\actions-runner
 ```
 
 ### 6.3 Runner'ı İndir
-GitHub sayfasındaki "Download" bölümündeki komutu kopyala-yapıştır.
-Genelde şuna benzer:
-```powershell
-Invoke-WebRequest -Uri https://github.com/actions/runner/releases/download/v2.XXX.X/actions-runner-win-x64-2.XXX.X.zip -OutFile actions-runner.zip
-```
-(XXX.X kısmı değişebilir, GitHub'daki güncel halini kullan!)
+GitHub sayfasındaki "Download" komutunu kopyala-yapıştır.
 
-### 6.4 Zip'i Aç
-```powershell
-Expand-Archive -Path actions-runner.zip -DestinationPath .
-```
-
-### 6.5 Yapılandır
-GitHub sayfasındaki "Configure" bölümündeki komutu kopyala-yapıştır.
-Genelde şuna benzer:
-```powershell
-.\config.cmd --url https://github.com/cagriaksoy191-oss/structural_health --token BURAYA_GITHUB_TOKEN_GELECEK
-```
+### 6.4 Yapılandır
+GitHub sayfasındaki "Configure" komutunu çalıştır.
 
 Sana birkaç soru soracak:
-- **Runner name:** Kendi adını yaz! 
+- **Runner name:** Kendi adını yaz!
   - Emine → `emine-pc`
   - Talha → `talha-pc`
   - Baha → `baha-pc`
-- Diğer sorulara **Enter** basarak geç (varsayılan değerler OK)
-
-### 6.6 Runner'ı Başlat
-```powershell
-.\run.cmd
-```
-
-Şunu görmelisin:
-```
-√ Connected to GitHub
-Listening for Jobs
-```
-
-## ✅ Kontrol:
-- https://github.com/cagriaksoy191-oss/structural_health/settings/actions/runners adresine git
-- Kendi runner'ını "Idle" (boşta) olarak görüyorsan → TAMAM! ✅
 
 ---
 
-# ADIM 7: Her Şeyi Test Et ✅
+# ADIM 7: Antigravity Kur 🚀
 
-## 7.1 Backend Sunucuyu Başlat
-YENİ bir PowerShell aç:
-```powershell
-cd C:\Projects\structural_health
-.\venv\Scripts\Activate
-py -3.11 main.py
+## Bu Adım Çok Önemli!
+
+Antigravity, bizim kurduğumuz otomasyonları çalıştıran IDE.
+
+### 7.1 Antigravity'yi İndir
+1. https://antigravity.dev adresine git
+2. Windows sürümünü indir
+3. Kur ve aç
+
+### 7.2 Brave Tarayıcısını Ayarla
+1. Antigravity'de `Ctrl + ,` bas (Ayarlar açılır)
+2. Arama çubuğuna "browser" yaz
+3. **"Chrome Binary Path"** alanına şunu yaz:
 ```
-"Uvicorn running on http://127.0.0.1:8000" görmelisin.
-
-## 7.2 Health Check Çalıştır
-BAŞKA BİR PowerShell aç:
-```powershell
-cd C:\Projects\structural_health
-.\venv\Scripts\Activate
-py -3.11 tests/health_check.py
+C:\Program Files\BraveSoftware\Brave-Browser\Application\brave.exe
 ```
-"TÜM KRİTİK KONTROLLER BAŞARILI" görmelisin.
 
-## 7.3 Web Arayüzünü Test Et
-1. Dosya Gezgini'nde `C:\Projects\structural_health` klasörüne git
-2. `index.html` dosyasına çift tıkla (tarayıcıda açılır)
-3. Formu doldur ve "Risk Skorunu Hesapla" butonuna bas
-4. Sonuç geliyorsa → HER ŞEY TAMAM! 🎉
+> 💡 Bu sayede Antigravity, GitHub Actions sayfasını otomatik kontrol edebilecek.
 
 ---
 
-# � GÜNLÜK KULLANIM
+# ADIM 8: Her Şeyi Test Et ✅
 
-## Her Gün Şunları Yap:
+Antigravity'yi aç ve şu komutu yaz:
 
-### 1. Son Değişiklikleri Çek (Sabah)
-```powershell
-cd C:\Projects\structural_health
-git pull origin main
+```
+/test
 ```
 
-### 2. Kodunu Yaz
-Normal şekilde çalış, istediğin değişikliği yap.
+"TÜM KRİTİK KONTROLLER BAŞARILI" görüyorsan → HER ŞEY TAMAM! 🎉
 
-### 3. Değişiklikleri Kaydet ve Gönder
-```powershell
-git add .
-git commit -m "Ne yaptığını kısaca yaz"
-git push origin main
+---
+
+# 📅 GÜNLÜK KULLANIM
+
+## Artık Çok Basit!
+
+### ☀️ Sabah (Bilgisayarı açınca):
+```
+/sabah
 ```
 
-### 4. Sonucu Bekle
-- 30-60 saniye bekle
-- GitHub Actions sayfasını kontrol et
-- ✅ Yeşil tik = Her şey OK
-- ❌ Kırmızı X = Bir sorun var, logları oku
+### 💻 Gün içi:
+Kodunu yaz, istediğin kadar çalış.
+
+### 📤 İşin bitince:
+```
+/gonder
+```
+
+### ✅ Sonucu görmek için:
+```
+/kontrol
+```
+
+---
+
+# ⚡ TÜM KOMUTLAR
+
+| Komut | Ne Yapar | Ne Zaman Kullan |
+|-------|----------|-----------------|
+| `/sabah` | Git pull + venv aktif | Günün başında |
+| `/gonder` | Git add/commit/push | Kod bitince |
+| `/kontrol` | GitHub Actions durumu | Push'tan sonra |
+| `/test` | Health check | Test etmek için |
+| `/runner` | Runner başlat | PC açıldığında |
 
 ---
 
 # ❓ SIKÇA KARŞILAŞILAN SORUNLAR
 
-## "git: command not found" hatası
-→ Git yüklü değil.
-→ https://git-scm.com/download/win adresinden indir ve kur.
-
-## "Permission denied" hatası
-→ GitHub davetini kabul etmemişsin.
-→ E-postanı kontrol et.
-
-## "Model bulunamadı" hatası
-→ .joblib dosyaları eksik.
-→ Çağrı'dan USB ile al.
-
-## "Ollama bağlantı hatası"
-→ Ollama çalışmıyor.
-→ Başlat menüsünden "Ollama" uygulamasını aç.
-
-## "Runner offline görünüyor"
-→ Runner kapalı.
-→ `C:\actions-runner\run.cmd` çalıştır.
-
-## "Push rejected" hatası
-→ Önce pull yapman lazım.
-→ `git pull origin main` yaz, sonra tekrar push yap.
+| Hata | Çözüm |
+|------|-------|
+| `/sabah` çalışmıyor | Antigravity'yi kapat, tekrar aç |
+| "Model bulunamadı" | .joblib dosyaları eksik, Çağrı'dan al |
+| "Ollama bağlantı hatası" | Başlat menüsünden "Ollama" aç |
+| "Runner offline" | `/runner` yaz |
+| Tarayıcı açılmıyor | Brave ayarlarını kontrol et |
 
 ---
 
-# 📱 YARDIM LAZIMSA
-
-1. **Önce bu rehberi tekrar oku** �
-2. **Hata mesajını Google'a yaz** 🔍
-3. **ChatGPT'ye sor** 🤖
-4. **Grup sohbetine yaz** 💬
-5. **En son Çağrı'yı ara** 📞
-
----
-
-# 📊 ÖZET TABLO
+# 📊 KURULUM KONTROL LİSTESİ
 
 | Adım | Ne Yaptın? | Kontrol |
 |------|------------|---------|
@@ -397,12 +271,21 @@ git push origin main
 | 4 | Ollama kur | `ollama list` çalışıyor mu? |
 | 5 | Model dosyaları | .joblib dosyaları var mı? |
 | 6 | Runner kur | GitHub'da "Idle" görünüyor mu? |
-| 7 | Test et | Web arayüzü çalışıyor mu? |
+| 7 | Antigravity kur | `/test` çalışıyor mu? |
 
 **7'si de ✅ ise: SEN HAZIRSIN!** 🎉
 
 ---
 
-*Son Güncelleme: 4 Şubat 2026*
+# 📱 YARDIM LAZIMSA
+
+1. 📖 Bu rehberi tekrar oku
+2. 🤖 Antigravity'ye "yardım et" de
+3. 💬 Grup sohbetine yaz
+4. 📞 Çağrı'yı ara
+
+---
+
+*Son Güncelleme: 5 Şubat 2026*
 *Hazırlayan: Çağrı*
 *Takım: Çağrı, Emine, Talha, Baha*
