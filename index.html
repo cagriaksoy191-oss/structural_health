@@ -341,55 +341,109 @@
             const ilSelect = document.getElementById("ilInput");
             const ilceSelect = document.getElementById("ilceInput");
 
+            // Tarayıcı desteği kontrolü
             if (!navigator.geolocation) {
-                durum.innerText = "Tarayıcınız konumu desteklemiyor.";
+                durum.innerText = "⚠️ Tarayıcınız konum özelliğini desteklemiyor. Lütfen manuel seçin.";
+                durum.style.color = "#fbbf24";
                 return;
             }
-            durum.innerText = "Konum aranıyor...";
 
-            navigator.geolocation.getCurrentPosition(async (pos) => {
-                try {
-                    const lat = pos.coords.latitude;
-                    const lon = pos.coords.longitude;
-
-                    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}&accept-language=tr`);
-                    const data = await res.json();
-                    const addr = data.address || {};
-
-                    const ilText = addr.province || addr.state || addr.city || "";
-                    const ilceText = addr.county || addr.district || addr.town || "";
-
-                    const ilSlug = normalizeTR(ilText);
-                    const ilObj = IL_ILCE_DATA?.iller?.find(x => x.slug === ilSlug);
-
-                    if (!ilObj) {
-                        durum.innerText = "Konumdan il bulunamadı. Lütfen manuel seçin.";
-                        durum.style.color = "#fbbf24";
-                        return;
-                    }
-
-                    // İl seç
-                    ilSelect.value = ilObj.slug;
-
-                    // İlçeleri doldur
-                    fillIlce(ilObj.ilceler);
-
-                    // İlçeyi seç (bulursa)
-                    const targetIlce = normalizeTR(ilceText);
-                    const match = ilObj.ilceler.find(x => normalizeTR(x) === targetIlce);
-                    if (match) ilceSelect.value = match;
-
-                    durum.innerText = `Konum bulundu: ${ilObj.ad}${match ? " / " + match : ""}`;
-                    durum.style.color = "#4ade80";
-
-                } catch (e) {
-                    durum.innerText = "Konum sunucusuna bağlanılamadı.";
-                    durum.style.color = "#fbbf24";
-                }
-            }, () => {
-                durum.innerText = "Konum izni verilmedi.";
+            // HTTPS kontrolü (localhost hariç)
+            if (location.protocol !== 'https:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
+                durum.innerText = "⚠️ Konum için güvenli bağlantı (HTTPS) gerekli. Manuel seçin.";
                 durum.style.color = "#fbbf24";
-            });
+                return;
+            }
+
+            durum.innerText = "📍 Konum aranıyor... (izin verin)";
+            durum.style.color = "#60a5fa";
+
+            // Konum seçenekleri - timeout ve yüksek doğruluk
+            const geoOptions = {
+                enableHighAccuracy: false,  // Hızlı sonuç için false
+                timeout: 15000,             // 15 saniye timeout
+                maximumAge: 300000          // 5 dakika cache
+            };
+
+            try {
+                // Promise wrapper ile daha iyi kontrol
+                const position = await new Promise((resolve, reject) => {
+                    navigator.geolocation.getCurrentPosition(resolve, reject, geoOptions);
+                });
+
+                const lat = position.coords.latitude;
+                const lon = position.coords.longitude;
+
+                durum.innerText = "🔍 Konum bulundu, adres aranıyor...";
+
+                // Nominatim API çağrısı
+                const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}&accept-language=tr`, {
+                    headers: {
+                        'User-Agent': 'YapiSagligi-App/1.0'
+                    }
+                });
+
+                if (!res.ok) {
+                    throw new Error("Adres servisi yanıt vermedi");
+                }
+
+                const data = await res.json();
+                const addr = data.address || {};
+
+                const ilText = addr.province || addr.state || addr.city || "";
+                const ilceText = addr.county || addr.district || addr.town || "";
+
+                if (!ilText) {
+                    durum.innerText = "⚠️ Konum bulundu ama il tespit edilemedi. Manuel seçin.";
+                    durum.style.color = "#fbbf24";
+                    return;
+                }
+
+                const ilSlug = normalizeTR(ilText);
+                const ilObj = IL_ILCE_DATA?.iller?.find(x => x.slug === ilSlug);
+
+                if (!ilObj) {
+                    durum.innerText = `⚠️ "${ilText}" ili listede bulunamadı. Manuel seçin.`;
+                    durum.style.color = "#fbbf24";
+                    return;
+                }
+
+                // İl seç
+                ilSelect.value = ilObj.slug;
+
+                // İlçeleri doldur
+                const ilcelerSirali = (ilObj.ilceler || []).slice().sort((a,b) => collatorTR.compare(a,b));
+                fillIlce(ilcelerSirali);
+
+                // İlçeyi seç (bulursa)
+                const targetIlce = normalizeTR(ilceText);
+                const match = ilObj.ilceler.find(x => normalizeTR(x) === targetIlce);
+                if (match) ilceSelect.value = match;
+
+                durum.innerText = `✅ Konum bulundu: ${ilObj.ad}${match ? " / " + match : ""}`;
+                durum.style.color = "#4ade80";
+
+            } catch (err) {
+                console.error("Konum hatası:", err);
+                
+                // Detaylı hata mesajları
+                let errorMsg = "⚠️ ";
+                
+                if (err.code === 1) {
+                    errorMsg += "Konum izni reddedildi. Tarayıcı ayarlarından izin verin.";
+                } else if (err.code === 2) {
+                    errorMsg += "Konum alınamadı. GPS açık mı kontrol edin.";
+                } else if (err.code === 3) {
+                    errorMsg += "Konum alma zaman aşımına uğradı. Tekrar deneyin.";
+                } else if (err.message) {
+                    errorMsg += err.message;
+                } else {
+                    errorMsg += "Bilinmeyen hata. Lütfen manuel seçin.";
+                }
+                
+                durum.innerText = errorMsg;
+                durum.style.color = "#fbbf24";
+            }
         }
 
 
