@@ -592,134 +592,98 @@
             });
         });
 
-        // --- 2. KONUM SERVİSİ ---
-
-        // IP tabanlı konum alma (yedek yöntem)
-        async function getLocationByIP() {
-            try {
-                // Ücretsiz IP geolocation API
-                const res = await fetch('https://ipapi.co/json/');
-                if (!res.ok) throw new Error("IP servisi yanıt vermedi");
-                const data = await res.json();
-                return {
-                    city: data.city || "",
-                    region: data.region || "",
-                    country: data.country_name || ""
-                };
-            } catch (e) {
-                console.error("IP konum hatası:", e);
-                return null;
-            }
-        }
-
-        // Konum sonucunu işle
-        async function processLocation(ilText, ilceText, durum, ilSelect, ilceSelect) {
-            if (!ilText) {
-                durum.innerText = "⚠️ Konum bulundu ama il tespit edilemedi. Manuel seçin.";
-                durum.style.color = "#fbbf24";
-                return false;
-            }
-
-            const ilSlug = normalizeTR(ilText);
-            const ilObj = IL_ILCE_DATA?.iller?.find(x => x.slug === ilSlug);
-
-            if (!ilObj) {
-                durum.innerText = `⚠️ "${ilText}" ili listede bulunamadı. Manuel seçin.`;
-                durum.style.color = "#fbbf24";
-                return false;
-            }
-
-            // İl seç
-            ilSelect.value = ilObj.slug;
-
-            // İlçeleri doldur
-            const ilcelerSirali = (ilObj.ilceler || []).slice().sort((a, b) => collatorTR.compare(a, b));
-            fillIlce(ilcelerSirali);
-
-            // İlçeyi seç (bulursa)
-            if (ilceText) {
-                const targetIlce = normalizeTR(ilceText);
-                const match = ilObj.ilceler.find(x => normalizeTR(x) === targetIlce);
-                if (match) ilceSelect.value = match;
-            }
-
-            durum.innerText = `✅ Konum bulundu: ${ilObj.ad}${ilceText ? " / " + ilceText : ""}`;
-            durum.style.color = "#4ade80";
-            return true;
-        }
-
+        // --- 2. KONUM SERVİSİ (Sadece GPS) ---
         async function konumuAl() {
             const durum = document.getElementById("konumDurumu");
             const ilSelect = document.getElementById("ilInput");
             const ilceSelect = document.getElementById("ilceInput");
 
-            durum.innerText = "📍 Konum aranıyor...";
-            durum.style.color = "#60a5fa";
-
-            // Önce GPS dene (eğer destekleniyorsa)
-            if (navigator.geolocation) {
-                try {
-                    durum.innerText = "📍 GPS ile konum aranıyor... (izin verin)";
-
-                    const geoOptions = {
-                        enableHighAccuracy: false,
-                        timeout: 10000,  // 10 saniye
-                        maximumAge: 600000  // 10 dakika cache
-                    };
-
-                    const position = await new Promise((resolve, reject) => {
-                        navigator.geolocation.getCurrentPosition(resolve, reject, geoOptions);
-                    });
-
-                    const lat = position.coords.latitude;
-                    const lon = position.coords.longitude;
-
-                    durum.innerText = "🔍 GPS konum bulundu, adres aranıyor...";
-
-                    // Nominatim API
-                    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}&accept-language=tr`, {
-                        headers: { 'User-Agent': 'YapiSagligi-App/1.0' }
-                    });
-
-                    if (res.ok) {
-                        const data = await res.json();
-                        const addr = data.address || {};
-                        const ilText = addr.province || addr.state || addr.city || "";
-                        const ilceText = addr.county || addr.district || addr.town || "";
-
-                        if (await processLocation(ilText, ilceText, durum, ilSelect, ilceSelect)) {
-                            return; // Başarılı, çık
-                        }
-                    }
-                } catch (gpsErr) {
-                    console.log("GPS başarısız, IP yedek deneniyor:", gpsErr.message);
-                    // GPS başarısız, IP yedek denenecek
-                }
+            // Tarayıcı desteği kontrolü
+            if (!navigator.geolocation) {
+                durum.innerText = "⚠️ Tarayıcınız konum özelliğini desteklemiyor. Lütfen manuel seçin.";
+                durum.style.color = "#fbbf24";
+                return;
             }
 
-            // GPS başarısız veya desteklenmiyor, IP tabanlı konum dene
-            durum.innerText = "🌐 İnternet üzerinden konum tespit ediliyor...";
+            durum.innerText = "📍 Konum izni bekleniyor...";
+            durum.style.color = "#60a5fa";
+
+            const geoOptions = {
+                enableHighAccuracy: true,   // GPS kullan
+                timeout: 30000,             // 30 saniye bekle
+                maximumAge: 600000          // 10 dakika cache
+            };
 
             try {
-                const ipLocation = await getLocationByIP();
+                const position = await new Promise((resolve, reject) => {
+                    navigator.geolocation.getCurrentPosition(resolve, reject, geoOptions);
+                });
 
-                if (ipLocation && ipLocation.region) {
-                    const ilText = ipLocation.region;
-                    const ilceText = ipLocation.city || "";
+                const lat = position.coords.latitude;
+                const lon = position.coords.longitude;
 
-                    if (await processLocation(ilText, ilceText, durum, ilSelect, ilceSelect)) {
-                        durum.innerText += " (IP tabanlı)";
-                        return;
-                    }
+                durum.innerText = "🔍 Konum bulundu, adres aranıyor...";
+
+                // Nominatim API
+                const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}&accept-language=tr`, {
+                    headers: { 'User-Agent': 'YapiSagligi-App/1.0' }
+                });
+
+                if (!res.ok) {
+                    throw new Error("Adres servisi yanıt vermedi");
                 }
 
-                // Her iki yöntem de başarısız
-                durum.innerText = "⚠️ Konum tespit edilemedi. Lütfen manuel seçin.";
-                durum.style.color = "#fbbf24";
+                const data = await res.json();
+                const addr = data.address || {};
 
-            } catch (ipErr) {
-                console.error("IP konum hatası:", ipErr);
-                durum.innerText = "⚠️ Konum tespit edilemedi. Lütfen manuel seçin.";
+                const ilText = addr.province || addr.state || addr.city || "";
+                const ilceText = addr.county || addr.district || addr.town || "";
+
+                if (!ilText) {
+                    durum.innerText = "⚠️ Konum bulundu ama il tespit edilemedi. Lütfen manuel seçin.";
+                    durum.style.color = "#fbbf24";
+                    return;
+                }
+
+                const ilSlug = normalizeTR(ilText);
+                const ilObj = IL_ILCE_DATA?.iller?.find(x => x.slug === ilSlug);
+
+                if (!ilObj) {
+                    durum.innerText = `⚠️ "${ilText}" ili listede bulunamadı. Lütfen manuel seçin.`;
+                    durum.style.color = "#fbbf24";
+                    return;
+                }
+
+                // İl seç
+                ilSelect.value = ilObj.slug;
+
+                // İlçeleri doldur
+                const ilcelerSirali = (ilObj.ilceler || []).slice().sort((a, b) => collatorTR.compare(a, b));
+                fillIlce(ilcelerSirali);
+
+                // İlçeyi seç (bulursa)
+                const targetIlce = normalizeTR(ilceText);
+                const match = ilObj.ilceler.find(x => normalizeTR(x) === targetIlce);
+                if (match) ilceSelect.value = match;
+
+                durum.innerText = `✅ Konum bulundu: ${ilObj.ad}${match ? " / " + match : ""}`;
+                durum.style.color = "#4ade80";
+
+            } catch (err) {
+                console.error("Konum hatası:", err);
+
+                let errorMsg = "⚠️ ";
+                if (err.code === 1) {
+                    errorMsg += "Konum izni verilmedi. Lütfen manuel seçin.";
+                } else if (err.code === 2) {
+                    errorMsg += "Konum alınamadı. Windows Konum Servisleri kapalı olabilir. Manuel seçin.";
+                } else if (err.code === 3) {
+                    errorMsg += "Konum bulunamadı (zaman aşımı). Lütfen manuel seçin.";
+                } else {
+                    errorMsg += "Konum tespit edilemedi. Lütfen manuel seçin.";
+                }
+
+                durum.innerText = errorMsg;
                 durum.style.color = "#fbbf24";
             }
         }
