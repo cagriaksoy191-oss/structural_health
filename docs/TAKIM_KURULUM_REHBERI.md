@@ -217,20 +217,34 @@ Antigravity'yi aç ve şu komutu yaz:
 
 ## Artık Çok Basit!
 
-### ☀️ Sabah (Bilgisayarı açınca):
+### 🚀 SİHİRLİ KOMUT (TEK KOMUTLA HER ŞEY!)
+
+Akşam bilgisayarı kapatmadan önce şunu yaz:
+
+> **"Runner'ı kontrol et, arkadaşlarımın değişikliklerini çek, çakışma varsa her iki tarafın en iyi kısımlarını birleştir ve neden bu kararı verdiğini açıkla, sonra benim değişikliklerimi GitHub'a gönder, CI/CD testini bekle ve projeyi tarayıcıda test edip sonucu göster"**
+
+Bu tek komut otomatik olarak:
+- ✅ Arkadaşların değişikliklerini çeker
+- ✅ Çakışma varsa akıllıca çözer
+- ✅ Senin değişikliklerini gönderir
+- ✅ Test eder ve sonucu gösterir
+
+### Alternatif: Tek Tek Komutlar
+
+☀️ Sabah (Bilgisayarı açınca):
 ```
 /sabah
 ```
 
-### 💻 Gün içi:
+💻 Gün içi:
 Kodunu yaz, istediğin kadar çalış.
 
-### 📤 İşin bitince:
+📤 İşin bitince:
 ```
 /gonder
 ```
 
-### ✅ Sonucu görmek için:
+✅ Sonucu görmek için:
 ```
 /kontrol
 ```
@@ -286,6 +300,6 @@ Kodunu yaz, istediğin kadar çalış.
 
 ---
 
-*Son Güncelleme: 5 Şubat 2026*
+*Son Güncelleme: 7 Şubat 2026*
 *Hazırlayan: Çağrı*
 *Takım: Çağrı, Emine, Talha, Baha*

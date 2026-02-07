@@ -59,10 +59,9 @@ Antigravity'yi aç ve chat'e şunu yaz:
 
 Bu kısım değişmedi - normal şekilde çalış:
 
-1. VS Code veya editörünü aç
-2. Projeyi aç
-3. İstediğin dosyayı düzenle
-4. Kaydet (**CTRL + S**)
+1. Antigravity'de projen açıkken çalış
+2. İstediğin dosyayı düzenle
+3. Kaydet (**CTRL + S**)
 
 > 💡 Bu aşamada istediğin kadar zaman harca. 5 dakika da olabilir, 5 saat de.
 
@@ -114,14 +113,30 @@ Gönderdikten sonra test sonucunu görmek için:
 
 ---
 
+# 🚀 TEK KOMUTLA HER ŞEY! (YENİ)
+
+Günün sonunda tek bir komutla her şeyi halledebilirsin:
+
+> **"Runner'ı kontrol et, arkadaşlarımın değişikliklerini çek, çakışma varsa her iki tarafın en iyi kısımlarını birleştir ve neden bu kararı verdiğini açıkla, sonra benim değişikliklerimi GitHub'a gönder, CI/CD testini bekle ve projeyi tarayıcıda test edip sonucu göster"**
+
+Bu komut otomatik olarak:
+1. ✅ Runner'ı kontrol eder
+2. ✅ Arkadaşların değişikliklerini çeker
+3. ✅ Çakışma varsa akıllıca birleştirir
+4. ✅ Senin değişikliklerini GitHub'a gönderir
+5. ✅ Test yapıp sonucu gösterir
+
+---
+
 # 📋 TEK SAYFA ÖZET (YAZDIR VE DUVARA AS)
 
 | Sıra | Ne Yapıyorsun | Antigravity Komutu |
 |------|---------------|-------------------|
 | 1️⃣ | Sabah başla | `/sabah` |
-| 2️⃣ | Kod yaz | *(editörde çalış)* |
+| 2️⃣ | Kod yaz | *(Antigravity'de çalış)* |
 | 3️⃣ | Bitince gönder | `/gonder` |
 | 4️⃣ | Sonucu kontrol et | `/kontrol` |
+| ⭐ | **YA DA** Akşam tek komut | Yukarıdaki sihirli komutu yaz |
 
 ---
 
@@ -213,5 +228,5 @@ Gönderdikten sonra test sonucunu görmek için:
 
 ---
 
-*Son Güncelleme: 5 Şubat 2026*
+*Son Güncelleme: 7 Şubat 2026*
 *Takım: Çağrı, Emine, Talha, Baha*
