@@ -103,8 +103,8 @@ C: Hayır. Runner zaten açıksa bir şey yapmana gerek yok.
 C: Önce `git pull origin main` yaz, sonra tekrar `git push origin main` dene.
 
 **S: Antigravity'de `/gonder` yazsam olmuyor mu?**
-C: Antigravity varsa evet, `/gonder` yeterli. Bu dosya Antigravity **olmayanlar** için.
+C: Antigravity kullanıyorsan çok daha kolayı var! Akşamları sadece **"Sihirli Komutu"** yazman yeterli. Bu rehber sadece Antigravity **olmayan** durumlar için.
 
 ---
 
-*Son Güncelleme: 6 Şubat 2026*
+*Son Güncelleme: 7 Şubat 2026*
