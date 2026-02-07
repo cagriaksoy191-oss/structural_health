@@ -26,12 +26,12 @@ Normal şekilde kodunuzu yazın, dosyaları kaydedin (`CTRL + S`).
 
 Bilgisayarı kapatmadan önce **Antigravity Chat**'e şu cümleyi yazın:
 
-> **"Runner'ı kontrol et, arkadaşlarımın değişikliklerini çek, çakışma varsa her iki tarafın en iyi kısımlarını birleştir ve neden bu kararı verdiğini açıkla, sonra benim değişikliklerimi GitHub'a gönder, CI/CD testini bekle ve projeyi tarayıcıda test edip sonucu göster"**
+> **"Runner'ın açık olduğundan emin ol (değilse başlat), sonra arkadaşlarımın değişikliklerini çek, çakışma varsa her iki tarafın en iyi kısımlarını birleştir ve neden bu kararı verdiğini açıkla, sonra benim değişikliklerimi GitHub'a gönder, CI/CD testini bekle ve projeyi tarayıcıda test edip sonucu göster"**
 
 ### Bu Komut Ne Yapar?
-1. ✅ Runner'ı kontrol eder (gerekirse açar).
+1. ⚠️ **SİZİN GÖREVİNİZ:** Runner'ı başlatmak (`/runner` veya manuel).
 2. ✅ Arkadaşların değişikliklerini çeker ("git pull").
-3. ✅ Çakışma varsa akıllıca birleştirir ve size rapor verir.
+3. ✅ Çakışma varsa akıllıca birleştirir ve rapor verir.
 4. ✅ Sizin değişikliklerinizi GitHub'a gönderir ("git push").
 5. ✅ Test yapıp sonucu gösterir.
 
