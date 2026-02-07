@@ -11,7 +11,7 @@ Bilgisayarında şunlar yüklü olmalı:
 - ✅ Windows 10/11
 - ✅ Python 3.11 (python.org'dan indir)
 - ✅ Git (git-scm.com'dan indir)
-- ✅ VS Code (code.visualstudio.com'dan indir)
+- ✅ Antigravity (antigravity.dev'den indir - Cursor benzeri AI destekli kod editörü)
 
 ---
 
@@ -147,19 +147,9 @@ INFO:     Started server process
 
 ---
 
-# ADIM 9: Antigravity Kur
+# ADIM 9: Antigravity'i Aç ve Projeyi Yükle
 
-1. **VS Code**'u aç
-2. Sol tarafta **Extensions** (4 kare ikon) tıkla veya `Ctrl+Shift+X` bas
-3. Arama kutusuna **"Antigravity"** yaz
-4. **"Antigravity"** eklentisini bul ve **Install** butonuna bas
-5. VS Code'u kapat ve yeniden aç
-
----
-
-# ADIM 10: Projeyi Antigravity ile Aç
-
-1. VS Code (Antigravity) aç
+1. **Antigravity** uygulamasını aç (Başlat menüsünden veya masaüstü kısayolundan)
 2. `File → Open Folder` tıkla
 3. Masaüstündeki `structural_health` klasörünü seç
 4. "Open" butonuna bas
