@@ -11,16 +11,12 @@ Fuzzy Logic (Bulanık Mantık), Random Forest ve LLM (Qwen3) teknolojilerini bir
 Tüm rehberler `docs/` klasöründedir:
 
 ### 👥 Takım İçin:
-- [**TAKIM_KURULUM_REHBERI.md**](docs/TAKIM_KURULUM_REHBERI.md) -> Projeye yeni başlayanlar için (Emine, Talha, Baha)
-- [**ARKADAS_KURULUM.md**](docs/ARKADAS_KURULUM.md) -> Hızlı başlangıç rehberi
-- [**GUNLUK_KULLANIM_REHBERI.md**](docs/GUNLUK_KULLANIM_REHBERI.md) -> Günlük çalışma rutini
+- [**1_KURULUM.md**](docs/1_KURULUM.md) -> Projeye yeni başlayanlar için kurulum rehberi
+- [**2_CALISMA_REHBERI.md**](docs/2_CALISMA_REHBERI.md) -> Günlük çalışma rutini (Antigravity & Manuel)
 
 ### ⚙️ Teknik Detaylar:
-- [**CI_CD_DOKUMANTASYONU.md**](docs/CI_CD_DOKUMANTASYONU.md) -> Otomatik test sistemi ve GitHub Actions
+- [**3_TEKNIK_REFERANS.md**](docs/3_TEKNIK_REFERANS.md) -> CI/CD sistemi ve Self-Hosted Runner detayları
 - [**V12_TITANIUM_GELISTIRME_PLANI.md**](docs/V12_TITANIUM_GELISTIRME_PLANI.md) -> Teknik geliştirme planı
-
-### ⚡ Antigravity Olmadan:
-- [**ANTIGRAVITY_OLMADAN_KULLANIM.md**](docs/ANTIGRAVITY_OLMADAN_KULLANIM.md) -> Manuel komutlarla çalışma rehberi
 
 ---
 
@@ -34,7 +30,7 @@ Her akşam günü bitirirken şu komutu kullanın:
 
 ## 🛠️ Kurulum
 
-Detaylı kurulum için [TAKIM_KURULUM_REHBERI.md](docs/TAKIM_KURULUM_REHBERI.md) dosyasına bakın.
+Detaylı kurulum için [1_KURULUM.md](docs/1_KURULUM.md) dosyasına bakın.
 
 Temel adımlar:
 1. `git clone` ile indir
