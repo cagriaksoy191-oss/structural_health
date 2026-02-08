@@ -4,24 +4,32 @@ Bu proje, binaların deprem riskini ve yapısal sağlığını ölçen, yapay ze
 
 ## 🚀 Hızlı Başlangıç (Yeni Katılanlar İçin)
 
-Eğer projeye yeni dahil olduysan, kurulumu 3 adımda tamamlayabilirsin:
+Size gönderilen **ZIP** dosyasını indirdikten sonra kurulumu 4 adımda tamamlayabilirsiniz:
 
-### 1. İndir ve Klasöre Gir
-Terminal veya CMD açıp şu komutları gir:
-```bash
-git clone https://github.com/cagriaksoy191-oss/structural_health.git
-cd structural_health
-```
+### 1. Dosyaları Çıkartın
+*   Size gelen Zip dosyasını masaüstünde veya belgelerinizde bir klasöre çıkartın.
+*   Klasörün ismini (İsterseniz) `HealthProject` veya `V12_Titanium` olarak değiştirebilirsiniz.
 
-### 2. Otomatik Kurulum (Tek Seferlik)
-Proje klasöründeki **`kurulum.bat`** dosyasına çift tıkla.
-Bu işlem:
-*   ✅ Sanal Python ortamını (venv) kurar.
-*   ✅ Gerekli kütüphaneleri yükler.
-*   ✅ Frontend (React) paketlerini indirir.
+### 2. Projeyi Açın
+*   **VS Code** veya **Cursor** (Antigravity) uygulamasını açın.
+*   "Open Folder" diyerek az önce çıkardığınız klasörü seçin.
 
-### 3. Sistemi Başlat
-Kurulum bitince **`baslat.bat`** dosyasına çift tıkla. Sistem tarayıcıda açılacaktır.
+### 3. Otomatik Kurulum (Tek Tıkla)
+*   Sol taraftaki dosya listesinden **`kurulum.bat`** dosyasına sağ tıklayın ve "Terminalde Çalıştır" deyin (veya dosyaya çift tıklayın).
+*   **Bu İşlem Şunları Yapar:**
+    *   ✅ Python sanal ortamını (venv) sıfırdan kurar.
+    *   ✅ Eksik olan tüm kütüphaneleri yükler.
+    *   ✅ Frontend (React) paketlerini indirir (`node_modules` oluşturur).
+
+### 4. Sistemi Başlat
+Kurulum bitince **`baslat.bat`** dosyasına çift tıklayın. Sistem tarayıcıda açılacaktır.
+
+---
+
+### ⚠️ ÖNEMLİ: `/gunsonu` Komutunu Kullanabilmek İçin
+Eğer "Yapay Zeka Agent" ile çalışıp işlerinizi GitHub'a göndermek istiyorsanız, klasördeki **`git_bagla.bat`** dosyasına bir kez çift tıklayın.
+
+*(Bu işlem projenizi GitHub'a bağlar ve `/gunsonu` komutunu aktif hale getirir.)*
 
 ### 2. Yapay Zeka Kurulumu (ÖNEMLİ ⚠️)
 Bu proje yerel LLM (Ollama) kullanır. "Yapay Zeka Yorumu" özelliğinin çalışması için arkadaşlarınızın şunları yapması gerekir:
