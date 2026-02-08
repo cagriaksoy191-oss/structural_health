@@ -2,10 +2,26 @@
 
 Bu proje, binaların deprem riskini ve yapısal sağlığını ölçen, yapay zeka destekli hibrit bir sistemdir.
 
-## 🚀 Hızlı Başlangıç
+## 🚀 Hızlı Başlangıç (Yeni Katılanlar İçin)
 
-### 1. Manuel Çalıştırma
-*   **Tam Başlatma:** `baslat.bat` dosyasına çift tıklayın. (Backend + Frontend + Browser)
+Eğer projeye yeni dahil olduysan, kurulumu 3 adımda tamamlayabilirsin:
+
+### 1. İndir ve Klasöre Gir
+Terminal veya CMD açıp şu komutları gir:
+```bash
+git clone https://github.com/cagriaksoy191-oss/structural_health.git
+cd structural_health
+```
+
+### 2. Otomatik Kurulum (Tek Seferlik)
+Proje klasöründeki **`kurulum.bat`** dosyasına çift tıkla.
+Bu işlem:
+*   ✅ Sanal Python ortamını (venv) kurar.
+*   ✅ Gerekli kütüphaneleri yükler.
+*   ✅ Frontend (React) paketlerini indirir.
+
+### 3. Sistemi Başlat
+Kurulum bitince **`baslat.bat`** dosyasına çift tıkla. Sistem tarayıcıda açılacaktır.
 
 ### 2. Yapay Zeka Kurulumu (ÖNEMLİ ⚠️)
 Bu proje yerel LLM (Ollama) kullanır. "Yapay Zeka Yorumu" özelliğinin çalışması için arkadaşlarınızın şunları yapması gerekir:
