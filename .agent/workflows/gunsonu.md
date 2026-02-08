@@ -8,15 +8,20 @@ Bu workflow, gün sonunda yapılması gereken tüm işlemleri (Runner kontrolü,
 
 ## Adımlar
 
-### 1. Runner Kontrolü
+### 1. Runner Kontrolü (Sadece Kuruluysa)
 // turbo
 ```powershell
-$runner = Get-Process "Runner.Listener" -ErrorAction SilentlyContinue
-if ($runner) {
-    Write-Host "✅ Runner Zaten Çalışıyor"
+$runnerPath = "C:\actions-runner"
+if (Test-Path $runnerPath) {
+    $runner = Get-Process "Runner.Listener" -ErrorAction SilentlyContinue
+    if ($runner) {
+        Write-Host "✅ Runner Zaten Çalışıyor"
+    } else {
+        Write-Host "⚠️ Runner Kapalı, Başlatılıyor..."
+        Start-Process cmd -ArgumentList "/k cd $runnerPath & .\run.cmd"
+    }
 } else {
-    Write-Host "⚠️ Runner Kapalı, Başlatılıyor..."
-    Start-Process cmd -ArgumentList "/k cd C:\actions-runner & .\run.cmd"
+    Write-Host "ℹ️ Bu bilgisayarda GitHub Runner kurulu değil. (Bu adım atlanıyor, sorun yok)"
 }
 ```
 
