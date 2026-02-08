@@ -25,6 +25,23 @@ if (Test-Path $runnerPath) {
 }
 ```
 
+### 2. Yapay Zeka (Ollama) Kontrolü
+// turbo
+```powershell
+$ollama = Get-Process "ollama app" -ErrorAction SilentlyContinue
+if ($ollama) {
+    Write-Host "✅ Ollama Servisi Açık"
+    $models = ollama list
+    if ($models -match "qwen3:8b") {
+        Write-Host "✅ Qwen3:8b Modeli Yüklü"
+    } else {
+        Write-Host "⚠️ UYARI: Qwen3:8b modeli bulunamadı! 'ollama pull qwen3:8b' yapmalısın."
+    }
+} else {
+    Write-Host "⚠️ UYARI: Ollama kapalı veya yüklü değil! AI özellikleri çalışmayabilir."
+}
+```
+
 ### 2. Git Güvenlik Kontrolü (VENV Koruması)
 // turbo
 ```powershell

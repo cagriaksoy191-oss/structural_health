@@ -7,6 +7,12 @@ Bu proje, binaların deprem riskini ve yapısal sağlığını ölçen, yapay ze
 ### 1. Manuel Çalıştırma
 *   **Tam Başlatma:** `baslat.bat` dosyasına çift tıklayın. (Backend + Frontend + Browser)
 
+### 2. Yapay Zeka Kurulumu (ÖNEMLİ ⚠️)
+Bu proje yerel LLM (Ollama) kullanır. "Yapay Zeka Yorumu" özelliğinin çalışması için arkadaşlarınızın şunları yapması gerekir:
+1.  [Ollama](https://ollama.com) indirip kurun.
+2.  Terminali açıp şu komutu girin: `ollama pull qwen3:8b`
+3.  *Bu adım yapılmazsa proje çalışır ama "Yapay Zeka Yorumu" kısmı boş gelir.*
+
 ### 2. Yapay Zeka (AI) Komutları
 Bu projede, geliştirme sürecini otomatize eden özel **Agent Workflow** dosyaları bulunur.
 Eğer bir AI Asistanı (Cursor, VS Code Copilot, vb.) kullanıyorsanız, şu komutlar tanımlıdır:
