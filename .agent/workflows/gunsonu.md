@@ -20,44 +20,61 @@ if ($runner) {
 }
 ```
 
-### 2. Değişiklikleri Çek (Pull) ve Birleştir
+### 2. Git Güvenlik Kontrolü (VENV Koruması)
+// turbo
+```powershell
+$gitignore = Get-Content .gitignore
+if ($gitignore -notcontains "venv/") {
+    Write-Host "⚠️ DIKKAT: .gitignore dosyasında venv eksik! Ekleniyor..."
+    Add-Content .gitignore "`nvenv/"
+}
+if (Test-Path "venv") {
+    $venvStatus = git status --porcelain venv/
+    if ($venvStatus) {
+        Write-Host "🚨 KRITIK: venv klasörü git tarafından izleniyor! Takipten çıkarılıyor..."
+        git rm -r --cached venv/
+    }
+}
+```
+
+### 3. Değişiklikleri Çek (Pull) ve Birleştir
 ```powershell
 git pull origin main
 ```
 **🤖 MANTIKLI BİRLEŞTİRME TALİMATI (AGENT İÇİN):**
 Eğer `git pull` sırasında "CONFLICT" (Çakışma) oluşursa:
-1.  Çakışan dosyaları aç (`<<<<<<<`, `=======`, `>>>>>>>` işaretlerini bul).
-2.  Arkadaşının ve senin kodunu karşılaştır.
-3.  **Mantıklı olanı seç** veya ikisini birleştir (Sadece bir tarafı silip atma, projenin bütünlüğünü koru).
-4.  Neden bu kararı verdiğini kullanıcıya kısaca açıkla.
-5.  `git add` ve `git commit` ile birleştirmeyi tamamla.
+1.  Çakışan dosyaları aç.
+2.  Mantıklı olanı seç veya birleştir (Silip atma).
+3.  `git add` ve `git commit` ile tamamla.
 
-### 3. Değişiklikleri Gönder (Push)
-Eğer değişiklik varsa gönder:
+### 4. Değişiklikleri Gönder (Push)
 ```powershell
 git add .
 git commit -m "Gun sonu guncellemesi (Automated by Antigravity)"
 git push origin main
 ```
-*(Not: Eğer "nothing to commit" derse sorun yok, devam et.)*
 
-### 4. CI/CD Takibi
+### 5. CI/CD Takibi
 GitHub Actions'ın tetiklendiğini ve başarılı olduğunu doğrula.
 1.  Tarayıcıyı aç ve şu adrese git: `https://github.com/cagriaksoy191-oss/structural_health/actions`
 2.  En son çalışan işin (Workflow) durumunu kontrol et.
 3.  Yeşil tik ✅ almasını bekle (veya devam ettiğini gör).
 
-### 5. Canlı Test (Browser)
-Projenin son halini lokalde test et:
-1.  Tarayıcıda `http://localhost:5173` adresini aç.
-2.  Ana sayfanın (Formun) doğru yüklendiğini gör.
-3.  Rastgele verilerle "Hesapla" butonuna bas.
-4.  Sonuç ekranının hatasız geldiğini doğrula.
+### 6. Canlı Test (Sunucu Kontrolü ile)
+Projenin son halini lokalde test et.
+**🤖 AGENT TALİMATI:**
+1.  Önce `http://localhost:5173` adresini kontrol et.
+2.  **Eğer sayfa açılmazsa (Bağlantı Hatası):**
+    *   `baslat.bat` dosyasını çalıştır (Start-Process ile).
+    *   15 saniye bekle (Sunucunun açılması için).
+    *   Tekrar kontrol et.
+3.  **Hala açılmıyorsa:** "Sunucu başlatılamadı" diye rapor ver ama işlemi durdurma (GitHub testi zaten başarılı).
+4.  **Açılırsa:** Formu doldur, "Hesapla" butonuna bas ve sonucu gör.
 
 ## Beklenen Sonuç
 ```
 ✅ Runner: Aktif
-✅ Git: Güncel ve Pushlandı (Çakışmalar çözüldü)
-✅ CI/CD: Kontrol Edildi
-✅ Test: Sorunsuz çalışıyor
+✅ Git: Güncel ve Pushlandı (Venv koruması aktif)
+✅ CI/CD: Kontrol Edildi (Yeşil)
+✅ Test: Sunucu kontrol edildi ve test yapıldı
 ```
