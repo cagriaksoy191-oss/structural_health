@@ -18,6 +18,7 @@ Bu komut, güncel dosyaları GitHub'dan indirir ve çalışma ortamını hazırl
 ## 💻 GÜN İÇİNDE
 
 Normal şekilde kodunuzu yazın, dosyaları kaydedin (`CTRL + S`).
+**Frontend'i başlatmak için:** `cd frontend` -> `npm run dev` komutunu kullanın.
 İstediğiniz kadar mola verebilir, bilgisayarı uyku moduna alabilirsiniz.
 
 ---

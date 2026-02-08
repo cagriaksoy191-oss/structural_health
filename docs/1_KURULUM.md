@@ -29,6 +29,7 @@ Bilgisayarında şunlar yüklü olmalı:
 - ✅ **Python 3.11** (python.org'dan indir, "Add to PATH" işaretle!)
 - ✅ **Git** (git-scm.com'dan indir)
 - ✅ **Antigravity** (antigravity.dev'den indir)
+- ✅ **Node.js** (nodejs.org'dan indir - LTS sürümü)
 
 ---
 
@@ -73,13 +74,36 @@ python -m venv venv
 pip install -r requirements.txt
 ```
 *(Bu işlem 2-5 dakika sürebilir)*
+### ADIM 8: Frontend (Arayüz) Kurulumu
+1. Frontend klasörüne gir:
+```powershell
+cd ../frontend
+```
+2. Paketleri yükle:
+```powershell
+npm install
+```
+3. Tekrar ana klasöre dön:
+```powershell
+cd ..
+```
 
-### ADIM 8: Projeyi Test Et
+### ADIM 9: Projeyi Test Et
 Sunucuyu çalıştırıp her şeyin yolunda olduğunu görelim:
+
+**Terminal 1 (Backend):**
 ```powershell
 py -3.11 main.py
 ```
-Tarayıcıda `http://127.0.0.1:8000` adresine git. Site açılıyorsa tamamdır! (Durdurmak için Ctrl+C)
+
+**Terminal 2 (Frontend):**
+Yeni bir terminal aç ve şu komutu gir:
+```powershell
+cd frontend
+npm run dev
+```
+
+Tarayıcıda `http://localhost:5173` (Frontend) ve `http://127.0.0.1:8000` (Backend) adreslerine git. İkisi de açılıyorsa tamamdır! (Durdurmak için Ctrl+C)
 
 ### ADIM 9: Antigravity ile Aç
 1. **Antigravity** uygulamasını aç.

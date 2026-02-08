@@ -76,11 +76,13 @@ class RiskRequest(BaseModel):
 
     # Korozyon Girdisi
     # Sınırı Fuzzy'den biraz geniş tuttuk ki aşırı değerlerde hata vermesin, clamp yapıp uyaralım.
-    corrosion: float = Field(default=-200.0, ge=-2000, le=1000)
+    corrosion: float = Field(..., description="Korozyon potansiyeli (mV)")
+    
+    # "Otomatik" seçilirse boş gelebilir.
+    zeminSinifi: Optional[str] = None
 
     # Frontend verileri
     crackPuan: Optional[int] = Field(default=None, ge=0, le=3)
-    zeminSinifi: Optional[Literal["Z1", "Z2", "Z3", "Z4"]] = None
 
 
 class RiskResponse(BaseModel):

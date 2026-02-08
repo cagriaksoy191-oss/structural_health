@@ -16,6 +16,12 @@ REM --- BURASI EN ONEMLI YER: Kutuphaneleri direkt yukluyoruz ---
 .\venv\Scripts\python.exe -m pip install fastapi uvicorn pandas numpy scikit-fuzzy requests joblib scikit-learn packaging networkx scipy
 
 echo.
+echo 3. Frontend paketleri yukleniyor...
+cd frontend
+call npm install
+cd ..
+
+echo.
 echo ==========================================
 echo KURULUM BITTI!
 echo Artik 'baslat.bat' dosyasina tiklayabilirsin.
