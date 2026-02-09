@@ -6,3 +6,8 @@ scikit-learn
 joblib
 torch
 pydantic
+requests
+scikit-fuzzy
+packaging
+scipy
+networkx
