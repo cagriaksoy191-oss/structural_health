@@ -4,12 +4,14 @@ description: GitHub Actions durumunu tarayıcıda kontrol et
 
 # /kontrol - GitHub Actions Kontrolü Workflow
 
-Bu workflow, Brave tarayıcısını kullanarak GitHub Actions durumunu kontrol eder.
+Bu workflow, GitHub Actions durumunu kontrol eder. Tarayıcı veya komut satırı ile çalışır.
 
 ## Adımlar
 
-### 1. Tarayıcıyı aç ve GitHub Actions sayfasına git
-Browser tool kullanarak şu URL'yi aç:
+### 1. GitHub Actions sayfasını kontrol et
+
+**Yöntem A — Tarayıcı aracın varsa (browser tool):**
+Tarayıcıda şu URL'yi aç:
 ```
 https://github.com/cagriaksoy191-oss/structural_health/actions
 ```
@@ -50,4 +52,24 @@ Eğer kırmızı X görünüyorsa:
 Hata: "ModuleNotFoundError: No module named 'pandas'"
 Çözüm: pip install pandas çalıştır
 ━━━━━━━━━━━━━━━━━━━━━
+```
+
+### 5. Yöntem B — Tarayıcı aracın yoksa (komut satırı alternatifi)
+```powershell
+try {
+    $response = Invoke-RestMethod -Uri "https://api.github.com/repos/cagriaksoy191-oss/structural_health/actions/runs?per_page=1" -Method Get -ErrorAction Stop
+    $run = $response.workflow_runs[0]
+    $durum = $run.conclusion
+    $baslik = $run.display_title
+    if ($durum -eq "success") {
+        Write-Host "✅ CI/CD Başarılı: $baslik"
+    } elseif ($durum -eq $null) {
+        Write-Host "🟡 CI/CD Çalışıyor: $baslik"
+    } else {
+        Write-Host "❌ CI/CD Hata: $baslik (Durum: $durum)"
+    }
+} catch {
+    Write-Host "⚠️ GitHub API'ye erişilemedi. Manuel kontrol gerekebilir."
+    Write-Host "   URL: https://github.com/cagriaksoy191-oss/structural_health/actions"
+}
 ```

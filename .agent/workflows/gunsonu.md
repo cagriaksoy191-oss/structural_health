@@ -7,7 +7,7 @@ description: Gün Sonu (End of Day) - Full CI/CD Döngüsü
 Bu workflow, gün sonunda yapılması gereken **TÜM** işlemleri tek seferde halleder.
 4 kişilik ekipte herkesin bilgisayarında sorunsuz çalışır.
 
-> **ÖNEMLİ AGENT TALİMATI:** Bu workflow tamamen self-contained (bağımsız). Hiçbir harici bilgiye veya geçmiş konuşma hafızasına ihtiyaç duymaz. Her adımı sırasıyla çalıştır. Bir adım başarısız olursa durma — hata mesajını kaydet ve bir sonraki adıma geç. En sonda özet raporu ver.
+> **ÖNEMLİ AGENT TALİMATI:** Bu workflow tamamen self-contained (bağımsız). Hiçbir harici bilgiye, geçmiş konuşma hafızasına veya MCP sunucusuna ihtiyaç duymaz. Her adımı sırasıyla çalıştır. Bir adım başarısız olursa durma — hata mesajını kaydet ve bir sonraki adıma geç. En sonda özet raporu ver. Bu talimatlar tüm AI modelleri (Claude, GPT, Gemini, vb.) tarafından anlaşılabilecek şekilde yazılmıştır.
 
 // turbo-all
 
@@ -84,7 +84,7 @@ if (Test-Path "venv") {
 $pullOutput = cmd /c "git pull origin main" 2>&1
 Write-Host $pullOutput
 ```
-**🤖 AKILLI ÇAKIŞMA ÇÖZME TALİMATI (AGENT İÇİN):**
+**🤖 ÇAKIŞMA ÇÖZME TALİMATI (TÜM AI MODELLERİ İÇİN):**
 
 Eğer `git pull` çıktısında **"CONFLICT"** kelimesi varsa, aşağıdaki adımları izle:
 
@@ -106,7 +106,7 @@ Eğer `git pull` çıktısında **"CONFLICT"** kelimesi varsa, aşağıdaki adı
 4. **Çakışmayı çözdükten sonra:**
    ```powershell
    git add .
-   git commit -m "Merge conflict cozuldu (Automated by Antigravity)"
+   git commit -m "Merge conflict cozuldu (AI-assisted)"
    ```
 
 5. **Hiç çakışma yoksa** bu adımı atla, devam et.
@@ -119,7 +119,7 @@ if ($status) {
     git status --short
     git add .
     $tarih = Get-Date -Format "yyyy-MM-dd HH:mm"
-    git commit -m "Gun sonu guncellemesi - $tarih (Automated by Antigravity)"
+    git commit -m "Gun sonu guncellemesi - $tarih (AI-assisted)"
     Write-Host "✅ Commit oluşturuldu"
 } else {
     Write-Host "ℹ️ Commit edilecek değişiklik yok."
@@ -152,11 +152,14 @@ $pushOutput = cmd /c "git push origin main" 2>&1
 Write-Host $pushOutput
 ```
 **🤖 AGENT TALİMATI:** Eğer push reddedilirse ("rejected", "non-fast-forward"):
-1. `git pull --rebase origin main` çalıştır
-2. Tekrar `git push origin main` dene
+1. Şunu çalıştır: `cmd /c "git pull --rebase origin main" 2>&1`
+2. Tekrar dene: `cmd /c "git push origin main" 2>&1`
 3. Hâlâ hata varsa, kullanıcıya bildir ve devam et (CI/CD'ye geç)
 
-### 8. Pinecone Hafıza Senkronizasyonu (Opsiyonel)
+### 8. Pinecone Hafıza Senkronizasyonu (Opsiyonel - Sadece Kurulanlar İçin)
+
+> **ÖNEMLİ:** Bu adım SADECE Pinecone MCP ayarlanmış bilgisayarlarda çalışır. Çoğu ekip üyesinde bu kurulu OLMAYACAKTIR — bu tamamen normaldir ve atlanması beklenen bir durumdur.
+
 ```powershell
 $mcpConfig = "$env:USERPROFILE\.gemini\antigravity\mcp_config.json"
 if (Test-Path $mcpConfig) {
@@ -173,33 +176,90 @@ if (Test-Path $mcpConfig) {
                 Write-Host "ℹ️ ingest_pdfs.py bulunamadı, Pinecone atlanıyor."
             }
         } else {
-            Write-Host "ℹ️ Pinecone MCP yapılandırılmamış. (Bu normal)"
+            Write-Host "ℹ️ Pinecone MCP yapılandırılmamış. (Bu normal, atlanıyor)"
         }
     } catch {
-        Write-Host "ℹ️ MCP config okunamadı, Pinecone atlanıyor."
+        Write-Host "ℹ️ MCP config okunamadı, Pinecone atlanıyor. (Bu normal)"
     }
 } else {
-    Write-Host "ℹ️ MCP config bulunamadı. Pinecone atlanıyor. (Bu normal)"
+    Write-Host "ℹ️ MCP config bulunamadı. Pinecone atlanıyor. (Bu tamamen normal)"
 }
 ```
 
 ### 9. CI/CD Takibi
-GitHub Actions'ın başarılı olduğunu doğrula.
+
+**🤖 AGENT TALİMATI (TÜM AI MODELLERİ İÇİN):**
+
+Aşağıdaki yöntemlerden birini kullan (hangisi yapılabiliyorsa):
+
+**Yöntem A — Tarayıcı aracın varsa (browser tool):**
 1. Tarayıcıyı aç: `https://github.com/cagriaksoy191-oss/structural_health/actions`
 2. En son workflow run'ın durumunu kontrol et.
-3. ✅ Yeşil tik = Başarılı → Rapor ver.
-4. ❌ Kırmızı X = Hata → Hata loglarını oku ve kullanıcıya açıkla.
-5. 🟡 Sarı = Çalışıyor → "CI/CD hâlâ çalışıyor" diye bildir.
+3. ✅ Yeşil tik = Başarılı | ❌ Kırmızı X = Hata | 🟡 Sarı = Çalışıyor
+
+**Yöntem B — Tarayıcı aracın yoksa (komut satırı):**
+```powershell
+# GitHub API ile son workflow durumunu kontrol et
+try {
+    $response = Invoke-RestMethod -Uri "https://api.github.com/repos/cagriaksoy191-oss/structural_health/actions/runs?per_page=1" -Method Get -ErrorAction Stop
+    $run = $response.workflow_runs[0]
+    $durum = $run.conclusion
+    $baslik = $run.display_title
+    if ($durum -eq "success") {
+        Write-Host "✅ CI/CD Başarılı: $baslik"
+    } elseif ($durum -eq $null) {
+        Write-Host "🟡 CI/CD Çalışıyor: $baslik"
+    } else {
+        Write-Host "❌ CI/CD Hata: $baslik (Durum: $durum)"
+    }
+} catch {
+    Write-Host "⚠️ GitHub API'ye erişilemedi. CI/CD durumu manuel kontrol gerektirebilir."
+    Write-Host "   URL: https://github.com/cagriaksoy191-oss/structural_health/actions"
+}
+```
 
 ### 10. Canlı Test (Sunucu Kontrolü)
-**🤖 AGENT TALİMATI:**
-1. Önce `http://localhost:5173` adresini tarayıcıda kontrol et.
-2. **Eğer sayfa açılmazsa:**
-   - `baslat.bat` dosyasını çalıştır: `Start-Process "baslat.bat"`
-   - 15 saniye bekle.
-   - Tekrar kontrol et.
-3. **Hâlâ açılmıyorsa:** "Sunucu başlatılamadı" diye rapor ver ama workflow'u durdurma.
-4. **Açılırsa:** Formu doldur, "Risk Skorunu Hesapla" butonuna bas ve sonucu gör.
+
+**🤖 AGENT TALİMATI (TÜM AI MODELLERİ İÇİN):**
+
+Aşağıdaki yöntemlerden birini kullan (hangisi yapılabiliyorsa):
+
+**Yöntem A — Tarayıcı aracın varsa:**
+1. `http://localhost:5173` adresini tarayıcıda aç.
+2. Sayfa açılıyorsa → "Canlı test başarılı" raporla.
+3. Açılmıyorsa → Yöntem B'deki komutu çalıştır.
+
+**Yöntem B — Her türlü AI modeli için çalışır:**
+```powershell
+# Önce frontend'in çalışıp çalışmadığını kontrol et
+try {
+    $web = Invoke-WebRequest -Uri "http://localhost:5173" -TimeoutSec 5 -ErrorAction Stop
+    Write-Host "✅ Frontend çalışıyor (HTTP $($web.StatusCode))"
+} catch {
+    Write-Host "⚠️ Frontend kapalı. Başlatılıyor..."
+    if (Test-Path "baslat.bat") {
+        Start-Process "baslat.bat"
+        Start-Sleep -Seconds 15
+        # Tekrar kontrol
+        try {
+            $web2 = Invoke-WebRequest -Uri "http://localhost:5173" -TimeoutSec 5 -ErrorAction Stop
+            Write-Host "✅ Frontend başlatıldı ve çalışıyor"
+        } catch {
+            Write-Host "⚠️ Frontend başlatılamadı. Manuel kontrol gerekli."
+        }
+    } else {
+        Write-Host "ℹ️ baslat.bat bulunamadı. Sunucu manuel başlatılmalı."
+    }
+}
+
+# Backend kontrolü
+try {
+    $api = Invoke-WebRequest -Uri "http://localhost:8000" -TimeoutSec 5 -ErrorAction Stop
+    Write-Host "✅ Backend API çalışıyor"
+} catch {
+    Write-Host "⚠️ Backend API kapalı veya henüz başlamadı."
+}
+```
 
 ## Özet Rapor Şablonu
 Tüm adımlar bittikten sonra kullanıcıya şu formatta rapor ver:
@@ -215,7 +275,7 @@ Tüm adımlar bittikten sonra kullanıcıya şu formatta rapor ver:
   📥 Git Pull     : [Güncel / Çakışma Çözüldü]
   📤 Git Push     : [Başarılı ✅ / Değişiklik Yok]
   🔬 Health Check : [Başarılı / Uyarı Var]
-  🧠 Pinecone     : [Güncellendi / MCP Yok-Atlandı]
+  🧠 Pinecone     : [Güncellendi / Kurulu Değil-Atlandı]
   ⚙️ CI/CD        : [Yeşil ✅ / Çalışıyor / Hata]
   🌐 Canlı Test   : [Başarılı / Sunucu Kapalı]
 

@@ -14,9 +14,14 @@ Bu workflow, her sabah çalışmaya başlamadan önce projeyi güncel hale getir
 
 ### 1. Son değişiklikleri çek
 ```powershell
-git pull origin main
+$pullOutput = cmd /c "git pull origin main" 2>&1
+Write-Host $pullOutput
 ```
-**🤖 AGENT TALİMATI:** Eğer conflict çıkarsa, `/gunsonu` workflow'undaki Adım 4'teki çakışma çözme talimatını uygula.
+**🤖 AGENT TALİMATI:** Eğer çıktıda "CONFLICT" kelimesi varsa:
+1. `git diff --name-only --diff-filter=U` ile çakışan dosyaları bul
+2. Her dosyada `<<<<<<<` ve `>>>>>>>` işaretlerini bul, iki değişikliği birleştir
+3. `git add . && git commit -m "Merge conflict cozuldu (AI-assisted)"` çalıştır
+4. Hiç conflict yoksa bu adımı atla.
 
 ### 2. Bağımlılıkları kontrol et
 ```powershell
