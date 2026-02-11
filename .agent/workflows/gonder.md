@@ -6,50 +6,49 @@ description: Değişiklikleri GitHub'a gönder - git add, commit ve push
 
 Bu workflow, kod değişikliklerini GitHub'a tek komutla gönderir.
 
+> **NOT:** Bu workflow proje klasörü içinden çalıştırılmalıdır. Agent zaten doğru klasördedir.
+
 ## Adımlar
 
-### 1. Proje klasörüne git
+### 1. Değişiklikleri göster
 // turbo
 ```powershell
-cd C:\Projects\structural_health
-```
-
-### 2. Değişiklikleri göster
-```powershell
-git status
+git status --short
 ```
 Kullanıcıya değişen dosyaları göster.
 
-### 3. Tüm değişiklikleri ekle
+### 2. Tüm değişiklikleri ekle
+// turbo
 ```powershell
 git add .
 ```
 
-### 4. Commit mesajı al
-Kullanıcıya sor: "Ne yaptığını kısaca yaz (örn: Login sayfası düzeltildi)"
+### 3. Commit mesajı oluştur
+Kullanıcıya sor: **"Ne yaptığını kısaca yaz (örn: Login sayfası düzeltildi)"**
+Eğer kullanıcı bir mesaj vermezse, değişen dosyalara bakarak otomatik anlamlı bir mesaj oluştur.
 
-### 5. Commit yap
+### 4. Commit yap
 ```powershell
-git commit -m "KULLANICI_MESAJI"
+git commit -m "KULLANICININ_VERDIGI_MESAJ"
 ```
 
-### 6. GitHub'a gönder
+### 5. GitHub'a gönder
 ```powershell
 git push origin main
 ```
 
-### 7. Sonucu raporla
+### 6. Sonucu raporla
 - Push başarılı mı?
 - GitHub Actions workflow tetiklendi mi?
 
+**🤖 AGENT TALİMATI:** Push reddedilirse:
+1. `git pull --rebase origin main` çalıştır, conflict varsa çöz
+2. Tekrar `git push origin main` dene
+
 ## Beklenen Sonuç
 ```
-✅ 3 dosya değişti
-✅ Commit: "Login sayfası düzeltildi"
+✅ X dosya değişti
+✅ Commit: "kullanıcının mesajı"
 ✅ GitHub'a gönderildi
 ⏳ GitHub Actions çalışıyor...
 ```
-
-## Hata Durumları
-- "Push rejected" → Önce `git pull origin main` yap
-- "Nothing to commit" → Değişiklik yok, dosyaları kaydet (CTRL+S)

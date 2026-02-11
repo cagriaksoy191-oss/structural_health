@@ -6,37 +6,34 @@ description: Projeyi lokal olarak test et - Health check ve sunucu
 
 Bu workflow, projenin lokal ortamda düzgün çalışıp çalışmadığını test eder.
 
+> **NOT:** Bu workflow proje klasörü içinden çalıştırılmalıdır. Agent zaten doğru klasördedir.
+
+// turbo-all
+
 ## Adımlar
 
-### 1. Proje klasörüne git
-// turbo
+### 1. Health check çalıştır
 ```powershell
-cd C:\Projects\structural_health
+if (Test-Path "venv\Scripts\python.exe") {
+    & venv\Scripts\python tests\health_check.py
+} else {
+    Write-Host "⚠️ venv bulunamadı! Önce 'python -m venv venv' ile oluştur."
+}
 ```
 
-### 2. Sanal ortamı aktif et
-// turbo
-```powershell
-.\venv\Scripts\Activate
-```
-
-### 3. Health check çalıştır
-```powershell
-py -3.11 tests/health_check.py
-```
-
-### 4. Sonucu değerlendir
+### 2. Sonucu değerlendir
 Health check çıktısını oku:
-- "TÜM KRİTİK KONTROLLER BAŞARILI" → ✅ BAŞARILI
+- "TUM KRITIK KONTROLLER BASARILI" → ✅ BAŞARILI
 - Hata mesajı varsa → Hatayı açıkla
 
-### 5. İsteğe bağlı: Sunucuyu başlat
-Kullanıcıya sor: "Backend sunucuyu başlatmak ister misin?"
+### 3. İsteğe bağlı: Sunucuyu başlat ve test et
+Kullanıcıya sor: "Backend ve frontend sunucuyu başlatmak ister misin?"
 
 Evet derse:
 ```powershell
-py -3.11 main.py
+Start-Process "baslat.bat"
 ```
+15 saniye bekle, sonra `http://localhost:5173` adresini tarayıcıda aç ve formu test et.
 
 ## Beklenen Sonuç
 ```
@@ -48,7 +45,7 @@ py -3.11 main.py
 ✅ Model dosyaları: Mevcut
 ✅ Kütüphaneler: Yüklü
 ━━━━━━━━━━━━━━━━━━━━━
-TÜM KRİTİK KONTROLLER BAŞARILI!
+TUM KRITIK KONTROLLER BASARILI!
 ```
 
 ## Hata Durumları
@@ -56,4 +53,4 @@ TÜM KRİTİK KONTROLLER BAŞARILI!
 |------|-------|
 | "Model bulunamadı" | .joblib dosyaları eksik, Çağrı'dan al |
 | "Ollama bağlantı hatası" | Ollama uygulamasını başlat |
-| "ModuleNotFoundError" | `pip install -r requirements.txt` çalıştır |
+| "ModuleNotFoundError" | `venv\Scripts\pip install -r requirements.txt` çalıştır |
