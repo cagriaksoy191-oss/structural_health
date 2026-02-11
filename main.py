@@ -250,6 +250,46 @@ def clamp(val: float, low: float, high: float) -> float:
     return max(low, min(high, val))
 
 
+def korozyon_olasiligi(mv: float) -> tuple:
+    """
+    ASTM C876 standardına göre korozyon olasılığını yüzde olarak hesaplar.
+    Sürekli (continuous) interpolasyon ile hassas sonuç verir.
+
+    Referans eşikler:
+      > -200 mV  → %90+ korozyon YOK
+      -200 ~ -350 mV → Belirsiz bölge (lineer interpolasyon)
+      < -350 mV  → %90+ korozyon VAR
+
+    Returns: (yuzde: int, seviye: str, renk_kodu: str)
+    """
+    if mv >= -100:
+        yuzde = 5
+    elif mv >= -200:
+        # -100 → %5,  -200 → %10  (güvenli bölge)
+        yuzde = int(5 + ((-100 - mv) / 100) * 5)
+    elif mv >= -350:
+        # -200 → %10,  -350 → %90  (belirsiz bölge, lineer artış)
+        yuzde = int(10 + ((-200 - mv) / 150) * 80)
+    elif mv >= -500:
+        # -350 → %90,  -500 → %97  (yüksek risk bölgesi)
+        yuzde = int(90 + ((-350 - mv) / 150) * 7)
+    else:
+        yuzde = 98
+
+    yuzde = max(2, min(98, yuzde))  # %2-%98 aralığında tut
+
+    if yuzde <= 15:
+        return yuzde, "Düşük", "🟢"
+    elif yuzde <= 40:
+        return yuzde, "Orta-Düşük", "🟡"
+    elif yuzde <= 65:
+        return yuzde, "Orta", "🟠"
+    elif yuzde <= 85:
+        return yuzde, "Yüksek", "🔴"
+    else:
+        return yuzde, "Çok Yüksek", "🔴"
+
+
 # -------------------------------------------------
 #  BETON MODELİ
 # -------------------------------------------------
@@ -545,13 +585,12 @@ def risk_hesapla(req: RiskRequest):
         toplam_yapisal_risk += 5
         detaylar.append("Yönetmelik altı beton nedeniyle ek risk (+5)")
 
-    # --- Korozyon Durum Etiketi (ASTM C876 standardına göre) ---
-    if req.corrosion < -350:
-        detaylar.append(f"Korozyon Durumu: YÜKSEK RİSK ({req.corrosion:.0f} mV < -350 mV)")
-    elif req.corrosion < -200:
-        detaylar.append(f"Korozyon Durumu: BELİRSİZ ({req.corrosion:.0f} mV, -350 ile -200 arası)")
-    else:
-        detaylar.append(f"Korozyon Durumu: Düşük Risk ({req.corrosion:.0f} mV > -200 mV)")
+    # --- Korozyon Olasılığı (ASTM C876 standardı, sürekli interpolasyon) ---
+    kor_yuzde, kor_seviye, kor_ikon = korozyon_olasiligi(req.corrosion)
+    detaylar.append(
+        f"{kor_ikon} Korozyon Olasılığı: %{kor_yuzde} ({kor_seviye}) "
+        f"[{req.corrosion:.0f} mV — ASTM C876]"
+    )
 
     # 4. Fuzzy Logic (Şeffaf Sınırlandırma ile)
     try:
