@@ -6,30 +6,27 @@ description: GitHub Actions Self-Hosted Runner'ı başlat
 
 Bu workflow, GitHub Actions self-hosted runner'ı başlatır.
 
-> **NOT:** Runner sadece runner kurulu bilgisayarlarda çalışır. Kurulu değilse bu adım otomatik atlanır.
-
 ## Adımlar
 
-### 1. Runner durumunu kontrol et
+### 1. Runner klasörüne git
 // turbo
 ```powershell
-$runnerPath = "C:\actions-runner"
-if (Test-Path $runnerPath) {
-    $runner = Get-Process "Runner.Listener" -ErrorAction SilentlyContinue
-    if ($runner) {
-        Write-Host "✅ Runner Zaten Çalışıyor"
-    } else {
-        Write-Host "⚠️ Runner Kapalı, Başlatılıyor..."
-        Start-Process cmd -ArgumentList "/k cd $runnerPath & .\run.cmd"
-        Write-Host "✅ Runner Başlatıldı"
-    }
-} else {
-    Write-Host "ℹ️ Bu bilgisayarda GitHub Runner kurulu değil."
-    Write-Host "   Runner kurmak için: https://github.com/cagriaksoy191-oss/structural_health/settings/actions/runners"
-}
+cd C:\actions-runner
 ```
 
-### 2. Durumu raporla
+### 2. Runner'ı başlat
+```powershell
+.\run.cmd
+```
+
+### 3. Bağlantıyı bekle
+Şu mesajı gör:
+```
+√ Connected to GitHub
+Listening for Jobs
+```
+
+### 4. Durumu raporla
 Kullanıcıya bildir:
 - Runner başarıyla bağlandı mı?
 - Pencereyi kapatmaması gerektiğini hatırlat
@@ -38,7 +35,22 @@ Kullanıcıya bildir:
 ```
 🏃 Runner Durumu:
 ━━━━━━━━━━━━━━━━━━━━━
-✅ Runner çalışıyor
+✅ GitHub'a bağlandı
+✅ İş dinleniyor (Listening for Jobs)
 ━━━━━━━━━━━━━━━━━━━━━
-⚠️ ÖNEMLİ: Runner penceresini KAPATMA! Küçült ve öyle bırak.
+
+⚠️ ÖNEMLİ: Bu pencereyi KAPATMA!
+   Küçült ve öyle bırak.
 ```
+
+## Hata Durumları
+| Hata | Çözüm |
+|------|-------|
+| "Runner already running" | Zaten çalışıyor, bir şey yapma |
+| "Cannot connect" | İnternet bağlantını kontrol et |
+| "Config.cmd not found" | Runner kurulmamış, TAKIM_KURULUM_REHBERI'ne bak |
+
+## Notlar
+- Runner sadece bilgisayar açıkken çalışır
+- Bilgisayarı her açtığında bu komutu çalıştır
+- Çalışırken pencereyi küçült, KAPATMA
