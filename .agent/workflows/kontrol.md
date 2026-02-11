@@ -56,8 +56,17 @@ Hata: "ModuleNotFoundError: No module named 'pandas'"
 
 ### 5. Yöntem B — Tarayıcı aracın yoksa (komut satırı alternatifi)
 ```powershell
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+$headers = @{ "User-Agent" = "StructuralHealth-CI" }
 try {
-    $response = Invoke-RestMethod -Uri "https://api.github.com/repos/cagriaksoy191-oss/structural_health/actions/runs?per_page=1" -Method Get -TimeoutSec 10 -ErrorAction Stop
+    $tokenLine = ("protocol=https`nhost=github.com`n" | git credential fill 2>$null | Select-String "password=")
+    if ($tokenLine) {
+        $token = ($tokenLine -split "password=")[1].Trim()
+        if ($token) { $headers["Authorization"] = "token $token" }
+    }
+} catch {}
+try {
+    $response = Invoke-RestMethod -Uri "https://api.github.com/repos/cagriaksoy191-oss/structural_health/actions/runs?per_page=1" -Method Get -TimeoutSec 15 -Headers $headers -ErrorAction Stop
     $run = $response.workflow_runs[0]
     $durum = $run.conclusion
     $baslik = $run.display_title
@@ -69,7 +78,7 @@ try {
         Write-Host "❌ CI/CD Hata: $baslik (Durum: $durum)"
     }
 } catch {
-    Write-Host "⚠️ GitHub API'ye erişilemedi. Manuel kontrol gerekebilir."
+    Write-Host "⚠️ GitHub API'ye erişilemedi: $($_.Exception.Message)"
     Write-Host "   URL: https://github.com/cagriaksoy191-oss/structural_health/actions"
 }
 ```

@@ -298,14 +298,34 @@ try {
 }
 
 # ----------------------------------------------------------
-# 10. CI/CD TAKIBI (GitHub API)
+# 10. CI/CD TAKIBI (GitHub API - Private Repo Destekli)
 # ----------------------------------------------------------
 Write-Host "[10/10] CI/CD Takibi..."
 try {
-    $response = Invoke-RestMethod -Uri "https://api.github.com/repos/cagriaksoy191-oss/structural_health/actions/runs?per_page=1" -Method Get -TimeoutSec 10 -ErrorAction Stop
+    # TLS 1.2 zorunlu (eski Windows sürümlerinde gerekli)
+    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+
+    $apiUrl = "https://api.github.com/repos/cagriaksoy191-oss/structural_health/actions/runs?per_page=1"
+    $headers = @{ "User-Agent" = "StructuralHealth-CI" }
+
+    # Git credential manager'dan token cikar (private repo destegi)
+    try {
+        $tokenLine = ("protocol=https`nhost=github.com`n" | git credential fill 2>$null | Select-String "password=")
+        if ($tokenLine) {
+            $token = ($tokenLine -split "password=")[1].Trim()
+            if ($token) {
+                $headers["Authorization"] = "token $token"
+            }
+        }
+    } catch {
+        # Token alinamazsa devam et (public repo'larda gerek yok)
+    }
+
+    $response = Invoke-RestMethod -Uri $apiUrl -Method Get -TimeoutSec 15 -Headers $headers -ErrorAction Stop
     $run = $response.workflow_runs[0]
     $durum = $run.conclusion
     $baslik = $run.display_title
+
     if ($durum -eq "success") {
         Write-Host "  >> CI/CD Basarili: $baslik"
         $rapor.CICD = "Basarili"
@@ -317,8 +337,9 @@ try {
         $rapor.CICD = "Hata: $durum"
     }
 } catch {
-    Write-Host "  >> GitHub API'ye erisilemedi. (Internet veya rate limit)"
-    $rapor.CICD = "API Hatasi"
+    Write-Host "  >> GitHub API erisilemedi: $($_.Exception.Message)"
+    Write-Host "  >> Tarayicida kontrol edebilirsin: https://github.com/cagriaksoy191-oss/structural_health/actions"
+    $rapor.CICD = "Manuel Kontrol Gerekli"
 }
 
 # ----------------------------------------------------------
