@@ -1,196 +1,269 @@
-# -*- coding: utf-8 -*-
-# V12 Titanium - Gun Sonu Otomasyon Scripti
-# Bu script /gunsonu workflow'unun TUMUNU tek seferde calistirir.
-# Hicbir kullanici etkilesimi gerektirmez.
+# ============================================================
+#  /GUNSONU - Tam Otomatik CI/CD Script
+#  4 kisilik ekipte herkesin bilgisayarinda sorunsuz calisir.
+#  Hicbir ozel araca (Pinecone, Ollama, Runner) bagli degildir.
+#  Eksik olanlar otomatik atlanir.
+# ============================================================
 
-[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 $ErrorActionPreference = "Continue"
 
-$rapor = @{}
+# Rapor degiskenleri
+$rapor = @{
+    Runner       = "Kontrol edilmedi"
+    Ollama       = "Kontrol edilmedi"
+    Gitignore    = "Kontrol edilmedi"
+    Commit       = "Kontrol edilmedi"
+    HealthCheck  = "Kontrol edilmedi"
+    GitPull      = "Kontrol edilmedi"
+    Bagimliliklar = "Kontrol edilmedi"
+    GitPush      = "Kontrol edilmedi"
+    Pinecone     = "Kontrol edilmedi"
+    CICD         = "Kontrol edilmedi"
+}
 
 Write-Host ""
-Write-Host "================================================" -ForegroundColor Cyan
-Write-Host "  V12 TITANIUM - GUN SONU OTOMASYON" -ForegroundColor Cyan
-Write-Host "  $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')" -ForegroundColor Cyan
-Write-Host "================================================" -ForegroundColor Cyan
+Write-Host "================================================"
+Write-Host "  /GUNSONU BASLATILIYOR..."
+Write-Host "================================================"
 Write-Host ""
 
-# ============================================
-# ADIM 1: RUNNER KONTROLU
-# ============================================
-Write-Host "[1/10] Runner Kontrolu..." -ForegroundColor Yellow
-$runnerPath = "C:\actions-runner"
-if (Test-Path $runnerPath) {
-    $runner = Get-Process "Runner.Listener" -ErrorAction SilentlyContinue
-    if ($runner) {
-        Write-Host "  OK: Runner Zaten Calisiyor" -ForegroundColor Green
-        $rapor["Runner"] = "Aktif"
+# ----------------------------------------------------------
+# 1. RUNNER KONTROLU
+# ----------------------------------------------------------
+Write-Host "[1/10] Runner Kontrolu..."
+try {
+    $runnerPath = "C:\actions-runner"
+    if (Test-Path $runnerPath) {
+        $runner = Get-Process "Runner.Listener" -ErrorAction SilentlyContinue
+        if ($runner) {
+            Write-Host "  >> Runner Zaten Calisiyor"
+            $rapor.Runner = "Aktif"
+        } else {
+            Write-Host "  >> Runner Kapali, Baslatiliyor..."
+            Start-Process cmd -ArgumentList "/k cd $runnerPath & .\run.cmd"
+            $rapor.Runner = "Baslatildi"
+        }
     } else {
-        Write-Host "  INFO: Runner Kapali, Baslatiliyor..." -ForegroundColor Yellow
-        Start-Process cmd -ArgumentList "/k cd $runnerPath & .\run.cmd"
-        $rapor["Runner"] = "Baslatildi"
+        Write-Host "  >> Bu bilgisayarda Runner kurulu degil. (Sorun yok)"
+        $rapor.Runner = "Kurulu Degil"
     }
-} else {
-    Write-Host "  INFO: Runner kurulu degil (sorun yok)" -ForegroundColor Gray
-    $rapor["Runner"] = "Kurulu Degil"
+} catch {
+    Write-Host "  >> Runner kontrol hatasi: $($_.Exception.Message)"
+    $rapor.Runner = "Hata"
 }
 
-# ============================================
-# ADIM 2: OLLAMA KONTROLU
-# ============================================
-Write-Host "[2/10] Ollama Kontrolu..." -ForegroundColor Yellow
-$ollama = Get-Process "ollama app" -ErrorAction SilentlyContinue
-if ($ollama) {
-    Write-Host "  OK: Ollama Servisi Acik" -ForegroundColor Green
-    $rapor["Ollama"] = "Acik"
-} else {
-    Write-Host "  INFO: Ollama kapali (AI yorumlama devre disi, sorun yok)" -ForegroundColor Gray
-    $rapor["Ollama"] = "Kapali"
+# ----------------------------------------------------------
+# 2. OLLAMA KONTROLU
+# ----------------------------------------------------------
+Write-Host "[2/10] Ollama Kontrolu..."
+try {
+    $ollama = Get-Process "ollama app" -ErrorAction SilentlyContinue
+    if ($ollama) {
+        Write-Host "  >> Ollama Servisi Acik"
+        try {
+            $models = ollama list 2>&1
+            if ($models -match "qwen") {
+                Write-Host "  >> Qwen Modeli Yuklu"
+                $rapor.Ollama = "Acik (Qwen yuklu)"
+            } else {
+                Write-Host "  >> Qwen modeli bulunamadi"
+                $rapor.Ollama = "Acik (Qwen yok)"
+            }
+        } catch {
+            $rapor.Ollama = "Acik (model kontrol edilemedi)"
+        }
+    } else {
+        Write-Host "  >> Ollama kapali veya yuklu degil. (Sorun yok)"
+        $rapor.Ollama = "Kapali"
+    }
+} catch {
+    Write-Host "  >> Ollama kontrol hatasi: $($_.Exception.Message)"
+    $rapor.Ollama = "Hata"
 }
 
-# ============================================
-# ADIM 3: GITIGNORE GUVENLIK KONTROLU
-# ============================================
-Write-Host "[3/10] .gitignore Guvenlik Kontrolu..." -ForegroundColor Yellow
-$gitignorePath = ".gitignore"
-if (Test-Path $gitignorePath) {
-    $content = Get-Content $gitignorePath -Raw
-    $kritikler = @("venv/", "__pycache__/", "node_modules/", "docs/referanslar/")
-    $eksik = $false
-    foreach ($item in $kritikler) {
-        if ($content -notmatch [regex]::Escape($item)) {
-            Write-Host "  WARN: .gitignore'a ekleniyor: $item" -ForegroundColor Yellow
-            Add-Content $gitignorePath "`n$item"
-            $eksik = $true
+# ----------------------------------------------------------
+# 3. .GITIGNORE GUVENLIK KONTROLU
+# ----------------------------------------------------------
+Write-Host "[3/10] .gitignore Guvenlik Kontrolu..."
+try {
+    $gitignorePath = ".gitignore"
+    if (Test-Path $gitignorePath) {
+        $content = Get-Content $gitignorePath -Raw
+        $kritikler = @("venv/", "__pycache__/", "node_modules/", "docs/referanslar/")
+        $eklenen = 0
+        foreach ($item in $kritikler) {
+            if ($content -notmatch [regex]::Escape($item)) {
+                Add-Content $gitignorePath "`n$item"
+                Write-Host "  >> Eklendi: $item"
+                $eklenen++
+            }
+        }
+        # venv takipten cikar
+        if (Test-Path "venv") {
+            $venvTracked = cmd /c "git ls-files venv/" 2>&1
+            if ($venvTracked -and $venvTracked.Count -gt 0) {
+                cmd /c "git rm -r --cached venv/" 2>&1 | Out-Null
+                Write-Host "  >> venv takipten cikarildi"
+            }
+        }
+        if ($eklenen -eq 0) {
+            Write-Host "  >> .gitignore zaten guvenli"
+        }
+        $rapor.Gitignore = "Guvenli"
+    } else {
+        Write-Host "  >> .gitignore bulunamadi!"
+        $rapor.Gitignore = "DOSYA YOK!"
+    }
+} catch {
+    Write-Host "  >> .gitignore hatasi: $($_.Exception.Message)"
+    $rapor.Gitignore = "Hata"
+}
+
+# ----------------------------------------------------------
+# 4. LOKAL COMMIT
+# ----------------------------------------------------------
+Write-Host "[4/10] Lokal Commit..."
+try {
+    $status = git status --porcelain 2>&1
+    if ($status) {
+        Write-Host "  >> Degisen dosyalar var, commit olusturuluyor..."
+        git add . 2>&1 | Out-Null
+        $tarih = Get-Date -Format "yyyy-MM-dd HH:mm"
+        $commitOutput = git commit -m "Gun sonu guncellemesi - $tarih (AI-assisted)" 2>&1
+        Write-Host "  >> $commitOutput"
+        $rapor.Commit = "Olusturuldu"
+    } else {
+        Write-Host "  >> Commit edilecek degisiklik yok."
+        $rapor.Commit = "Degisiklik Yok"
+    }
+} catch {
+    Write-Host "  >> Commit hatasi: $($_.Exception.Message)"
+    $rapor.Commit = "Hata"
+}
+
+# ----------------------------------------------------------
+# 5. HEALTH CHECK
+# ----------------------------------------------------------
+Write-Host "[5/10] Health Check..."
+try {
+    if (Test-Path "tests\health_check.py") {
+        if (Test-Path "venv\Scripts\python.exe") {
+            $hcOutput = & venv\Scripts\python tests\health_check.py 2>&1
+            Write-Host "  >> $hcOutput"
+            if ($LASTEXITCODE -ne 0) {
+                $rapor.HealthCheck = "Uyari Var"
+            } else {
+                $rapor.HealthCheck = "Basarili"
+            }
+        } else {
+            Write-Host "  >> venv bulunamadi, health check atlanıyor."
+            $rapor.HealthCheck = "venv Yok"
+        }
+    } else {
+        Write-Host "  >> health_check.py bulunamadi, atlaniyor."
+        $rapor.HealthCheck = "Script Yok"
+    }
+} catch {
+    Write-Host "  >> Health check hatasi: $($_.Exception.Message)"
+    $rapor.HealthCheck = "Hata"
+}
+
+# ----------------------------------------------------------
+# 6. GIT PULL (Arkadaslarin Degisiklikleri)
+# ----------------------------------------------------------
+Write-Host "[6/10] Git Pull..."
+try {
+    $pullOutput = cmd /c "git pull origin main" 2>&1
+    Write-Host "  >> $pullOutput"
+    if ($pullOutput -match "CONFLICT") {
+        Write-Host "  >> CONFLICT TESPIT EDILDI! Agent conflict cozmelidir."
+        $rapor.GitPull = "CONFLICT VAR"
+    } elseif ($pullOutput -match "Already up to date") {
+        $rapor.GitPull = "Guncel"
+    } else {
+        $rapor.GitPull = "Guncellendi"
+    }
+} catch {
+    Write-Host "  >> Git pull hatasi: $($_.Exception.Message)"
+    $rapor.GitPull = "Hata"
+}
+
+# ----------------------------------------------------------
+# 7. BAGIMLILIK SENKRONIZASYONU
+# ----------------------------------------------------------
+Write-Host "[7/10] Bagimlilik Senkronizasyonu..."
+try {
+    # Python bagimliliklari
+    if (Test-Path "venv\Scripts\pip.exe") {
+        if (Test-Path "requirements.txt") {
+            & venv\Scripts\pip install -r requirements.txt --quiet 2>&1 | Out-Null
+            Write-Host "  >> Python bagimliliklari senkronize edildi"
         }
     }
-    # venv git tarafindan izleniyorsa kaldir
-    if (Test-Path "venv") {
-        $venvTracked = cmd /c "git ls-files venv/" 2>&1
-        if ($venvTracked -and $venvTracked.Count -gt 0) {
-            Write-Host "  WARN: venv takipten cikariliyor..." -ForegroundColor Yellow
-            cmd /c "git rm -r --cached venv/" 2>&1 | Out-Null
-        }
-    }
-    Write-Host "  OK: .gitignore guvenli" -ForegroundColor Green
-    $rapor["Gitignore"] = "Guvenli"
-} else {
-    Write-Host "  FAIL: .gitignore bulunamadi!" -ForegroundColor Red
-    $rapor["Gitignore"] = "BULUNAMADI"
-}
-
-# ============================================
-# ADIM 4: LOKAL DEGISIKLIKLERI KAYDET
-# ============================================
-Write-Host "[4/10] Lokal Degisiklikler..." -ForegroundColor Yellow
-$status = git status --porcelain 2>&1
-if ($status) {
-    Write-Host "  Degisen dosyalar:" -ForegroundColor White
-    git status --short
-    git add .
-    $tarih = Get-Date -Format "yyyy-MM-dd HH:mm"
-    git commit -m "Gun sonu guncellemesi - $tarih (AI-assisted)" 2>&1 | Out-Null
-    Write-Host "  OK: Commit olusturuldu" -ForegroundColor Green
-    $rapor["Commit"] = "Olusturuldu"
-} else {
-    Write-Host "  INFO: Degisiklik yok" -ForegroundColor Gray
-    $rapor["Commit"] = "Degisiklik Yok"
-}
-
-# ============================================
-# ADIM 5: HEALTH CHECK
-# ============================================
-Write-Host "[5/10] Health Check..." -ForegroundColor Yellow
-if ((Test-Path "tests\health_check.py") -and (Test-Path "venv\Scripts\python.exe")) {
-    $hcOutput = & venv\Scripts\python tests\health_check.py 2>&1
-    $hcOutput | ForEach-Object { Write-Host "  $_" }
-    if ($LASTEXITCODE -ne 0) {
-        Write-Host "  WARN: Health check uyarilari var" -ForegroundColor Yellow
-        $rapor["HealthCheck"] = "Uyari Var"
-    } else {
-        Write-Host "  OK: Health check basarili" -ForegroundColor Green
-        $rapor["HealthCheck"] = "Basarili"
-    }
-} else {
-    Write-Host "  INFO: Health check atlanıyor (venv veya script yok)" -ForegroundColor Gray
-    $rapor["HealthCheck"] = "Atlandi"
-}
-
-# ============================================
-# ADIM 6: GIT PULL (ARKADASLARIN DEGISIKLIKLERI)
-# ============================================
-Write-Host "[6/10] Git Pull..." -ForegroundColor Yellow
-$pullOutput = cmd /c "git pull origin main" 2>&1
-Write-Host "  $pullOutput"
-if ($pullOutput -match "CONFLICT") {
-    Write-Host "  WARN: Conflict var! Agent tarafindan cozulmeli." -ForegroundColor Red
-    $rapor["GitPull"] = "CONFLICT - Manuel cozum gerekli"
-} elseif ($pullOutput -match "Already up to date") {
-    Write-Host "  OK: Zaten guncel" -ForegroundColor Green
-    $rapor["GitPull"] = "Guncel"
-} else {
-    Write-Host "  OK: Yeni degisiklikler cekildi" -ForegroundColor Green
-    $rapor["GitPull"] = "Guncellendi"
-}
-
-# ============================================
-# ADIM 7: BAGIMLILIK SENKRONU
-# ============================================
-Write-Host "[7/10] Bagimlilik Senkronu..." -ForegroundColor Yellow
-if (Test-Path "venv\Scripts\pip.exe") {
-    & venv\Scripts\pip install -r requirements.txt --quiet 2>&1 | Out-Null
-    Write-Host "  OK: Python bagimliliklari guncel" -ForegroundColor Green
-}
-if (Test-Path "frontend\package.json") {
-    $pkgChanged = cmd /c "git diff HEAD~1 --name-only -- frontend/package.json" 2>&1
-    if ($pkgChanged -match "package.json") {
-        Write-Host "  INFO: package.json degismis, npm install calisiyor..." -ForegroundColor Yellow
+    # Frontend bagimliliklari
+    if (Test-Path "frontend\package.json") {
         Push-Location frontend
-        npm install --silent 2>&1 | Out-Null
+        if (-not (Test-Path "node_modules")) {
+            Write-Host "  >> Frontend node_modules kuruluyor..."
+            npm install --silent 2>&1 | Out-Null
+        } else {
+            Write-Host "  >> Frontend node_modules mevcut"
+        }
         Pop-Location
-        Write-Host "  OK: Frontend bagimliliklari guncel" -ForegroundColor Green
     }
+    $rapor.Bagimliliklar = "Guncel"
+} catch {
+    Write-Host "  >> Bagimlilik hatasi: $($_.Exception.Message)"
+    $rapor.Bagimliliklar = "Hata"
 }
-$rapor["Bagimlilik"] = "Guncel"
 
-# ============================================
-# ADIM 8: GIT PUSH
-# ============================================
-Write-Host "[8/10] Git Push..." -ForegroundColor Yellow
-$pushOutput = cmd /c "git push origin main" 2>&1
-if ($pushOutput -match "rejected" -or $pushOutput -match "non-fast-forward") {
-    Write-Host "  WARN: Push reddedildi, rebase deneniyor..." -ForegroundColor Yellow
-    cmd /c "git pull --rebase origin main" 2>&1 | Out-Null
-    $pushOutput2 = cmd /c "git push origin main" 2>&1
-    if ($pushOutput2 -match "rejected") {
-        Write-Host "  FAIL: Push basarisiz" -ForegroundColor Red
-        $rapor["GitPush"] = "BASARISIZ"
+# ----------------------------------------------------------
+# 8. GIT PUSH
+# ----------------------------------------------------------
+Write-Host "[8/10] Git Push..."
+try {
+    # Pull sonrasi yeni commit olabilir, kontrol et
+    $status2 = git status --porcelain 2>&1
+    if ($status2) {
+        git add . 2>&1 | Out-Null
+        $tarih2 = Get-Date -Format "yyyy-MM-dd HH:mm"
+        git commit -m "Post-pull guncelleme - $tarih2 (AI-assisted)" 2>&1 | Out-Null
+    }
+
+    $pushOutput = cmd /c "git push origin main" 2>&1
+    Write-Host "  >> $pushOutput"
+
+    if ($pushOutput -match "rejected" -or $pushOutput -match "non-fast-forward") {
+        Write-Host "  >> Push reddedildi, rebase deneniyor..."
+        cmd /c "git pull --rebase origin main" 2>&1 | Out-Null
+        $pushOutput2 = cmd /c "git push origin main" 2>&1
+        Write-Host "  >> $pushOutput2"
+        if ($pushOutput2 -match "rejected") {
+            $rapor.GitPush = "BASARISIZ"
+        } else {
+            $rapor.GitPush = "Basarili (rebase ile)"
+        }
     } else {
-        Write-Host "  OK: Rebase sonrasi push basarili" -ForegroundColor Green
-        $rapor["GitPush"] = "Basarili (rebase)"
+        $rapor.GitPush = "Basarili"
     }
-} elseif ($pushOutput -match "Everything up-to-date") {
-    Write-Host "  INFO: Push edilecek degisiklik yok" -ForegroundColor Gray
-    $rapor["GitPush"] = "Degisiklik Yok"
-} else {
-    Write-Host "  OK: Push basarili" -ForegroundColor Green
-    $rapor["GitPush"] = "Basarili"
+} catch {
+    Write-Host "  >> Git push hatasi: $($_.Exception.Message)"
+    $rapor.GitPush = "Hata"
 }
 
-# ============================================
-# ADIM 9: PINECONE (OPSIYONEL - TIMEOUT 30sn)
-# ============================================
-Write-Host "[9/10] Pinecone Kontrolu..." -ForegroundColor Yellow
-$mcpConfig = "$env:USERPROFILE\.gemini\antigravity\mcp_config.json"
-if (Test-Path $mcpConfig) {
-    try {
+# ----------------------------------------------------------
+# 9. PINECONE HAFIZA (Opsiyonel - Sadece Kurulanlar Icin)
+# ----------------------------------------------------------
+Write-Host "[9/10] Pinecone Kontrolu..."
+try {
+    $mcpConfig = "$env:USERPROFILE\.gemini\antigravity\mcp_config.json"
+    if (Test-Path $mcpConfig) {
         $config = Get-Content $mcpConfig -Raw | ConvertFrom-Json
         $hasPinecone = $config.mcpServers.PSObject.Properties.Name -contains "pinecone-mcp-server"
         if ($hasPinecone) {
             $scriptPath = "docs\referanslar\ingest_pdfs.py"
-            if (Test-Path $scriptPath) {
-                Write-Host "  INFO: Pinecone guncelleniyor (max 30 saniye)..." -ForegroundColor Yellow
-                # Timeout ile calistir - 30 saniyede bitmezse atla
+            if ((Test-Path $scriptPath) -and (Test-Path "venv\Scripts\python.exe")) {
+                Write-Host "  >> Pinecone Hafiza Guncelleniyor (30sn timeout)..."
                 $job = Start-Job -ScriptBlock {
                     param($sp)
                     Set-Location $using:PWD
@@ -198,76 +271,76 @@ if (Test-Path $mcpConfig) {
                 } -ArgumentList $scriptPath
                 $completed = Wait-Job $job -Timeout 30
                 if ($completed) {
-                    Receive-Job $job | Out-Null
-                    Write-Host "  OK: Pinecone guncellendi" -ForegroundColor Green
-                    $rapor["Pinecone"] = "Guncellendi"
+                    $jobOutput = Receive-Job $job
+                    Write-Host "  >> $jobOutput"
+                    $rapor.Pinecone = "Guncellendi"
                 } else {
                     Stop-Job $job
-                    Write-Host "  WARN: Pinecone 30sn icinde bitmedi, atlandi" -ForegroundColor Yellow
-                    $rapor["Pinecone"] = "Timeout-Atlandi"
+                    Write-Host "  >> Pinecone timeout (30sn), atlaniyor."
+                    $rapor.Pinecone = "Timeout"
                 }
                 Remove-Job $job -Force -ErrorAction SilentlyContinue
             } else {
-                Write-Host "  INFO: ingest_pdfs.py bulunamadi, Pinecone atlaniyor" -ForegroundColor Gray
-                $rapor["Pinecone"] = "Script Yok"
+                Write-Host "  >> ingest_pdfs.py veya venv bulunamadi, Pinecone atlaniyor."
+                $rapor.Pinecone = "Script Yok"
             }
         } else {
-            Write-Host "  INFO: Pinecone MCP yapilandirilmamis (bu normal)" -ForegroundColor Gray
-            $rapor["Pinecone"] = "MCP Yok"
+            Write-Host "  >> Pinecone MCP yapilandirilmamis. (Bu normal)"
+            $rapor.Pinecone = "Kurulu Degil"
         }
-    } catch {
-        Write-Host "  INFO: MCP config okunamadi (bu normal)" -ForegroundColor Gray
-        $rapor["Pinecone"] = "Atlandi"
+    } else {
+        Write-Host "  >> MCP config bulunamadi. Pinecone atlaniyor. (Bu tamamen normal)"
+        $rapor.Pinecone = "Kurulu Degil"
     }
-} else {
-    Write-Host "  INFO: MCP config bulunamadi (bu tamamen normal)" -ForegroundColor Gray
-    $rapor["Pinecone"] = "Kurulu Degil"
+} catch {
+    Write-Host "  >> Pinecone hatasi: $($_.Exception.Message) (Bu normal, atlaniyor)"
+    $rapor.Pinecone = "Atlandi"
 }
 
-# ============================================
-# ADIM 10: CI/CD TAKIBI (TIMEOUT 10sn)
-# ============================================
-Write-Host "[10/10] CI/CD Kontrolu..." -ForegroundColor Yellow
+# ----------------------------------------------------------
+# 10. CI/CD TAKIBI (GitHub API)
+# ----------------------------------------------------------
+Write-Host "[10/10] CI/CD Takibi..."
 try {
     $response = Invoke-RestMethod -Uri "https://api.github.com/repos/cagriaksoy191-oss/structural_health/actions/runs?per_page=1" -Method Get -TimeoutSec 10 -ErrorAction Stop
     $run = $response.workflow_runs[0]
     $durum = $run.conclusion
     $baslik = $run.display_title
     if ($durum -eq "success") {
-        Write-Host "  OK: CI/CD Basarili: $baslik" -ForegroundColor Green
-        $rapor["CICD"] = "Basarili"
-    } elseif ($durum -eq $null) {
-        Write-Host "  INFO: CI/CD Calisiyor: $baslik" -ForegroundColor Yellow
-        $rapor["CICD"] = "Calisiyor"
+        Write-Host "  >> CI/CD Basarili: $baslik"
+        $rapor.CICD = "Basarili"
+    } elseif ($null -eq $durum) {
+        Write-Host "  >> CI/CD Calisiyor: $baslik"
+        $rapor.CICD = "Calisiyor"
     } else {
-        Write-Host "  FAIL: CI/CD Hata: $baslik ($durum)" -ForegroundColor Red
-        $rapor["CICD"] = "Hata: $durum"
+        Write-Host "  >> CI/CD Hata: $baslik (Durum: $durum)"
+        $rapor.CICD = "Hata: $durum"
     }
 } catch {
-    Write-Host "  WARN: GitHub API erisilemedi (10sn timeout)" -ForegroundColor Yellow
-    $rapor["CICD"] = "API Erisilemedi"
+    Write-Host "  >> GitHub API'ye erisilemedi. (Internet veya rate limit)"
+    $rapor.CICD = "API Hatasi"
 }
 
-# ============================================
+# ----------------------------------------------------------
 # OZET RAPOR
-# ============================================
+# ----------------------------------------------------------
 Write-Host ""
-Write-Host "================================================" -ForegroundColor Cyan
-Write-Host "  /GUNSONU RAPORU" -ForegroundColor Cyan
-Write-Host "================================================" -ForegroundColor Cyan
+Write-Host "================================================"
+Write-Host "  /GUNSONU RAPORU"
+Write-Host "================================================"
 Write-Host ""
-Write-Host "  Runner       : $($rapor['Runner'])"
-Write-Host "  Ollama       : $($rapor['Ollama'])"
-Write-Host "  .gitignore   : $($rapor['Gitignore'])"
-Write-Host "  Commit       : $($rapor['Commit'])"
-Write-Host "  Health Check : $($rapor['HealthCheck'])"
-Write-Host "  Git Pull     : $($rapor['GitPull'])"
-Write-Host "  Bagimliliklar: $($rapor['Bagimlilik'])"
-Write-Host "  Git Push     : $($rapor['GitPush'])"
-Write-Host "  Pinecone     : $($rapor['Pinecone'])"
-Write-Host "  CI/CD        : $($rapor['CICD'])"
+Write-Host "  Runner       : $($rapor.Runner)"
+Write-Host "  Ollama       : $($rapor.Ollama)"
+Write-Host "  .gitignore   : $($rapor.Gitignore)"
+Write-Host "  Commit       : $($rapor.Commit)"
+Write-Host "  Health Check : $($rapor.HealthCheck)"
+Write-Host "  Git Pull     : $($rapor.GitPull)"
+Write-Host "  Bagimliliklar: $($rapor.Bagimliliklar)"
+Write-Host "  Git Push     : $($rapor.GitPush)"
+Write-Host "  Pinecone     : $($rapor.Pinecone)"
+Write-Host "  CI/CD        : $($rapor.CICD)"
 Write-Host ""
-Write-Host "================================================" -ForegroundColor Green
-Write-Host "  Bilgisayarini kapatabilirsin!" -ForegroundColor Green
-Write-Host "================================================" -ForegroundColor Green
+Write-Host "================================================"
+Write-Host "  Bilgisayarini kapatabilirsin!"
+Write-Host "================================================"
 Write-Host ""
