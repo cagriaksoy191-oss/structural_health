@@ -13,8 +13,9 @@ Bu workflow, gün sonunda yapılması gereken **TÜM** işlemleri tek seferde ha
 
 ## Adımlar
 
-### 1. Runner Kontrolü (Sadece Kuruluysa)
+### 1. Ortam Kontrolü (Runner + Ollama)
 ```powershell
+# --- Runner Kontrolü ---
 $runnerPath = "C:\actions-runner"
 if (Test-Path $runnerPath) {
     $runner = Get-Process "Runner.Listener" -ErrorAction SilentlyContinue
@@ -28,20 +29,15 @@ if (Test-Path $runnerPath) {
 } else {
     Write-Host "ℹ️ Bu bilgisayarda GitHub Runner kurulu değil. (Sorun yok, atlanıyor)"
 }
-```
 
-### 2. Ollama (Yapay Zeka) Kontrolü
-```powershell
+# --- Ollama Kontrolü ---
 $ollama = Get-Process "ollama app" -ErrorAction SilentlyContinue
 if ($ollama) {
     Write-Host "✅ Ollama Servisi Açık"
     try {
         $models = ollama list 2>&1
-        if ($models -match "qwen") {
-            Write-Host "✅ Qwen Modeli Yüklü"
-        } else {
-            Write-Host "⚠️ UYARI: Qwen modeli bulunamadı. AI yorumlama devre dışı olabilir."
-        }
+        if ($models -match "qwen") { Write-Host "✅ Qwen Modeli Yüklü" }
+        else { Write-Host "⚠️ Qwen modeli bulunamadı. (AI yorumlama devre dışı, sorun yok)" }
     } catch {
         Write-Host "⚠️ Ollama list komutu çalıştırılamadı."
     }
@@ -50,7 +46,7 @@ if ($ollama) {
 }
 ```
 
-### 3. .gitignore Güvenlik Kontrolü
+### 2. Güvenlik Kontrolü (.gitignore + venv)
 ```powershell
 # .gitignore'da kritik klasörlerin olduğundan emin ol
 $gitignorePath = ".gitignore"
@@ -79,11 +75,53 @@ if (Test-Path "venv") {
 }
 ```
 
-### 4. Arkadaşların Değişikliklerini Çek (Git Pull)
+### 3. Lokal Değişiklikleri Kaydet (Stash + Commit)
+```powershell
+# Önce commitlenmemiş değişiklikleri kontrol et
+$status = git status --porcelain 2>&1
+if ($status) {
+    Write-Host "📝 Değişen dosyalar:"
+    git status --short
+    git add .
+    $tarih = Get-Date -Format "yyyy-MM-dd HH:mm"
+    git commit -m "Gun sonu guncellemesi - $tarih (AI-assisted)"
+    Write-Host "✅ Lokal değişiklikler commit edildi"
+} else {
+    Write-Host "ℹ️ Commit edilecek değişiklik yok."
+}
+```
+
+### 4. Health Check (Push Öncesi Hata Tespiti)
+```powershell
+if (Test-Path "tests\health_check.py") {
+    if (Test-Path "venv\Scripts\python.exe") {
+        Write-Host "🔬 Pre-push health check çalıştırılıyor..."
+        & venv\Scripts\python tests\health_check.py 2>&1
+        if ($LASTEXITCODE -ne 0) {
+            Write-Host "⚠️ Health check uyarıları var ama devam ediyoruz."
+        } else {
+            Write-Host "✅ Health check başarılı"
+        }
+    } else {
+        Write-Host "⚠️ Python venv bulunamadı. Health check atlanıyor."
+        Write-Host "   Çözüm: 'python -m venv venv' ve 'venv\Scripts\pip install -r requirements.txt' çalıştır."
+    }
+} else {
+    Write-Host "ℹ️ Health check scripti bulunamadı, atlanıyor."
+}
+```
+
+**🤖 AGENT TALİMATI:** Eğer health check **kritik** bir hata gösterirse (örn: `[FAIL]` içeren import hatası):
+1. Hatayı düzelt (eksik paket yükle: `& venv\Scripts\pip install -r requirements.txt`)
+2. Düzeltmeyi commit'e ekle: `git add .; git commit --amend --no-edit`
+3. Kritik olmayan uyarılar (`[WARN]` — GPU yok, Ollama kapalı) için bir şey yapma, devam et.
+
+### 5. Arkadaşların Değişikliklerini Çek (Git Pull)
 ```powershell
 $pullOutput = cmd /c "git pull origin main" 2>&1
 Write-Host $pullOutput
 ```
+
 **🤖 ÇAKIŞMA ÇÖZME TALİMATI (TÜM AI MODELLERİ İÇİN):**
 
 Eğer `git pull` çıktısında **"CONFLICT"** kelimesi varsa, aşağıdaki adımları izle:
@@ -94,13 +132,15 @@ Eğer `git pull` çıktısında **"CONFLICT"** kelimesi varsa, aşağıdaki adı
    ```
 
 2. **Her çakışan dosya için:**
-   - Dosyayı aç ve `<<<<<<<`, `=======`, `>>>>>>>` işaretlerini bul.
+   - Dosyayı oku (view_file veya cat komutu ile).
    - `<<<<<<<` ile `=======` arası = **BİZİM KOD** (bu bilgisayardaki)
    - `=======` ile `>>>>>>>` arası = **GELEN KOD** (GitHub'dan)
 
 3. **Karar mekanizması (sırasıyla uygula):**
-   - İki kod **aynı şeyi farklı şekilde yapıyorsa:** Daha doğru/güncel olanı seç.
-   - İki kod **farklı özellikler ekliyorsa:** İkisini de koru, birleştir.
+   - **Projeyi BÜTÜNSEL ele al.** Sadece çakışan satırlara değil, dosyanın tamamına ve projenin mantığına bak.
+   - İki kod **aynı şeyi farklı şekilde yapıyorsa:** Daha doğru, daha performanslı ve daha güncel olanı seç.
+   - İki kod **farklı özellikler ekliyorsa:** İkisini de koru, en iyi şekilde birleştir.
+   - İki kodun da **kendine has avantajları varsa:** İkisinin de en iyi kısımlarını al, sentezleyerek yeni ve daha iyi bir versiyon oluştur.
    - **Emin olamıyorsan:** İki kodu da koru ve yorum satırı ekle: `# TODO: Ekip olarak karar verilmeli`
 
 4. **Çakışmayı çözdükten sonra:**
@@ -111,52 +151,42 @@ Eğer `git pull` çıktısında **"CONFLICT"** kelimesi varsa, aşağıdaki adı
 
 5. **Hiç çakışma yoksa** bu adımı atla, devam et.
 
-### 5. Değişiklikleri Kontrol Et ve Commitle
+### 6. Bağımlılık Güncellemesi (Pull Sonrası)
 ```powershell
-$status = git status --porcelain 2>&1
-if ($status) {
-    Write-Host "📝 Değişen dosyalar:"
-    git status --short
-    git add .
-    $tarih = Get-Date -Format "yyyy-MM-dd HH:mm"
-    git commit -m "Gun sonu guncellemesi - $tarih (AI-assisted)"
-    Write-Host "✅ Commit oluşturuldu"
-} else {
-    Write-Host "ℹ️ Commit edilecek değişiklik yok."
+# Arkadaş yeni paket eklemiş olabilir — pip ve npm senkronize et
+if (Test-Path "venv\Scripts\pip.exe") {
+    Write-Host "📦 Python bağımlılıkları kontrol ediliyor..."
+    & venv\Scripts\pip install -r requirements.txt --quiet 2>&1 | Out-Null
+    Write-Host "✅ Python bağımlılıkları güncel"
 }
-```
 
-### 6. Health Check (Push Öncesi Hata Tespiti)
-```powershell
-if (Test-Path "tests\health_check.py") {
-    Write-Host "🔬 Pre-push health check çalıştırılıyor..."
-    & venv\Scripts\python tests\health_check.py 2>&1
-    if ($LASTEXITCODE -ne 0) {
-        Write-Host "⚠️ Health check uyarıları var. Commit yine de gönderilecek."
-    } else {
-        Write-Host "✅ Health check başarılı"
+if (Test-Path "frontend\package.json") {
+    $lockBefore = if (Test-Path "frontend\package-lock.json") { (Get-Item "frontend\package-lock.json").LastWriteTime } else { $null }
+    $pullChangedFrontend = cmd /c "git diff HEAD~1 --name-only -- frontend/package.json" 2>&1
+    if ($pullChangedFrontend -match "package.json") {
+        Write-Host "📦 Frontend bağımlılıkları güncelleniyor (package.json değişmiş)..."
+        Push-Location frontend
+        npm install --silent 2>&1 | Out-Null
+        Pop-Location
+        Write-Host "✅ Frontend bağımlılıkları güncel"
     }
-} else {
-    Write-Host "ℹ️ Health check scripti bulunamadı, atlanıyor."
 }
 ```
-
-**🤖 AGENT TALİMATI:** Eğer health check **kritik** bir hata gösterirse (örn: import hatası):
-1. Hatayı düzelt (eksik paket yükle, syntax hatasını düzelt, vb.)
-2. Düzeltmeyi commit'e ekle: `git add . && git commit --amend --no-edit`
-3. Kritik olmayan uyarılar (GPU yok, Ollama kapalı) için bir şey yapma, devam et.
 
 ### 7. GitHub'a Gönder (Push)
 ```powershell
 $pushOutput = cmd /c "git push origin main" 2>&1
 Write-Host $pushOutput
 ```
-**🤖 AGENT TALİMATI:** Eğer push reddedilirse ("rejected", "non-fast-forward"):
+
+**🤖 AGENT TALİMATI:** `git push` komutu PowerShell'de exit code 1 dönebilir — bu bilinen bir PowerShell/stderr sorunudur. Çıktıda **"rejected"** veya **"non-fast-forward"** kelimeleri YOKSA push başarılıdır.
+
+Eğer gerçekten reddedildiyse:
 1. Şunu çalıştır: `cmd /c "git pull --rebase origin main" 2>&1`
 2. Tekrar dene: `cmd /c "git push origin main" 2>&1`
-3. Hâlâ hata varsa, kullanıcıya bildir ve devam et (CI/CD'ye geç)
+3. Hâlâ hata varsa, kullanıcıya bildir ve devam et.
 
-### 8. Pinecone Hafıza Senkronizasyonu (Opsiyonel - Sadece Kurulanlar İçin)
+### 8. Pinecone Hafıza Senkronizasyonu (Opsiyonel)
 
 > **ÖNEMLİ:** Bu adım SADECE Pinecone MCP ayarlanmış bilgisayarlarda çalışır. Çoğu ekip üyesinde bu kurulu OLMAYACAKTIR — bu tamamen normaldir ve atlanması beklenen bir durumdur.
 
@@ -197,9 +227,8 @@ Aşağıdaki yöntemlerden birini kullan (hangisi yapılabiliyorsa):
 2. En son workflow run'ın durumunu kontrol et.
 3. ✅ Yeşil tik = Başarılı | ❌ Kırmızı X = Hata | 🟡 Sarı = Çalışıyor
 
-**Yöntem B — Tarayıcı aracın yoksa (komut satırı):**
+**Yöntem B — Tarayıcı aracın yoksa veya tarayıcı açılamıyorsa (komut satırı):**
 ```powershell
-# GitHub API ile son workflow durumunu kontrol et
 try {
     $response = Invoke-RestMethod -Uri "https://api.github.com/repos/cagriaksoy191-oss/structural_health/actions/runs?per_page=1" -Method Get -ErrorAction Stop
     $run = $response.workflow_runs[0]
@@ -218,46 +247,32 @@ try {
 }
 ```
 
-### 10. Canlı Test (Sunucu Kontrolü)
+### 10. Canlı Test (Sadece Kontrol — Sunucu Başlatma YOK)
 
-**🤖 AGENT TALİMATI (TÜM AI MODELLERİ İÇİN):**
+> **NOT:** Bu adım sadece sunucu zaten çalışıyorsa kontrol eder. Gün sonu olduğu için sunucu başlatmaya gerek yok — kullanıcı bilgisayarı kapatacak.
 
-Aşağıdaki yöntemlerden birini kullan (hangisi yapılabiliyorsa):
-
-**Yöntem A — Tarayıcı aracın varsa:**
-1. `http://localhost:5173` adresini tarayıcıda aç.
-2. Sayfa açılıyorsa → "Canlı test başarılı" raporla.
-3. Açılmıyorsa → Yöntem B'deki komutu çalıştır.
-
-**Yöntem B — Her türlü AI modeli için çalışır:**
 ```powershell
-# Önce frontend'in çalışıp çalışmadığını kontrol et
+$frontendOk = $false
+$backendOk = $false
+
 try {
-    $web = Invoke-WebRequest -Uri "http://localhost:5173" -TimeoutSec 5 -ErrorAction Stop
+    $web = Invoke-WebRequest -Uri "http://localhost:5173" -TimeoutSec 3 -ErrorAction Stop
     Write-Host "✅ Frontend çalışıyor (HTTP $($web.StatusCode))"
+    $frontendOk = $true
 } catch {
-    Write-Host "⚠️ Frontend kapalı. Başlatılıyor..."
-    if (Test-Path "baslat.bat") {
-        Start-Process "baslat.bat"
-        Start-Sleep -Seconds 15
-        # Tekrar kontrol
-        try {
-            $web2 = Invoke-WebRequest -Uri "http://localhost:5173" -TimeoutSec 5 -ErrorAction Stop
-            Write-Host "✅ Frontend başlatıldı ve çalışıyor"
-        } catch {
-            Write-Host "⚠️ Frontend başlatılamadı. Manuel kontrol gerekli."
-        }
-    } else {
-        Write-Host "ℹ️ baslat.bat bulunamadı. Sunucu manuel başlatılmalı."
-    }
+    Write-Host "ℹ️ Frontend kapalı. (Gün sonu — bu normal)"
 }
 
-# Backend kontrolü
 try {
-    $api = Invoke-WebRequest -Uri "http://localhost:8000" -TimeoutSec 5 -ErrorAction Stop
+    $api = Invoke-WebRequest -Uri "http://localhost:8000" -TimeoutSec 3 -ErrorAction Stop
     Write-Host "✅ Backend API çalışıyor"
+    $backendOk = $true
 } catch {
-    Write-Host "⚠️ Backend API kapalı veya henüz başlamadı."
+    Write-Host "ℹ️ Backend kapalı. (Gün sonu — bu normal)"
+}
+
+if (-not $frontendOk -and -not $backendOk) {
+    Write-Host "ℹ️ Sunucular kapalı — bilgisayar kapatılmaya hazır."
 }
 ```
 
@@ -275,9 +290,10 @@ Tüm adımlar bittikten sonra kullanıcıya şu formatta rapor ver:
   📥 Git Pull     : [Güncel / Çakışma Çözüldü]
   📤 Git Push     : [Başarılı ✅ / Değişiklik Yok]
   🔬 Health Check : [Başarılı / Uyarı Var]
+  📦 Bağımlılıklar: [Güncel ✅]
   🧠 Pinecone     : [Güncellendi / Kurulu Değil-Atlandı]
   ⚙️ CI/CD        : [Yeşil ✅ / Çalışıyor / Hata]
-  🌐 Canlı Test   : [Başarılı / Sunucu Kapalı]
+  🌐 Sunucu       : [Çalışıyor / Kapalı (normal)]
 
 ═══════════════════════════════════════
   ✅ Bilgisayarını kapatabilirsin!

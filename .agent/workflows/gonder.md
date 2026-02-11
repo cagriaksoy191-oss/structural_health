@@ -34,16 +34,20 @@ git commit -m "KULLANICININ_VERDIGI_MESAJ"
 
 ### 5. GitHub'a gönder
 ```powershell
-git push origin main
+$pushOutput = cmd /c "git push origin main" 2>&1
+Write-Host $pushOutput
 ```
+
+**🤖 AGENT TALİMATI:**
+- `git push` komutu PowerShell'de exit code 1 dönebilir — bu bilinen bir PowerShell/stderr sorunudur. Çıktıda **"rejected"** veya **"non-fast-forward"** kelimeleri YOKSA push başarılıdır.
+- Push reddedilirse:
+  1. `cmd /c "git pull --rebase origin main" 2>&1` çalıştır
+  2. Conflict varsa çöz (her iki kodun en iyi kısımlarını birleştir)
+  3. Tekrar `cmd /c "git push origin main" 2>&1` dene
 
 ### 6. Sonucu raporla
 - Push başarılı mı?
 - GitHub Actions workflow tetiklendi mi?
-
-**🤖 AGENT TALİMATI:** Push reddedilirse:
-1. `git pull --rebase origin main` çalıştır, conflict varsa çöz
-2. Tekrar `git push origin main` dene
 
 ## Beklenen Sonuç
 ```
