@@ -432,6 +432,12 @@ def yapisal_skor_hesapla(req: RiskRequest, zemin_sinifi: str) -> Tuple[int, List
     else:
         skor += 4; detaylar.append(f"{req.katSayisi} kat (+4)")
 
+    # --- YÖNETMELİK: Yüksek Yapı Kontrolü (TBDY 2018) ---
+    # 21.50m üzeri (yaklaşık 7+ kat) = Yüksek Yapı → özel kurallar gerektirir
+    if req.katSayisi >= 8:
+        skor += 2
+        detaylar.append(f"⚠️ Yüksek Yapı Kategorisi ({req.katSayisi} kat ≥ 8) - TBDY 2018 ek kurallar (+2)")
+
     if req.zeminDukkan == "evet": skor += 3; detaylar.append("Zemin katta dükkân (+3)")
     if req.bitisik == "evet": skor += 1; detaylar.append("Bitişik nizam (+1)")
 
@@ -526,6 +532,26 @@ def risk_hesapla(req: RiskRequest):
     basinc_dayanimi = tahmin_beton_dayanimi(req.ultrasonikSesHizi, req.geriSicramaSayisi)
     if concrete_model is None:
         detaylar.append("UYARI: Beton modeli yok, varsayılan (C25) kullanıldı.")
+
+    # --- YÖNETMELİK: Minimum Beton Sınıfı Kontrolü (TBDY 2018 Madde 7.2.5.3) ---
+    # Deprem etkisi alacak elemanlarda en düşük beton sınıfı C25 (25 MPa) olmalıdır.
+    if basinc_dayanimi < 25.0:
+        detaylar.append(
+            f"🚨 YÖNETMELİK UYARISI: Tahmini beton dayanımı ({basinc_dayanimi:.1f} MPa) "
+            f"TBDY 2018 minimum sınırının (C25 = 25 MPa) altında! "
+            f"Bu bina mevcut yönetmelik şartlarını karşılamıyor."
+        )
+        # Yapısal risk skoruna ciddi ceza ekle
+        toplam_yapisal_risk += 5
+        detaylar.append("Yönetmelik altı beton nedeniyle ek risk (+5)")
+
+    # --- Korozyon Durum Etiketi (ASTM C876 standardına göre) ---
+    if req.corrosion < -350:
+        detaylar.append(f"Korozyon Durumu: YÜKSEK RİSK ({req.corrosion:.0f} mV < -350 mV)")
+    elif req.corrosion < -200:
+        detaylar.append(f"Korozyon Durumu: BELİRSİZ ({req.corrosion:.0f} mV, -350 ile -200 arası)")
+    else:
+        detaylar.append(f"Korozyon Durumu: Düşük Risk ({req.corrosion:.0f} mV > -200 mV)")
 
     # 4. Fuzzy Logic (Şeffaf Sınırlandırma ile)
     try:
