@@ -70,10 +70,10 @@ if (Test-Path $gitignorePath) {
 
 # venv git tarafından izleniyorsa kaldır
 if (Test-Path "venv") {
-    $venvTracked = git ls-files venv/ 2>&1
+    $venvTracked = cmd /c "git ls-files venv/" 2>&1
     if ($venvTracked -and $venvTracked.Count -gt 0) {
         Write-Host "🚨 venv klasörü git tarafından izleniyor! Takipten çıkarılıyor..."
-        git rm -r --cached venv/ 2>&1 | Out-Null
+        cmd /c "git rm -r --cached venv/" 2>&1 | Out-Null
         Write-Host "✅ venv takipten çıkarıldı"
     }
 }
@@ -81,7 +81,8 @@ if (Test-Path "venv") {
 
 ### 4. Arkadaşların Değişikliklerini Çek (Git Pull)
 ```powershell
-git pull origin main 2>&1
+$pullOutput = cmd /c "git pull origin main" 2>&1
+Write-Host $pullOutput
 ```
 **🤖 AKILLI ÇAKIŞMA ÇÖZME TALİMATI (AGENT İÇİN):**
 
@@ -147,7 +148,8 @@ if (Test-Path "tests\health_check.py") {
 
 ### 7. GitHub'a Gönder (Push)
 ```powershell
-git push origin main 2>&1
+$pushOutput = cmd /c "git push origin main" 2>&1
+Write-Host $pushOutput
 ```
 **🤖 AGENT TALİMATI:** Eğer push reddedilirse ("rejected", "non-fast-forward"):
 1. `git pull --rebase origin main` çalıştır
