@@ -57,7 +57,7 @@ Hata: "ModuleNotFoundError: No module named 'pandas'"
 ### 5. Yöntem B — Tarayıcı aracın yoksa (komut satırı alternatifi)
 ```powershell
 try {
-    $response = Invoke-RestMethod -Uri "https://api.github.com/repos/cagriaksoy191-oss/structural_health/actions/runs?per_page=1" -Method Get -ErrorAction Stop
+    $response = Invoke-RestMethod -Uri "https://api.github.com/repos/cagriaksoy191-oss/structural_health/actions/runs?per_page=1" -Method Get -TimeoutSec 10 -ErrorAction Stop
     $run = $response.workflow_runs[0]
     $durum = $run.conclusion
     $baslik = $run.display_title

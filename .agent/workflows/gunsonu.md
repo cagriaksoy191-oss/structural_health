@@ -230,7 +230,7 @@ Aşağıdaki yöntemlerden birini kullan (hangisi yapılabiliyorsa):
 **Yöntem B — Tarayıcı aracın yoksa veya tarayıcı açılamıyorsa (komut satırı):**
 ```powershell
 try {
-    $response = Invoke-RestMethod -Uri "https://api.github.com/repos/cagriaksoy191-oss/structural_health/actions/runs?per_page=1" -Method Get -ErrorAction Stop
+    $response = Invoke-RestMethod -Uri "https://api.github.com/repos/cagriaksoy191-oss/structural_health/actions/runs?per_page=1" -Method Get -TimeoutSec 10 -ErrorAction Stop
     $run = $response.workflow_runs[0]
     $durum = $run.conclusion
     $baslik = $run.display_title
