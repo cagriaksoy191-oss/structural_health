@@ -50,7 +50,7 @@ jobs:
       - name: 📦 Install Dependencies
         run: |
           pip install -r requirements.txt
-          pip list
+          pip freeze > pip_freeze.txt
 
       # 5. Health Check Testi
       - name: 🔬 Run Health Check
@@ -58,8 +58,8 @@ jobs:
 
       # 6. İsteğe bağlı: FastAPI syntax kontrolü
       - name: ✅ Verify Main Module
-        run: |
-          python -c "import sys; sys.path.append('.'); try: import main; print('✅ main.py başarıyla import edildi'); except Exception: import traceback; traceback.print_exc(file=open('error_log.txt', 'w')); exit(1)"
+        shell: cmd
+        run: python -c "import main; print('Success')" > verify_output.txt 2>&1
 
       # 7. Sonuç bildirimi
       - name: 🎉 Pipeline Complete
