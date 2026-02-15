@@ -33,18 +33,25 @@ Write-Host ""
 Write-Host "[1/10] Runner Kontrolu..."
 try {
     $runnerPath = "C:\actions-runner"
+    Write-Host "  >> Runner yolu kontrol ediliyor: $runnerPath"
     if (Test-Path $runnerPath) {
+        Write-Host "  >> Runner klasoru bulundu."
         $runner = Get-Process "Runner.Listener" -ErrorAction SilentlyContinue
         if ($runner) {
             Write-Host "  >> Runner Zaten Calisiyor"
             $rapor.Runner = "Aktif"
         } else {
-            Write-Host "  >> Runner Kapali, Baslatiliyor..."
-            Start-Process cmd -ArgumentList "/k cd $runnerPath & .\run.cmd"
-            $rapor.Runner = "Baslatildi"
+            if (Test-Path "$runnerPath\run.cmd") {
+                Write-Host "  >> Runner Kapali, Baslatiliyor..."
+                Start-Process cmd -ArgumentList "/k cd $runnerPath & .\run.cmd"
+                $rapor.Runner = "Baslatildi"
+            } else {
+                Write-Host "  >> Runner klasoru bos veya run.cmd yok."
+                $rapor.Runner = "Eksik Dosya"
+            }
         }
     } else {
-        Write-Host "  >> Bu bilgisayarda Runner kurulu degil. (Sorun yok)"
+        Write-Host "  >> Bu bilgisayarda Runner kurulu degil (Klasor yok). (Sorun yok)"
         $rapor.Runner = "Kurulu Degil"
     }
 } catch {
