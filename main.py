@@ -4,6 +4,8 @@ from datetime import datetime
 import csv
 import threading
 import unicodedata
+import time
+import os
 
 import pandas as pd
 import joblib
@@ -12,12 +14,33 @@ import skfuzzy as fuzz
 from skfuzzy import control as ctrl
 
 import requests
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field, field_validator
 
+from dotenv import load_dotenv
+from supabase import create_client, Client
+
+# .env dosyasını yükle
+load_dotenv()
+
+# Supabase Ayarları
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+
+supabase: Optional[Client] = None
+if SUPABASE_URL and SUPABASE_KEY:
+    try:
+        supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+        print("✅ Supabase bağlantısı kuruldu.")
+    except Exception as e:
+        print(f"❌ Supabase bağlantı hatası: {e}")
+else:
+    print("⚠️ UYARI: SUPABASE_URL veya SUPABASE_KEY eksik! Veriler sadece CSV'ye yazılabilir (yedek mod).")
+
 # -------------------------------------------------
-#  UYGULAMA VE AYARLAR
+#  FUZZY LOGIC & PREDICTION MODELLERİ (YAPISAL + BETON)
 # -------------------------------------------------
 app = FastAPI(title="Yapı Sağlığı Ön Tarama API")
 
@@ -536,16 +559,22 @@ HEADER = ["tarih", "il", "ilce", "yapimYili", "katSayisi", "zeminDukkan", "bitis
           "yapisalPuan", "toplamYapisalRisk", "yapisalSeviye", "genelSeviye"]
 
 
-def kayit_ekle_csv(data_list):
+def kayit_ekle_supabase(record_dict: dict):
+    """
+    Veriyi Supabase 'bina_analizleri' tablosuna ekler.
+    Bağlantı yoksa veya hata olursa konsola yazar (Prod: Kuyruğa atılmalı).
+    """
+    if not supabase:
+        print("❌ Supabase istemcisi yüklü değil! Kayıt atlandı.")
+        return
+
     try:
-        with CSV_LOCK:
-            yeni_dosya = not DATA_FILE.exists()
-            with DATA_FILE.open("a", newline="", encoding="utf-8") as f:
-                writer = csv.writer(f)
-                if yeni_dosya: writer.writerow(HEADER)
-                writer.writerow(data_list)
+        # Arka planda (async değil ama hızlı) gönderim
+        # .execute() sonucu bekler.
+        response = supabase.table("bina_analizleri").insert(record_dict).execute()
+        # print(f"✅ Supabase Kayıt Başarılı: {response}")
     except Exception as e:
-        print(f"CSV Yazma Hatası: {e}")
+        print(f"❌ Supabase Yazma Hatası: {e}")
 
 
 # -------------------------------------------------
@@ -640,14 +669,32 @@ def risk_hesapla(req: RiskRequest):
         risk_puani=int(toplam_yapisal_risk)
     )
 
-    # Kayıt
-    kayit_ekle_csv([
-        datetime.now().isoformat(timespec="seconds"),
-        req.il, req.ilce, req.yapimYili, req.katSayisi, req.zeminDukkan, req.bitisik, req.hasar,
-        req.kullanimAmaci, req.kisaKolon, req.agirCikma, req.planTipi, req.bitisikHiza,
-        zemin_sinifi, req.crackPuan if req.crackPuan is not None else 0,
-        deprem_seviye, deprem_puan, yapisal_puan, toplam_yapisal_risk, yapisal_seviye, genel_seviye
-    ])
+    # Kayıt (Supabase)
+    kayit_ekle_supabase({
+        "created_at": datetime.now().isoformat(timespec="seconds"),
+        "il": req.il,
+        "ilce": req.ilce,
+        "yapim_yili": req.yapimYili,
+        "kat_sayisi": req.katSayisi,
+        "zemin_dukkan": req.zeminDukkan,
+        "bitisik_nizam": req.bitisik,
+        "hasar_durumu": req.hasar,
+        "kullanim_amaci": req.kullanimAmaci,
+        "kisa_kolon": req.kisaKolon,
+        "agir_cikma": req.agirCikma,
+        "plan_tipi": req.planTipi,
+        "bitisik_hiza": req.bitisikHiza,
+        "zemin_sinifi": zemin_sinifi,
+        "crack_puan": req.crackPuan if req.crackPuan is not None else 0,
+        "deprem_seviye": deprem_seviye,
+        "deprem_puan": deprem_puan,
+        "yapisal_puan": yapisal_puan,
+        "toplam_risk_puani": toplam_yapisal_risk,
+        "yapisal_seviye": yapisal_seviye,
+        "genel_seviye": genel_seviye,
+        "ai_etiket": fuzzy_label,
+        "ai_yorum": aciklama
+    })
 
     return RiskResponse(
         # İnsani Yuvarlama (Round)

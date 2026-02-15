@@ -1,67 +1,90 @@
-# 🏗️ Yapı Sağlığı İzleme Sistemi (V12 Titanium)
+# 🚀 V12 Titanium - Proje Kullanım Kılavuzu
 
-Bu proje, binaların deprem riskini ve yapısal sağlığını ölçen, yapay zeka destekli hibrit bir sistemdir.
-
-## 🚀 Hızlı Başlangıç (Yeni Katılanlar İçin)
-
-Size gönderilen **ZIP** dosyasını indirdikten sonra kurulumu 4 adımda tamamlayabilirsiniz:
-
-### 1. Dosyaları Çıkartın
-*   Size gelen Zip dosyasını masaüstünde veya belgelerinizde bir klasöre çıkartın.
-*   Klasörün ismini (İsterseniz) `HealthProject` veya `V12_Titanium` olarak değiştirebilirsiniz.
-
-### 2. Projeyi Açın
-*   **VS Code** veya **Cursor** (Antigravity) uygulamasını açın.
-*   "Open Folder" diyerek az önce çıkardığınız klasörü seçin.
-
-### 3. Otomatik Kurulum (Tek Tıkla)
-*   Sol taraftaki dosya listesinden **`kurulum.bat`** dosyasına sağ tıklayın ve "Terminalde Çalıştır" deyin (veya dosyaya çift tıklayın).
-*   **Bu İşlem Şunları Yapar:**
-    *   ✅ Python sanal ortamını (venv) sıfırdan kurar.
-    *   ✅ Eksik olan tüm kütüphaneleri yükler.
-    *   ✅ Frontend (React) paketlerini indirir (`node_modules` oluşturur).
-
-### 4. Sistemi Başlat
-Kurulum bitince **`baslat.bat`** dosyasına çift tıklayın. Sistem tarayıcıda açılacaktır.
+Merhaba ekip! 👇 Projeyi kendi bilgisayarınızda çalıştırmak için bu adımları takip edin.
 
 ---
 
-### ⚠️ ÖNEMLİ: `/gunsonu` Komutunu Kullanabilmek İçin
-Eğer "Yapay Zeka Agent" ile çalışıp işlerinizi GitHub'a göndermek istiyorsanız, klasördeki **`git_bagla.bat`** dosyasına bir kez çift tıklayın.
+## 🛠️ İlk Kurulum (Sadece 1 Kez - Projeyi İlk İndirdiğinde)
 
-*(Bu işlem projenizi GitHub'a bağlar ve `/gunsonu` komutunu aktif hale getirir.)*
+1.  **Projeyi GitHub'dan indir:**
+    ```bash
+    git clone https://github.com/cagriaksoy191-oss/structural_health.git
+    ```
 
-### 2. Yapay Zeka Kurulumu (ÖNEMLİ ⚠️)
-Bu proje yerel LLM (Ollama) kullanır. "Yapay Zeka Yorumu" özelliğinin çalışması için arkadaşlarınızın şunları yapması gerekir:
-1.  [Ollama](https://ollama.com) indirip kurun.
-2.  Terminali açıp şu komutu girin: `ollama pull qwen3:8b`
-3.  *Bu adım yapılmazsa proje çalışır ama "Yapay Zeka Yorumu" kısmı boş gelir.*
+2.  **Proje klasörüne gir:**
+    ```bash
+    cd structural_health
+    ```
 
-### 2. Yapay Zeka (AI) Komutları
-Bu projede, geliştirme sürecini otomatize eden özel **Agent Workflow** dosyaları bulunur.
-Eğer bir AI Asistanı (Cursor, VS Code Copilot, vb.) kullanıyorsanız, şu komutlar tanımlıdır:
+3.  **Sanal Ortam (Venv) oluştur:**
+    ```bash
+    python -m venv venv
+    ```
 
-#### 👉 `/gunsonu` (Tam Otomatik CI/CD)
-Gün sonunda yapılması gereken tüm işlemleri tek komutla halleder.
-*   **Dosya Konumu:** `.agent/workflows/gunsonu.md`
-*   **İşlevleri:**
-    1.  ✅ **Runner Kontrolü:** GitHub Actions Runner kapalıysa otomatik başlatır.
-    2.  🛡️ **Güvenlik:** `venv` ve gereksiz dosyaların git'e gitmesini engeller.
-    3.  🔄 **Git Sync:** `pull`, `merge` (akıllı çakışma çözümü) ve `push` işlemlerini yapar.
-    4.  🧪 **Oto-Test:** Yerel sunucuyu (`localhost:5173`) otomatik başlatır ve test eder.
+4.  **Sanal Ortamı aktif et:**
+    ```bash
+    .\venv\Scripts\activate
+    ```
+    ✅ Başında **`(venv)`** yazısı çıkmalı.
+
+5.  **Kütüphaneleri yükle:**
+    ```bash
+    pip install -r requirements.txt
+    ```
+
+6.  **Gizli Anahtar Dosyasını Oluştur:**
+    *   Proje klasöründe sağ tık → Yeni Metin Belgesi oluştur.
+    *   Adını **`.env`** yap (sonunda `.txt` kalmasın!).
+    *   Çağrı'nın size özelden attığı **SUPABASE_URL** ve **SUPABASE_KEY** satırlarını içine yapıştırıp kaydedin.
+
+---
+
+## 🟢 Günlük Kullanım (Her Gün - Bilgisayarı Her Açtığında)
+
+**En kolay yol:** Proje klasörüne girip **`baslat.bat`** dosyasına çift tıklayın. Her şeyi otomatik yapar! ✅
+
+**Veya CMD ile manuel:**
+
+1.  Proje klasörüne gidin:
+    ```bash
+    cd "proje_klasor_yolunuz"
+    ```
+
+2.  Sanal ortamı aktif edin:
+    ```bash
+    .\venv\Scripts\activate
+    ```
+
+3.  Projeyi çalıştırın:
+    ```bash
+    uvicorn main:app --reload
+    ```
+    ✅ **"Application startup complete"** yazısı görünce hazır!
 
 ---
 
-## 📂 Proje Yapısı
+## 🌙 Gün Sonu Rutini (Kod Değiştirdiyseniz - İş Bitince)
 
-*   **`frontend/`**: React (Vite) tabanlı modern arayüz.
-*   **`main.py`**: FastAPI backend, Qwen3-7B entegrasyonu ve hesaplama motoru.
-*   **`.agent/workflows/`**: AI asistanları için özel talimat dosyaları.
-*   **`.github/workflows/`**: GitHub Actions CI/CD yapılandırması.
+Kodlarda değişiklik yaptıysanız, günün sonunda mutlaka şunu çalıştırın:
 
-## ⚠️ Önemli Notlar (AI İçin)
-*   **Venv Koruması:** `.gitignore` dosyasında `venv/` kesinlikle olmalıdır. `/gunsonu` komutu bunu otomatik kontrol eder.
-*   **Server Otomasyonu:** Test sırasında sunucu kapalıysa, `/gunsonu` workflow'u `baslat.bat` dosyasını tetikler.
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\gunsonu.ps1
+```
+
+**Ne İşe Yarar?** Kodlarınızı güvenli şekilde GitHub'a gönderir (yedekler + CI/CD tetikler).
 
 ---
-*Generated by Gemini 3 Pro (Antigravity) - 2026*
+
+## ❓ Sıkça Sorulan Sorular
+
+*   **S:** "Module not found" hatası alıyorum?
+    *   **C:** `.\venv\Scripts\activate` komutunu unuttun. Önce onu yap, sonra tekrar dene.
+
+*   **S:** Swagger UI / Site açılmıyor?
+    *   **C:** CMD penceresini (siyah ekranı) kapattın mı? O hep açık kalmalı.
+
+*   **S:** Veriler nereye gidiyor?
+    *   **C:** Hepsi buluttaki (Supabase) ortak veritabanımıza gidiyor. Herkes sonuçları orada görebilir.
+
+*   **S:** `.env` dosyası nedir?
+    *   **C:** Supabase bağlantı anahtarları. Bu dosyayı Çağrı size özelden atacak. GitHub'a gitmez, güvenlidir.

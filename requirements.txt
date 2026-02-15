@@ -11,3 +11,5 @@ scikit-fuzzy
 packaging
 scipy
 networkx
+python-dotenv
+supabase
