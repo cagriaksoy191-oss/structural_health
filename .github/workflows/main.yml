@@ -48,7 +48,9 @@ jobs:
 
       # 4. Bağımlılıkları yükle
       - name: 📦 Install Dependencies
-        run: pip install -r requirements.txt
+        run: |
+          pip install -r requirements.txt
+          pip list
 
       # 5. Health Check Testi
       - name: 🔬 Run Health Check
