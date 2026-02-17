@@ -117,12 +117,15 @@ def get_changed_files(start_path: str = ".") -> Set[str]:
 
         elif not last_synced_commit:
             logger.info("No valid sync state found. Checking recent activity (HEAD~1).")
-            if len(repo.commits()) > 1:
+            # Check if there are at least 2 commits to diff
+            if repo.head.is_valid() and repo.head.commit.parents:
+                # Check just the last commit diff
                 parent = repo.head.commit.parents[0]
                 for d in parent.diff(repo.head.commit):
                     if d.change_type in ["A", "M", "R"] and d.b_path:
                         changed.add(str(Path(repo.working_dir) / d.b_path))
             else:
+                # Initial commit - all files
                 for item in repo.head.commit.tree.traverse():
                     if item.type == "blob":
                         changed.add(str(Path(repo.working_dir) / item.path))
