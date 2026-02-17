@@ -204,14 +204,16 @@ def chunk_text(text: str, chunk_size: int = CHUNK_SIZE) -> List[str]:
 
 
 def generate_record_id(filename: str, chunk_index: int) -> str:
-    clean_name = filename.replace("\\", "_").replace("/", "_").replace(".", "_")
-    return f"proje__{clean_name}_c{chunk_index}"
+    # Use MD5 hash for filename to ensure ASCII compliance (handles 'Masaüstü' etc.)
+    # and to keep ID length limits in check.
+    path_hash = hashlib.md5(filename.encode("utf-8")).hexdigest()
+    return f"proje__{path_hash}_c{chunk_index}"
 
 
 def delete_existing_records(index, filename: str):
     try:
-        clean_name = filename.replace("\\", "_").replace("/", "_").replace(".", "_")
-        prefix = f"proje__{clean_name}_"
+        path_hash = hashlib.md5(filename.encode("utf-8")).hexdigest()
+        prefix = f"proje__{path_hash}_"
         matches = []
         for ids in index.list(prefix=prefix, namespace=NAMESPACE):
             matches.extend(ids)
