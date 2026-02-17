@@ -36,9 +36,14 @@ Eğer script çıktısında **"CONFLICT"** görürsen, agent olarak şu adımlar
 
 1. `git diff --name-only --diff-filter=U` ile çakışan dosyaları bul
 2. Her dosyada `<<<<<<<` ve `>>>>>>>` işaretlerini bul
-3. **Projeyi bütünsel ele al.** İki kodun en iyi kısımlarını sentezleyerek birleştir
-4. `git add .; git commit -m "Merge conflict cozuldu (AI-assisted)"` çalıştır
-5. `cmd /c "git push origin main" 2>&1` ile tekrar push et
+3. **Projeyi bütünsel ele al.** İki kodun en iyi kısımlarını sentezleyerek birleştir.
+4. **RAPORLAMA YAP (ÖNEMLİ):** Çakışmayı çözdükten sonra kullanıcıya şu formatta bir özet sun:
+   - **Çakışan Dosya:** [Dosya Adı]
+   - **Gelen Değişiklik:** [Arkadaşın ne yapmış?]
+   - **Senin Değişikliğin:** [Sen ne yapmıştın?]
+   - **Çözüm:** [Nasıl birleştirdin?]
+5. `git add .; git commit -m "Merge conflict cozuldu (AI-assisted)"` çalıştır
+6. `cmd /c "git push origin main" 2>&1` ile tekrar push et
 
 ## Beklenen Çıktı
 

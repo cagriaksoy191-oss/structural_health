@@ -21,8 +21,13 @@ Write-Host $pullOutput
 **🤖 AGENT TALİMATI:** Eğer çıktıda "CONFLICT" kelimesi varsa:
 1. `git diff --name-only --diff-filter=U` ile çakışan dosyaları bul
 2. Her dosyada `<<<<<<<` ve `>>>>>>>` işaretlerini bul, iki değişikliği birleştir
-3. `git add .; git commit -m "Merge conflict cozuldu (AI-assisted)"` çalıştır
-4. Hiç conflict yoksa bu adımı atla.
+3. **RAPORLAMA YAP (ÖNEMLİ):** Çakışmayı çözdükten sonra kullanıcıya şu formatta bir özet sun:
+    - **Çakışan Dosya:** [Dosya Adı]
+    - **Gelen Değişiklik:** [Arkadaşın ne yapmış?]
+    - **Senin Değişikliğin:** [Sen ne yapmıştın?]
+    - **Çözüm:** [Nasıl birleştirdin?]
+4. `git add .; git commit -m "Merge conflict cozuldu (AI-assisted)"` çalıştır
+5. Hiç conflict yoksa bu adımı atla.
 
 ### 2. Bağımlılıkları kontrol et ve güncelle
 ```powershell
