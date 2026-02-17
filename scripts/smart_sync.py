@@ -30,7 +30,18 @@ EMBEDDING_MODEL = "multilingual-e5-large"
 SYNC_STATE_FILENAME = ".pinecone_sync_state"
 
 # Load Environment Variables
-load_dotenv()
+# We need to find the .env file relative to this script or the repo root
+# Since we have get_repo_root function now, we can use it, but we need it defined before loading env?
+# Actually, let's just use the fact that this script is in /scripts and .env is in /
+script_dir = Path(__file__).parent.absolute()
+project_root = script_dir.parent
+env_path = project_root / ".env"
+
+if env_path.exists():
+    load_dotenv(dotenv_path=env_path)
+else:
+    load_dotenv()  # Fallback
+
 PINECONE_API_KEY = os.getenv("PINECONE_API_KEY")
 
 
