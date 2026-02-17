@@ -259,49 +259,32 @@ try {
 }
 
 # ----------------------------------------------------------
-# 9. PINECONE HAFIZA (Opsiyonel - Sadece Kurulanlar Icin)
+# 9. PINECONE HAFIZA (Akilli Senkronizasyon)
 # ----------------------------------------------------------
-Write-Host "[9/10] Pinecone Kontrolu..."
+Write-Host "[9/10] Pinecone Hafiza Kontrolu..."
 try {
-    $mcpConfig = "$env:USERPROFILE\.gemini\antigravity\mcp_config.json"
-    if (Test-Path $mcpConfig) {
-        $config = Get-Content $mcpConfig -Raw | ConvertFrom-Json
-        $hasPinecone = $config.mcpServers.PSObject.Properties.Name -contains "pinecone-mcp-server"
-        if ($hasPinecone) {
-            $scriptPath = "docs\referanslar\ingest_pdfs.py"
-            if ((Test-Path $scriptPath) -and (Test-Path "venv\Scripts\python.exe")) {
-                Write-Host "  >> Pinecone Hafiza Guncelleniyor (30sn timeout)..."
-                $job = Start-Job -ScriptBlock {
-                    param($sp)
-                    Set-Location $using:PWD
-                    & venv\Scripts\python $sp --proje-only 2>&1
-                } -ArgumentList $scriptPath
-                $completed = Wait-Job $job -Timeout 30
-                if ($completed) {
-                    $jobOutput = Receive-Job $job
-                    Write-Host "  >> $jobOutput"
-                    $rapor.Pinecone = "Guncellendi"
-                } else {
-                    Stop-Job $job
-                    Write-Host "  >> Pinecone timeout (30sn), atlaniyor."
-                    $rapor.Pinecone = "Timeout"
-                }
-                Remove-Job $job -Force -ErrorAction SilentlyContinue
-            } else {
-                Write-Host "  >> ingest_pdfs.py veya venv bulunamadi, Pinecone atlaniyor."
-                $rapor.Pinecone = "Script Yok"
-            }
+    $syncScript = "scripts\smart_sync.py"
+    if ((Test-Path $syncScript) -and (Test-Path "venv\Scripts\python.exe")) {
+        Write-Host "  >> Akilli hafiza senkronizasyonu baslatiliyor..."
+        
+        # Scripti calistir
+        $process = Start-Process -FilePath "venv\Scripts\python.exe" -ArgumentList $syncScript -NoNewWindow -PassThru -Wait
+        
+        if ($process.ExitCode -eq 0) {
+            Write-Host "  >> Hafiza senkronizasyonu tamamlandi."
+            $rapor.Pinecone = "Guncellendi"
         } else {
-            Write-Host "  >> Pinecone MCP yapilandirilmamis. (Bu normal)"
-            $rapor.Pinecone = "Kurulu Degil"
+            Write-Host "  >> Senkronizasyon hatasi veya degisiklik yok (ExitCode: $($process.ExitCode))."
+            Write-Host "  >> .env dosyasinda PINECONE_API_KEY oldugundan emin olun."
+            $rapor.Pinecone = "Hata/Atlandi"
         }
     } else {
-        Write-Host "  >> MCP config bulunamadi. Pinecone atlaniyor. (Bu tamamen normal)"
-        $rapor.Pinecone = "Kurulu Degil"
+        Write-Host "  >> smart_sync.py veya venv bulunamadi. Atlanıyor."
+        $rapor.Pinecone = "Script Yok"
     }
 } catch {
-    Write-Host "  >> Pinecone hatasi: $($_.Exception.Message) (Bu normal, atlaniyor)"
-    $rapor.Pinecone = "Atlandi"
+    Write-Host "  >> Pinecone islem hatasi: $($_.Exception.Message)"
+    $rapor.Pinecone = "Hata"
 }
 
 # ----------------------------------------------------------

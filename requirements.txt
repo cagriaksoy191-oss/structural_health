@@ -13,3 +13,5 @@ scipy
 networkx
 python-dotenv
 supabase
+pinecone-client
+gitpython
