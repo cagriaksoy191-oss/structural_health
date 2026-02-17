@@ -279,6 +279,7 @@ def main():
     try:
         pc = Pinecone(api_key=PINECONE_API_KEY)
         index = pc.Index(INDEX_NAME)
+        logger.info("✅ PINECONE BAGLANTISI BASARILI! (API Key Dogrulandi)")
     except Exception as e:
         logger.error(f"Pinecone Connection Error: {e}")
         # If connection fails, we fail (so user knows info is stale)
