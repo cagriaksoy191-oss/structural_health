@@ -1,0 +1,195 @@
+[
+  {
+    "id": "TC001",
+    "title": "Health check returns success message (API running)",
+    "description": "Verifies the root health-check endpoint responds with HTTP 200 and a visible message string.",
+    "category": "Structural Health Analysis",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"message\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"{\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC002",
+    "title": "Risk calculation happy path returns RiskResponse fields",
+    "description": "Verifies the risk calculation endpoint returns a successful response that visibly contains risk score and related fields when provided a valid request body.",
+    "category": "Structural Health Analysis",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /docs"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Swagger UI\" is visible"
+      },
+      {
+        "type": "action",
+        "description": "Scroll to \"POST /api/risk-hesapla\""
+      },
+      {
+        "type": "action",
+        "description": "Click on \"POST /api/risk-hesapla\""
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Try it out\""
+      },
+      {
+        "type": "action",
+        "description": "Type \"{\\\"il\\\":\\\"Istanbul\\\",\\\"ilce\\\":\\\"Kadikoy\\\",\\\"yapimYili\\\":2005,\\\"katSayisi\\\":6,\\\"zeminDukkan\\\":\\\"Yok\\\",\\\"bitisik\\\":\\\"Hayir\\\",\\\"hasar\\\":\\\"Yok\\\",\\\"kullanimAmaci\\\":\\\"Konut\\\",\\\"kisaKolon\\\":\\\"Hayir\\\",\\\"agirCikma\\\":\\\"Hayir\\\",\\\"planTipi\\\":\\\"DuzensizDegil\\\",\\\"bitisikHiza\\\":\\\"Uygun\\\",\\\"ultrasonikSesHizi\\\":4200,\\\"geriSicramaSayisi\\\":28,\\\"corrosion\\\":0.1,\\\"zeminSinifi\\\":\\\"ZC\\\",\\\"crackPuan\\\":1}\" into the request body field"
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Execute\""
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"200\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"risk_score\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC003",
+    "title": "Risk calculation response includes concrete strength estimate and fuzzy details",
+    "description": "Verifies that a successful risk response visibly includes the concrete strength estimate and fuzzy logic details.",
+    "category": "Structural Health Analysis",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /docs"
+      },
+      {
+        "type": "action",
+        "description": "Scroll to \"POST /api/risk-hesapla\""
+      },
+      {
+        "type": "action",
+        "description": "Click on \"POST /api/risk-hesapla\""
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Try it out\""
+      },
+      {
+        "type": "action",
+        "description": "Type \"{\\\"il\\\":\\\"Ankara\\\",\\\"ilce\\\":\\\"Cankaya\\\",\\\"yapimYili\\\":1998,\\\"katSayisi\\\":8,\\\"zeminDukkan\\\":\\\"Var\\\",\\\"bitisik\\\":\\\"Evet\\\",\\\"hasar\\\":\\\"Orta\\\",\\\"kullanimAmaci\\\":\\\"Konut\\\",\\\"kisaKolon\\\":\\\"Evet\\\",\\\"agirCikma\\\":\\\"Evet\\\",\\\"planTipi\\\":\\\"Duzensiz\\\",\\\"bitisikHiza\\\":\\\"UygunDegil\\\",\\\"ultrasonikSesHizi\\\":3600,\\\"geriSicramaSayisi\\\":22,\\\"corrosion\\\":0.4,\\\"zeminSinifi\\\":\\\"ZD\\\",\\\"crackPuan\\\":3}\" into the request body field"
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Execute\""
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"200\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"concrete_strength_estimate\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"fuzzy\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC004",
+    "title": "Validation error when a required field is missing (ultrasonikSesHizi omitted)",
+    "description": "Verifies the API returns a client validation error and a visible indication of the missing required field when ultrasonikSesHizi is omitted.",
+    "category": "Structural Health Analysis",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /docs"
+      },
+      {
+        "type": "action",
+        "description": "Scroll to \"POST /api/risk-hesapla\""
+      },
+      {
+        "type": "action",
+        "description": "Click on \"POST /api/risk-hesapla\""
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Try it out\""
+      },
+      {
+        "type": "action",
+        "description": "Type \"{\\\"il\\\":\\\"Izmir\\\",\\\"ilce\\\":\\\"Konak\\\",\\\"yapimYili\\\":2010,\\\"katSayisi\\\":5,\\\"zeminDukkan\\\":\\\"Yok\\\",\\\"bitisik\\\":\\\"Hayir\\\",\\\"hasar\\\":\\\"Yok\\\",\\\"kullanimAmaci\\\":\\\"Konut\\\",\\\"kisaKolon\\\":\\\"Hayir\\\",\\\"agirCikma\\\":\\\"Hayir\\\",\\\"planTipi\\\":\\\"DuzensizDegil\\\",\\\"bitisikHiza\\\":\\\"Uygun\\\",\\\"geriSicramaSayisi\\\":27,\\\"corrosion\\\":0.0,\\\"zeminSinifi\\\":\\\"ZB\\\",\\\"crackPuan\\\":0}\" into the request body field"
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Execute\""
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"422\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"ultrasonikSesHizi\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC005",
+    "title": "Validation error when a numeric field has invalid type (yapimYili as text)",
+    "description": "Verifies the API rejects an invalid request where a numeric field is provided with an incorrect type and shows a visible validation error.",
+    "category": "Structural Health Analysis",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /docs"
+      },
+      {
+        "type": "action",
+        "description": "Scroll to \"POST /api/risk-hesapla\""
+      },
+      {
+        "type": "action",
+        "description": "Click on \"POST /api/risk-hesapla\""
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Try it out\""
+      },
+      {
+        "type": "action",
+        "description": "Type \"{\\\"il\\\":\\\"Bursa\\\",\\\"ilce\\\":\\\"Nilufer\\\",\\\"yapimYili\\\":\\\"iki bin\\\",\\\"katSayisi\\\":4,\\\"zeminDukkan\\\":\\\"Yok\\\",\\\"bitisik\\\":\\\"Hayir\\\",\\\"hasar\\\":\\\"Yok\\\",\\\"kullanimAmaci\\\":\\\"Konut\\\",\\\"kisaKolon\\\":\\\"Hayir\\\",\\\"agirCikma\\\":\\\"Hayir\\\",\\\"planTipi\\\":\\\"DuzensizDegil\\\",\\\"bitisikHiza\\\":\\\"Uygun\\\",\\\"ultrasonikSesHizi\\\":4100,\\\"geriSicramaSayisi\\\":30,\\\"corrosion\\\":0.05,\\\"zeminSinifi\\\":\\\"ZC\\\",\\\"crackPuan\\\":1}\" into the request body field"
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Execute\""
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"422\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"yapimYili\" is visible"
+      }
+    ]
+  }
+]

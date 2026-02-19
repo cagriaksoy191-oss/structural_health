@@ -1,0 +1,17 @@
+{
+  "status": "commited",
+  "type": "frontend",
+  "scope": "codebase",
+  "localEndpoint": "http://localhost:5173",
+  "executionArgs": {
+    "projectName": "frontend",
+    "projectPath": "c:\\Users\\cagri\\OneDrive\\Resimler\\Masaüstü\\Final_Proje_Paketi - Kopya\\frontend",
+    "testIds": [],
+    "additionalInstruction": "Use 'http://localhost:5173' as the base URL. Ensure selectors match the React component names/labels. The app is running locally.",
+    "envs": {
+      "API_KEY": "sk-user-jNbFe2njdQNRzZx8p21qFycQh1eXFAHIdVHz9urBuKKRPY5EMCeN5sckieZhfFxBRzXQKXl0SAWOUpKQIetb_psON0tBdf00sU04ppFOz5jmfBwwp0rTZKFdoGjRFkl5JFU"
+    }
+  },
+  "serverPort": 64950,
+  "proxy": "http://8373ed7a-7372-4379-9147-8c94abc4b11c:OP9B2lRp1twRr93XKtntPW4fME0XijpW@tun.testsprite.com:8080"
+}

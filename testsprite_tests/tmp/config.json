@@ -1,0 +1,20 @@
+{
+  "status": "commited",
+  "type": "backend",
+  "scope": "codebase",
+  "localEndpoint": "http://localhost:8000",
+  "backendAuthType": "public",
+  "executionArgs": {
+    "projectName": "Final_Proje_Paketi - Kopya",
+    "projectPath": "c:\\Users\\cagri\\OneDrive\\Resimler\\Masaüstü\\Final_Proje_Paketi - Kopya",
+    "testIds": [
+      "TC001"
+    ],
+    "additionalInstruction": "Run existing test TC001. Do not regenerate code if possible, just execute.",
+    "envs": {
+      "API_KEY": "sk-user-jNbFe2njdQNRzZx8p21qFycQh1eXFAHIdVHz9urBuKKRPY5EMCeN5sckieZhfFxBRzXQKXl0SAWOUpKQIetb_psON0tBdf00sU04ppFOz5jmfBwwp0rTZKFdoGjRFkl5JFU"
+    }
+  },
+  "serverPort": 59512,
+  "proxy": "http://24523bf9-bb47-4dcc-9493-3aa26c0bb83a:BPuhw5G0hr2WSlEp5fFQoJ6TiuGfFMZP@tun.testsprite.com:8080"
+}

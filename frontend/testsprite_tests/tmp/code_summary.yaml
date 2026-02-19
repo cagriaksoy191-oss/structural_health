@@ -1,0 +1,42 @@
+version: "2"
+type: frontend
+tech_stack:
+  - language: javascript
+  - framework: react
+  - ui_library: css_modules
+  - other: vite
+routes:
+  - path: /
+    file: src/App.jsx
+    auth_required: false
+    description: Main Risk Analysis Page
+features:
+  - name: Building Risk Analysis
+    description: User fills out building details to get a risk score
+    files:
+      - src/components/RiskForm.jsx
+      - src/App.jsx
+    entry_route: /
+    user_interactions:
+      - Select "il" (City)
+      - Select "ilce" (District)
+      - Fill "yapimYili" (Construction Year)
+      - Fill "katSayisi" (Floor Count)
+      - Select "zeminDukkan" (Ground Floor Shop) - Radio
+      - Select "bitisik" (Adjacent Building) - Radio
+      - Select "kullanimAmaci" (Usage Function)
+      - Select "kisaKolon" (Short Column) - Radio
+      - Select "agirCikma" (Heavy Overhang)
+      - Select "planTipi" (Plan Type)
+      - Select "hasar" (Visible Damage)
+      - Fill "ultrasonikSesHizi" (UPV)
+      - Fill "geriSicramaSayisi" (Schmidt Hammer)
+      - Fill "corrosion" (Corrosion Potential)
+      - Select "zeminSinifi" (Ground Class)
+      - Click "Risk Skorunu Hesapla" button
+      - View "Analiz Sonucu" section with Score and Badge
+    api_calls:
+      - method: POST
+        endpoint: http://127.0.0.1:8000/api/risk-hesapla
+    auth_required: false
+known_limitations: []

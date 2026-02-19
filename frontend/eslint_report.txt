@@ -1,0 +1,39 @@
+
+> yapi-sagligi@0.0.0 lint
+> eslint .
+
+
+C:\Users\cagri\OneDrive\Resimler\Masaüstü\Final_Proje_Paketi - Kopya\frontend\src\components\RiskForm.jsx
+  32:9   error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  30 |     useEffect(() => {
+  31 |         const sortedIller = [...IL_ILCE_DATA.iller].sort((a, b) => collatorTR.compare(a.ad, b.ad));
+> 32 |         setIller(sortedIller);
+     |         ^^^^^^^^ Avoid calling setState() directly within an effect
+  33 |     }, []);
+  34 |
+  35 |     useEffect(() => {                                                                                              react-hooks/set-state-in-effect
+  39:13  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  37 |             const ilObj = IL_ILCE_DATA.iller.find(x => x.slug === formData.il);
+  38 |             const sortedIlceler = (ilObj?.ilceler || []).sort((a, b) => collatorTR.compare(a, b));
+> 39 |             setIlceler(sortedIlceler);
+     |             ^^^^^^^^^^ Avoid calling setState() directly within an effect
+  40 |         } else {
+  41 |             setIlceler([]);
+  42 |         }  react-hooks/set-state-in-effect
+
+✖ 2 problems (2 errors, 0 warnings)
+

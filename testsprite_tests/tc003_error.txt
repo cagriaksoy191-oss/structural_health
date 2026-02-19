@@ -1,0 +1,7 @@
+DEBUG: Error Response Body: {"detail":[{"type":"literal_error","loc":["body","kisaKolon"],"msg":"Input should be 'yok', 'var' or 'emin_degil'","input":"hayir","ctx":{"expected":"'yok', 'var' or 'emin_degil'"}},{"type":"literal_error","loc":["body","agirCikma"],"msg":"Input should be 'yok', 'hafif' or 'buyuk'","input":"var","ctx":{"expected":"'yok', 'hafif' or 'buyuk'"}}]}
+Traceback (most recent call last):
+  File "C:\Users\cagri\OneDrive\Resimler\Masaüstü\Final_Proje_Paketi - Kopya\testsprite_tests\TC003_post_risk_hesapla_with_valid_body_returns_200_with_risk_response.py", line 59, in <module>
+    test_post_risk_hesapla_with_valid_body_returns_200_with_risk_response()
+  File "C:\Users\cagri\OneDrive\Resimler\Masaüstü\Final_Proje_Paketi - Kopya\testsprite_tests\TC003_post_risk_hesapla_with_valid_body_returns_200_with_risk_response.py", line 36, in test_post_risk_hesapla_with_valid_body_returns_200_with_risk_response
+    response.status_code == 200
+AssertionError: Expected status code 200, got 422

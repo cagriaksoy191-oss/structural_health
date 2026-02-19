@@ -1,0 +1,82 @@
+[
+  {
+    "id": "TC001",
+    "title": "get_health_check_endpoint_returns_200_with_message",
+    "description": "Test the GET / health check endpoint to verify it returns a 200 status code with a message string confirming the API is running."
+  },
+  {
+    "id": "TC002",
+    "title": "get_health_check_endpoint_returns_500_when_service_unavailable",
+    "description": "Test the GET / health check endpoint to verify it returns a 500 status code with an error message when the service is unavailable."
+  },
+  {
+    "id": "TC003",
+    "title": "post_risk_hesapla_with_valid_body_returns_200_and_risk_response",
+    "description": "Test the POST /api/risk-hesapla endpoint with a valid request body containing all required building attributes to verify it returns a 200 status code with a RiskResponse including risk_score, concrete_strength_estimate, and fuzzy_details."
+  },
+  {
+    "id": "TC004",
+    "title": "post_risk_hesapla_with_missing_required_fields_returns_400_or_422",
+    "description": "Test the POST /api/risk-hesapla endpoint with a request body missing required fields (e.g., ultrasonikSesHizi) to verify it returns a 400 or 422 status code with validation errors listing the missing or invalid fields."
+  },
+  {
+    "id": "TC005",
+    "title": "post_risk_hesapla_with_missing_concrete_model_file_returns_200_with_fallback_note",
+    "description": "Test the POST /api/risk-hesapla endpoint when the local joblib concrete model file is missing to verify it returns a 200 status code with a RiskResponse that includes a note indicating model_fallback and uses the default C25 concrete strength estimate."
+  },
+  {
+    "id": "TC006",
+    "title": "verify_building_year_scoring_logic",
+    "description": "Test to verify point assignment based on construction year: Pre-1975 (+5), 1976-1999 (+4), 2000-2018 (+2), Post-2018 (+1). Verify correct score increments."
+  },
+  {
+    "id": "TC007",
+    "title": "verify_floor_count_penalties_and_high_structure",
+    "description": "Test to verify floor count penalties: 1-4 floors (Low), 5-7 floors (Medium), >=8 floors (High + Extra Penalty). Check for 'Yüksek Bina' warning."
+  },
+  {
+    "id": "TC008",
+    "title": "verify_low_concrete_strength_penalty",
+    "description": "Test to verify that if estimated concrete strength is below 25 MPa, a +5 point penalty is applied and a warning message is included in details."
+  },
+  {
+    "id": "TC009",
+    "title": "verify_fuzzy_logic_consistency_extremes",
+    "description": "Test fuzzy logic output for 'Very Bad' (Low Strength, High Corrosion, High Survey Risk) vs 'Very Good' inputs. Verify score gap is significant."
+  },
+  {
+    "id": "TC010",
+    "title": "edge_case_year_validation",
+    "description": "Test validation for building years: Reject future years (e.g. 2026), reject too old years (<1800)."
+  },
+  {
+    "id": "TC011",
+    "title": "edge_case_floor_validation",
+    "description": "Test validation for floor counts: Reject 0 floors, reject >100 floors."
+  },
+  {
+    "id": "TC012",
+    "title": "edge_case_corrosion_extremes",
+    "description": "Test corrosion input limits: Ensure extremely negative values (e.g. -1000) or high positive values are handled without crashing."
+  },
+  {
+    "id": "TC015",
+    "title": "earthquake_risk_map_verification",
+    "description": "Test specific city/district inputs (e.g. Istanbul/Avcilar -> High Risk, Rize -> Low Risk) to verify earthquake risk map integration."
+  },
+  {
+    "id": "TC016",
+    "title": "critical_facility_scoring",
+    "description": "Test that 'okul' and 'hastane' usage types receive +2 risk points compared to 'konut'."
+  },
+  {
+    "id": "TC017",
+    "title": "structural_defect_combinations",
+    "description": "Test cumulative effect of multiple defects: Short Column + Heavy Overhang + Irregular Plan should result in max structural risk contribution."
+  },
+  {
+    "id": "TC018",
+    "title": "service_failure_resilience",
+    "description": "Test system behavior when external services (AI/Database) fail. Verify 'Graceful Degradation' where API returns result with warning messages instead of 500 Error."
+  }
+]

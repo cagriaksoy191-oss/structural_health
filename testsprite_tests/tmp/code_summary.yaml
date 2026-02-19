@@ -1,0 +1,54 @@
+version: "2"
+type: backend
+tech_stack:
+  - python
+  - fastapi
+  - supabase
+  - skfuzzy
+  - joblib
+  - ollama
+features:
+  - name: Structural Health Analysis
+    description: Core functionality to calculate building risk scores using fuzzy logic, concrete data, and AI analysis.
+    files:
+      - main.py
+    endpoints:
+      - method: GET
+        path: /
+        description: Health check endpoint to verify API is running.
+        auth_required: false
+        response_schema:
+          "200":
+            message: string
+      - method: POST
+        path: /api/risk-hesapla
+        description: Calculates comprehensive risk score based on building attributes, fuzzy logic, and concrete strength.
+        auth_required: false
+        request_schema:
+          body:
+            il: string
+            ilce: string
+            yapimYili: integer
+            katSayisi: integer
+            zeminDukkan: string
+            bitisik: string
+            hasar: string
+            kullanimAmaci: string
+            kisaKolon: string
+            agirCikma: string
+            planTipi: string
+            bitisikHiza: string
+            ultrasonikSesHizi: number
+            geriSicramaSayisi: number
+            corrosion: number
+            zeminSinifi: string
+            crackPuan: integer
+        response_schema:
+          "200": RiskResponse
+    depends_on:
+      - Supabase (Database)
+      - Ollama (AI Model)
+known_limitations:
+  - issue: Concrete model fallback
+    location: main.py
+    impact: Uses default C25 value if joblib model is missing.

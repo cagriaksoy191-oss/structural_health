@@ -1,0 +1,324 @@
+[
+  {
+    "id": "TC001",
+    "title": "Calculate risk score successfully with all fields completed",
+    "description": "Verifies a user can complete the full building + NDT form and see the Analysis Result with a score and badge.",
+    "category": "Building Risk Analysis (UI Form)",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to \"/\""
+      },
+      {
+        "type": "action",
+        "description": "Select a valid option from the \"il\" (City) dropdown"
+      },
+      {
+        "type": "action",
+        "description": "Select a valid option from the \"ilce\" (District) dropdown"
+      },
+      {
+        "type": "action",
+        "description": "Fill \"2000\" into the \"yapimYili\" (Construction Year) field"
+      },
+      {
+        "type": "action",
+        "description": "Fill \"5\" into the \"katSayisi\" (Floor Count) field"
+      },
+      {
+        "type": "action",
+        "description": "Fill \"3500\" into the \"ultrasonikSesHizi\" (UPV) field"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Risk Skorunu Hesapla\" button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Analiz Sonucu\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC002",
+    "title": "Successful result shows score and badge elements",
+    "description": "Verifies that after a successful calculation, the result area includes visible score and badge indicators.",
+    "category": "Building Risk Analysis (UI Form)",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to \"/\""
+      },
+      {
+        "type": "action",
+        "description": "Fill all required form fields with valid values"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Risk Skorunu Hesapla\" button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Analiz Sonucu\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Skor\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"Risk badge\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC003",
+    "title": "Required field validation when UPV is empty",
+    "description": "Verifies the form blocks submission and shows a required-field error when \"ultrasonikSesHizi\" is missing.",
+    "category": "Building Risk Analysis (UI Form)",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to \"/\""
+      },
+      {
+        "type": "action",
+        "description": "Fill all required fields except the \"ultrasonikSesHizi\" (UPV) field"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Risk Skorunu Hesapla\" button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"ultrasonikSesHizi\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"zorunlu\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Analiz Sonucu\" is not visible"
+      }
+    ]
+  },
+  {
+    "id": "TC004",
+    "title": "Numeric validation error for Construction Year when non-numeric input is provided",
+    "description": "Verifies the UI shows a validation error if \"yapimYili\" contains non-numeric text.",
+    "category": "Building Risk Analysis (UI Form)",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to \"/\""
+      },
+      {
+        "type": "action",
+        "description": "Fill \"abcd\" into the \"yapimYili\" (Construction Year) field"
+      },
+      {
+        "type": "action",
+        "description": "Fill all other required fields with valid values"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Risk Skorunu Hesapla\" button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"yapimYili\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"geçersiz\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC005",
+    "title": "Prevents submission when Floor Count is empty (required validation)",
+    "description": "Verifies the UI enforces required validation for \"katSayisi\" before attempting to calculate risk.",
+    "category": "Building Risk Analysis (UI Form)",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to \"/\""
+      },
+      {
+        "type": "action",
+        "description": "Fill all required fields except the \"katSayisi\" (Floor Count) field"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Risk Skorunu Hesapla\" button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"katSayisi\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"zorunlu\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Analiz Sonucu\" is not visible"
+      }
+    ]
+  },
+  {
+    "id": "TC006",
+    "title": "Outlier input values still produce a result section (no UI crash)",
+    "description": "Verifies the form can be submitted with edge/outlier values and still shows the Analysis Result section.",
+    "category": "Building Risk Analysis (UI Form)",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to \"/\""
+      },
+      {
+        "type": "action",
+        "description": "Fill \"1900\" into the \"yapimYili\" (Construction Year) field"
+      },
+      {
+        "type": "action",
+        "description": "Fill all other required fields with valid values"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Risk Skorunu Hesapla\" button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Analiz Sonucu\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC007",
+    "title": "Successful risk calculation displays score, badge, and engineer report",
+    "description": "Verifies that a successful local calculation returns results and the UI shows Analiz Sonucu with Score, Badge, and Mühendis Görüşü Raporu.",
+    "category": "Local Risk Calculation & Report Generation (Backend/On‑Premise)",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to \"/\""
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Risk Skorunu Hesapla\" is visible"
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Risk Skorunu Hesapla\""
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Analiz Sonucu\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"Score\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"Badge\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Mühendis Görüşü Raporu\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC008",
+    "title": "Malformed payload returns validation errors and UI shows field-level error summary",
+    "description": "Verifies that when required inputs are missing/invalid, the UI shows a validation error summary instead of results.",
+    "category": "Local Risk Calculation & Report Generation (Backend/On‑Premise)",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to \"/\""
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Risk Skorunu Hesapla\" is visible"
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Risk Skorunu Hesapla\""
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"error summary\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"validation\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC009",
+    "title": "Repeated calculations update the displayed analysis result",
+    "description": "Verifies the UI remains usable for multiple runs and continues to display an analysis result after recalculation.",
+    "category": "Local Risk Calculation & Report Generation (Backend/On‑Premise)",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to \"/\""
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Risk Skorunu Hesapla\""
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Analiz Sonucu\" is visible"
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Risk Skorunu Hesapla\""
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Analiz Sonucu\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"Score\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC010",
+    "title": "Results section is not shown before running calculation",
+    "description": "Verifies that on initial page load, the analysis results area is not displayed until the user triggers calculation.",
+    "category": "Local Risk Calculation & Report Generation (Backend/On‑Premise)",
+    "priority": "Low",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to \"/\""
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Risk Skorunu Hesapla\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Analiz Sonucu\" is not visible"
+      }
+    ]
+  }
+]
