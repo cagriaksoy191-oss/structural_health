@@ -28,36 +28,11 @@ Write-Host "================================================"
 Write-Host ""
 
 # ----------------------------------------------------------
-# 1. RUNNER KONTROLU
+# 1. RUNNER KONTROLU (BULUT GEÇİŞİ)
 # ----------------------------------------------------------
 Write-Host "[1/10] Runner Kontrolu..."
-try {
-    $runnerPath = "C:\actions-runner"
-    Write-Host "  >> Runner yolu kontrol ediliyor: $runnerPath"
-    if (Test-Path $runnerPath) {
-        Write-Host "  >> Runner klasoru bulundu."
-        $runner = Get-Process "Runner.Listener" -ErrorAction SilentlyContinue
-        if ($runner) {
-            Write-Host "  >> Runner Zaten Calisiyor"
-            $rapor.Runner = "Aktif"
-        } else {
-            if (Test-Path "$runnerPath\run.cmd") {
-                Write-Host "  >> Runner Kapali, Baslatiliyor..."
-                Start-Process cmd -ArgumentList "/k cd $runnerPath & .\run.cmd"
-                $rapor.Runner = "Baslatildi"
-            } else {
-                Write-Host "  >> Runner klasoru bos veya run.cmd yok."
-                $rapor.Runner = "Eksik Dosya"
-            }
-        }
-    } else {
-        Write-Host "  >> Bu bilgisayarda Runner kurulu degil (Klasor yok). (Sorun yok)"
-        $rapor.Runner = "Kurulu Degil"
-    }
-} catch {
-    Write-Host "  >> Runner kontrol hatasi: $($_.Exception.Message)"
-    $rapor.Runner = "Hata"
-}
+Write-Host "  >> Eski 'self-hosted' runner kaldirildi. CI/CD dogrudan GitHub Cloud (ubuntu-latest) uzerinde calisiyor."
+$rapor.Runner = "GitHub Cloud"
 
 # ----------------------------------------------------------
 # 2. OLLAMA KONTROLU
