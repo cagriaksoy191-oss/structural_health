@@ -1,0 +1,30 @@
+﻿python.exe : 2026-02-24 01:29
+:26,028 - INFO - \u2705 PINEC
+ONE BAGLANTISI BASARILI! (API
+ Key Dogrulandi)
+At line:1 char:1
++ & venv\Scripts\python.exe s
+cripts\smart_sync.py 2>&1 | O
+ut-File -File ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo           
+   : NotSpecified: (2026-02  
+  -24 01:2...Key Dogruland   
+ i):String) [], RemoteExc    
+eption
+    + FullyQualifiedErrorId  
+   : NativeCommandError
+ 
+2026-02-24 01:29:26,265 - INF
+O - Syncing 1 files: ['C:\\Us
+ers\\cagri\\OneDrive\\Resimle
+r\\Masa³st³\\Final_Proje_Pake
+ti - Kopya\\pinecone_output.t
+xt']
+2026-02-24 01:29:28,671 - INF
+O - Sync state updated to 4c2
+ff3f
+2026-02-24 01:29:28,671 - INF
+O - Memory sync completed suc
+cessfully.
