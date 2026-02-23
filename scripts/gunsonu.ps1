@@ -242,19 +242,27 @@ try {
     if ((Test-Path $syncScript) -and (Test-Path "venv\Scripts\python.exe")) {
         Write-Host "  >> Akilli hafiza senkronizasyonu baslatiliyor..."
         
-        # Scripti calistir
-        $process = Start-Process -FilePath "venv\Scripts\python.exe" -ArgumentList $syncScript -NoNewWindow -PassThru -Wait
+        # Dogrudan calistir (Start-Process yerine) - gercek exit code'u yakala
+        $syncOutput = & venv\Scripts\python.exe $syncScript 2>&1
+        $syncExitCode = $LASTEXITCODE
         
-        if ($process.ExitCode -eq 0) {
+        # Ciktiyi goster
+        if ($syncOutput) {
+            foreach ($line in $syncOutput) {
+                Write-Host "  >> $line"
+            }
+        }
+        
+        if ($syncExitCode -eq 0) {
             Write-Host "  >> Hafiza senkronizasyonu tamamlandi."
             $rapor.Pinecone = "Guncellendi"
         } else {
-            Write-Host "  >> Senkronizasyon hatasi veya degisiklik yok (ExitCode: $($process.ExitCode))."
+            Write-Host "  >> Senkronizasyon hatasi (ExitCode: $syncExitCode)."
             Write-Host "  >> .env dosyasinda PINECONE_API_KEY oldugundan emin olun."
             $rapor.Pinecone = "Hata/Atlandi"
         }
     } else {
-        Write-Host "  >> smart_sync.py veya venv bulunamadi. Atlanıyor."
+        Write-Host "  >> smart_sync.py veya venv bulunamadi. Atlaniyor."
         $rapor.Pinecone = "Script Yok"
     }
 } catch {
