@@ -1,0 +1,31 @@
+"""Yapı Sağlığı — Konfigürasyon ve Bağlantılar"""
+
+import os
+import threading
+from typing import Optional
+
+from dotenv import load_dotenv
+from supabase import create_client, Client
+
+# .env dosyasını yükle
+load_dotenv()
+
+# Supabase Ayarları
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+
+supabase: Optional[Client] = None
+if SUPABASE_URL and SUPABASE_KEY:
+    try:
+        supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+        print("✅ Supabase bağlantısı kuruldu.")
+    except Exception as e:
+        print(f"❌ Supabase bağlantı hatası: {e}")
+else:
+    print(
+        "⚠️ UYARI: SUPABASE_URL veya SUPABASE_KEY eksik! Veriler sadece CSV'ye yazılabilir (yedek mod)."
+    )
+
+# --- CSV THREAD LOCK ---
+# Not: Sunum sırasında (tek worker) bu kilit dosyayı korur.
+CSV_LOCK = threading.Lock()

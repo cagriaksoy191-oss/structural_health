@@ -2,8 +2,6 @@ from typing import List, Optional, Literal, Tuple, Dict
 from pathlib import Path
 from datetime import datetime
 import csv
-import threading
-import unicodedata
 import time
 import os
 
@@ -17,29 +15,11 @@ import requests
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel, Field, field_validator
 
-from dotenv import load_dotenv
-from supabase import create_client, Client
-
-# .env dosyasını yükle
-load_dotenv()
-
-# Supabase Ayarları
-SUPABASE_URL = os.getenv("SUPABASE_URL")
-SUPABASE_KEY = os.getenv("SUPABASE_KEY")
-
-supabase: Optional[Client] = None
-if SUPABASE_URL and SUPABASE_KEY:
-    try:
-        supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
-        print("✅ Supabase bağlantısı kuruldu.")
-    except Exception as e:
-        print(f"❌ Supabase bağlantı hatası: {e}")
-else:
-    print(
-        "⚠️ UYARI: SUPABASE_URL veya SUPABASE_KEY eksik! Veriler sadece CSV'ye yazılabilir (yedek mod)."
-    )
+# --- Modüler İmportlar (Adım 1) ---
+from config import supabase, CSV_LOCK
+from models.schemas import RiskRequest, RiskResponse
+from services.normalize import normalize_key
 
 
 # -------------------------------------------------
@@ -70,113 +50,12 @@ app.add_middleware(
 OLLAMA_URL = "http://localhost:11434/api/generate"
 OLLAMA_MODEL = "qwen3:8b"
 
-# --- CSV THREAD LOCK ---
-# Not: Sunum sırasında (tek worker) bu kilit dosyayı korur.
-CSV_LOCK = threading.Lock()
-
 
 # -------------------------------------------------
 #  PYDANTIC MODELLERİ (Validasyonlu)
-# -------------------------------------------------
-class RiskRequest(BaseModel):
-    il: str
-    ilce: Optional[str] = ""
-
-    # Dinamik yıl kontrolü
-    yapimYili: int = Field(..., ge=1800)
-
-    @field_validator("yapimYili")
-    @classmethod
-    def check_year_not_future(cls, v: int):
-        current_year = datetime.now().year
-        if v > current_year:
-            raise ValueError(f"Yapım yılı gelecekte olamaz (En fazla {current_year}).")
-        return v
-
-    katSayisi: int = Field(..., ge=1, le=100)
-
-    zeminDukkan: Literal["evet", "hayir"]
-    bitisik: Literal["evet", "hayir"]
-    hasar: Literal["yok", "hafif", "kolon"]
-
-    kullanimAmaci: Literal["konut", "isyeri", "okul", "hastane", "sanayi", "diger"]
-
-    kisaKolon: Literal["yok", "var", "emin_degil"]
-    agirCikma: Literal["yok", "hafif", "buyuk"]
-    planTipi: Literal["dikdortgen", "L", "T", "U", "kompleks"]
-    bitisikHiza: Optional[Literal["uyumlu", "farkli", "yok"]] = "yok"
-
-    # Beton Girdileri (Pozitif olmalı)
-    ultrasonikSesHizi: float = Field(..., gt=0)
-    geriSicramaSayisi: float = Field(..., gt=0)
-
-    # Korozyon Girdisi
-    # Sınırı Fuzzy'den biraz geniş tuttuk ki aşırı değerlerde hata vermesin, clamp yapıp uyaralım.
-    corrosion: float = Field(..., description="Korozyon potansiyeli (mV)")
-
-    # "Otomatik" seçilirse boş gelebilir.
-    zeminSinifi: Optional[str] = None
-
-    # Frontend verileri
-    crackPuan: Optional[int] = Field(default=None, ge=0, le=3)
-
-
-class RiskResponse(BaseModel):
-    healthScore: int
-    genelSeviye: str
-    aciklama: str
-    depremSeviye: str
-    depremPuan: int
-    yapisalSeviye: str
-    yapisalPuan: int
-    toplamYapisalRisk: int
-    zeminSinifi: Optional[str]
-    basincDayanimi: Optional[float] = None
-    detaylar: List[str]
-
-    fuzzyLabel: str
-    corrosion: float
-
-    aiEtiket: Optional[str] = None
-    aiYorum: Optional[str] = None
-
-
-# -------------------------------------------------
-#  AKILLI NORMALİZASYON (V12)
-# -------------------------------------------------
-def normalize_key(text: Optional[str]) -> str:
-    """
-    Türkçe karakterleri güvenli İngilizce karakterlere çevirir.
-    Optional[str] tip desteği eklendi.
-    """
-    if not text:
-        return ""
-
-    # Türkçe Karakter Eşleşmesi
-    tr_map = str.maketrans(
-        {
-            "ğ": "g",
-            "Ğ": "g",
-            "ı": "i",
-            "İ": "i",
-            "I": "i",
-            "ö": "o",
-            "Ö": "o",
-            "ş": "s",
-            "Ş": "s",
-            "ü": "u",
-            "Ü": "u",
-            "ç": "c",
-            "Ç": "c",
-        }
-    )
-
-    text = text.strip().translate(tr_map).lower()
-    text = unicodedata.normalize("NFKD", text)
-    text = "".join(ch for ch in text if not unicodedata.combining(ch))
-    text = text.replace(" ", "").replace("-", "")
-
-    return text
+# RiskRequest, RiskResponse → models/schemas.py
+# normalize_key → services/normalize.py
+# (Backward-compat re-exportlar dosya sonundadır)
 
 
 # -------------------------------------------------
