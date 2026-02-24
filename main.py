@@ -41,18 +41,29 @@ else:
         "⚠️ UYARI: SUPABASE_URL veya SUPABASE_KEY eksik! Veriler sadece CSV'ye yazılabilir (yedek mod)."
     )
 
+
 # -------------------------------------------------
 #  FUZZY LOGIC & PREDICTION MODELLERİ (YAPISAL + BETON)
 # -------------------------------------------------
+def _parse_origins(raw: str) -> list:
+    """ALLOWED_ORIGINS env var'ını virgülle ayırıp listeye çevirir."""
+    return [o.strip() for o in raw.split(",") if o.strip()]
+
+
 app = FastAPI(title="Yapı Sağlığı Ön Tarama API")
 
 # --- CORS AYARLARI ---
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=_parse_origins(
+        os.getenv(
+            "ALLOWED_ORIGINS",
+            "http://localhost:5173,http://localhost:5174,http://localhost:5175,http://127.0.0.1:5173",
+        )
+    ),
     allow_credentials=False,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_headers=["Content-Type", "Accept"],
 )
 
 # --- AI CONFIG (Qwen3) ---
