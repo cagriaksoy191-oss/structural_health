@@ -29,3 +29,7 @@ else:
 # --- CSV THREAD LOCK ---
 # Not: Sunum sırasında (tek worker) bu kilit dosyayı korur.
 CSV_LOCK = threading.Lock()
+
+# --- AFAD Deprem API Ayarları ---
+AFAD_API_BASE_URL = "https://deprem.afad.gov.tr/apiv2/event/filter"
+AFAD_CACHE_TTL = int(os.getenv("AFAD_CACHE_TTL", "3600"))  # saniye (varsayılan 1 saat)

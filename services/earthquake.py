@@ -1,6 +1,7 @@
-"""Yapı Sağlığı — Deprem ve Zemin Harita Verileri"""
+"""Yapı Sağlığı — Deprem ve Zemin Harita Verileri (Hybrid: AFAD API + Statik Harita)"""
 
-from typing import Dict
+from typing import Dict, Optional
+import logging
 
 from services.normalize import normalize_key
 
@@ -238,3 +239,65 @@ def tahmini_zemin_sinifi(il: str, ilce: str) -> str:
     if not il_data:
         return "Z3"
     return il_data.get(ilce_key, il_data.get("_default", "Z3"))
+
+
+# -------------------------------------------------
+#  HYBRID FONKSİYON (AFAD API + Statik Harita Fallback)
+# -------------------------------------------------
+logger = logging.getLogger(__name__)
+
+
+async def deprem_analizi_async(
+    il: str,
+    ilce: str,
+    lat: Optional[float] = None,
+    lon: Optional[float] = None,
+) -> dict:
+    """
+    Hybrid deprem analizi: Önce AFAD API'den gerçek veri dener,
+    başarısız olursa statik haritaya düşer.
+
+    Returns:
+        {
+            "seviye": str,     # "yüksek" / "orta" / "düşük"
+            "puan": int,       # 0, 1 veya 3
+            "pga": float|None, # PGA değeri (g), None ise API çalışmadı
+            "kaynak": str,     # "AFAD" veya "Statik Harita"
+        }
+    """
+    # --- Önce AFAD API'yi dene ---
+    try:
+        from services.afad_api import calculate_seismic_hazard
+
+        afad_result = await calculate_seismic_hazard(il, ilce, lat, lon)
+
+        if afad_result is not None:
+            seviye = afad_result["risk_seviyesi"]
+            puan = deprem_seviyesi_puan(seviye)
+            logger.info(
+                f"AFAD veri başarılı: {il}/{ilce} → "
+                f"PGA={afad_result['pga']:.4f}g, Seviye={seviye}, "
+                f"Kaynak: AFAD ({afad_result['deprem_sayisi']} deprem)"
+            )
+            return {
+                "seviye": seviye,
+                "puan": puan,
+                "pga": afad_result["pga"],
+                "kaynak": "AFAD",
+                "deprem_sayisi": afad_result["deprem_sayisi"],
+            }
+    except Exception as e:
+        logger.warning(f"AFAD API hatası, statik haritaya düşülüyor: {e}")
+
+    # --- Fallback: Statik harita ---
+    seviye = deprem_seviyesi_bul(il, ilce)
+    puan = deprem_seviyesi_puan(seviye)
+    logger.info(f"Statik harita kullanıldı: {il}/{ilce} → Seviye={seviye}")
+
+    return {
+        "seviye": seviye,
+        "puan": puan,
+        "pga": None,
+        "kaynak": "Statik Harita",
+    }
+

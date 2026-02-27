@@ -61,7 +61,9 @@ export const useGeolocation = () => {
 
             return {
                 il: ilObj.slug,
-                ilce: match || ""
+                ilce: match || "",
+                latitude: lat,
+                longitude: lon,
             };
 
         } catch (err) {

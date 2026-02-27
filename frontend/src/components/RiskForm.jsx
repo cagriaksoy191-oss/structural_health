@@ -21,6 +21,8 @@ const RiskForm = ({ onSubmit, loading: subLoading }) => {
     geriSicramaSayisi: "",
     corrosion: "-200",
     zeminSinifi: "",
+    latitude: null,
+    longitude: null,
   });
 
   const { getPosition, loading: geoLoading, status: geoStatus } = useGeolocation();
@@ -54,6 +56,8 @@ const RiskForm = ({ onSubmit, loading: subLoading }) => {
         ...prev,
         il: loc.il,
         ilce: loc.ilce,
+        latitude: loc.latitude || null,
+        longitude: loc.longitude || null,
       }));
     }
   };
@@ -69,6 +73,8 @@ const RiskForm = ({ onSubmit, loading: subLoading }) => {
       ultrasonikSesHizi: parseFloat(formData.ultrasonikSesHizi),
       geriSicramaSayisi: parseFloat(formData.geriSicramaSayisi),
       corrosion: parseFloat(formData.corrosion),
+      latitude: formData.latitude,
+      longitude: formData.longitude,
       crackPuan: 0, // Varsayılan değer
     };
 

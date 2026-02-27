@@ -13,6 +13,7 @@ from services.earthquake import (
     deprem_seviyesi_bul,
     deprem_seviyesi_puan,
     tahmini_zemin_sinifi,
+    deprem_analizi_async,
 )
 from services.structural import yapisal_skor_hesapla, yapisal_seviye_etiketi
 from services.ai_comment import get_llm_comment
@@ -23,16 +24,36 @@ router = APIRouter()
 
 
 @router.post("/api/risk-hesapla", response_model=RiskResponse)
-def risk_hesapla(req: RiskRequest):
-    # 1. Deprem ve Zemin Analizi
-    deprem_seviye = deprem_seviyesi_bul(req.il, req.ilce)
-    deprem_puan = deprem_seviyesi_puan(deprem_seviye)
+async def risk_hesapla(req: RiskRequest):
+    # 1. Deprem ve Zemin Analizi (Hybrid: AFAD API + Statik Harita Fallback)
+    deprem_result = await deprem_analizi_async(
+        il=req.il,
+        ilce=req.ilce,
+        lat=req.latitude,
+        lon=req.longitude,
+    )
+    deprem_seviye = deprem_result["seviye"]
+    deprem_puan = deprem_result["puan"]
+    pga_value = deprem_result.get("pga")  # None ise API çalışmadı
+    deprem_kaynak = deprem_result.get("kaynak", "Statik Harita")
+
     zemin_sinifi = (
         req.zeminSinifi if req.zeminSinifi else tahmini_zemin_sinifi(req.il, req.ilce)
     )
 
+    # Detaylara kaynak bilgisi ekle
+    detay_prefix = []
+    if pga_value is not None:
+        detay_prefix.append(
+            f"📡 AFAD Veri: PGA={pga_value:.4f}g, "
+            f"{deprem_result.get('deprem_sayisi', '?')} deprem tespit edildi"
+        )
+    else:
+        detay_prefix.append(f"📋 Veri Kaynağı: Statik Deprem Haritası")
+
     # 2. Yapısal Skor
-    yapisal_puan, detaylar = yapisal_skor_hesapla(req, zemin_sinifi)
+    yapisal_puan, detaylar_raw = yapisal_skor_hesapla(req, zemin_sinifi)
+    detaylar = detay_prefix + detaylar_raw  # AFAD bilgisini başa ekle
     toplam_yapisal_risk = yapisal_puan + deprem_puan
     yapisal_seviye = yapisal_seviye_etiketi(toplam_yapisal_risk)
 
@@ -168,6 +189,8 @@ def risk_hesapla(req: RiskRequest):
         fuzzyLabel=fuzzy_label,
         corrosion=req.corrosion,
         basincDayanimi=basinc_dayanimi,
+        pga=pga_value,
+        depremKaynak=deprem_kaynak,
         aiEtiket=fuzzy_label,
         aiYorum=aciklama,
     )

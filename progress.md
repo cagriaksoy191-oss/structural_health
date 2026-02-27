@@ -27,7 +27,8 @@ models/schemas.py          → RiskRequest (17 alan) + RiskResponse (17 alan)
 routes/risk.py             → /api/risk-hesapla endpoint (6 aşamalı pipeline)
 services/
   normalize.py             → Türkçe karakter normalizasyonu (ğ→g, ş→s, ı→i)
-  earthquake.py            → 81 il deprem risk haritası + zemin sınıfı (Z1-Z4)
+  earthquake.py            → 81 il deprem risk haritası + zemin sınıfı (Z1-Z4) + AFAD hybrid
+  afad_api.py              → AFAD Event API client + PGA hesaplama + in-memory cache
   structural.py            → 14 kritere göre yapısal skor hesaplama
   fuzzy_engine.py          → scikit-fuzzy 3-girdi/5-kural sistemi
   ml_models.py             → RandomForest beton + risk modeli (joblib)
@@ -191,6 +192,11 @@ services/
 - [x] Backward compatibility (eski importlar main.py'den hala çalışır)
 - [x] Sentetik veri üretme pipeline'ı
 - [x] Supabase veri migrasyon scripti
+- [x] AFAD Deprem Tehlike Haritası API entegrasyonu (hybrid: AFAD API + statik harita fallback)
+- [x] PGA (Peak Ground Acceleration) hesaplama ve gösterimi
+- [x] 81 il koordinat tablosu + AFAD Event API sorgusu
+- [x] In-memory cache (TTL bazlı, 1 saat)
+- [x] AFAD entegrasyon testleri (21 test)
 
 ## In Progress
 
@@ -211,14 +217,22 @@ services/
 
 ## Files Modified (Son Oturum)
 
-- CLAUDE.md: Lint hataları düzeltildi (MD025 single-h1, MD022 blanks)
-- progress.md: Kapsamlı yeniden yazım (tam mimari dokümantasyon)
-- .agent/workflows/compress.md: Lint hataları düzeltildi
-- docs/context-management-rehberi.md: Yeni oluşturuldu (4 rutin rehberi)
+- services/afad_api.py: YENİ — AFAD Event API client + PGA hesaplama + cache
+- services/earthquake.py: Hybrid sistem eklendi (deprem_analizi_async)
+- models/schemas.py: RiskRequest'e lat/lon, RiskResponse'a pga/depremKaynak eklendi
+- routes/risk.py: Pipeline async hale getirildi, AFAD entegrasyonu
+- config.py: AFAD API ayarları eklendi
+- .env.example: AFAD_CACHE_TTL eklendi
+- requirements.txt: httpx eklendi
+- frontend/src/hooks/useGeolocation.js: lat/lon return eklendi
+- frontend/src/components/RiskForm.jsx: lat/lon form data'ya eklendi
+- frontend/src/App.jsx: PGA ve kaynak pill'leri eklendi
+- tests/test_afad_integration.py: YENİ — 21 test
+- progress.md: Güncellendi
 
 ## Next Steps
 
-- Yeni sohbet aç ve progress.md ile tam bağlam restore testi yap
-- /compress workflow'unu uzun sohbette test et
-- Frontend UI/UX iyileştirmeleri
+- Frontend UI/UX iyileştirmeleri (modern tasarım, animasyonlar)
 - Production deployment hazırlığı
+- AFAD TDTH doğrudan PGA sorgusu (e-Devlet API key alınırsa)
+- /compress workflow'unu uzun sohbette test et

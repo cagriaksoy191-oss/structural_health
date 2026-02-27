@@ -45,6 +45,10 @@ class RiskRequest(BaseModel):
     # "Otomatik" seçilirse boş gelebilir.
     zeminSinifi: Optional[str] = None
 
+    # Konum bilgisi (Frontend geolocation'dan, opsiyonel)
+    latitude: Optional[float] = Field(default=None, description="Enlem (geolocation)")
+    longitude: Optional[float] = Field(default=None, description="Boylam (geolocation)")
+
     # Frontend verileri
     crackPuan: Optional[int] = Field(default=None, ge=0, le=3)
 
@@ -64,6 +68,10 @@ class RiskResponse(BaseModel):
 
     fuzzyLabel: str
     corrosion: float
+
+    # AFAD API verileri
+    pga: Optional[float] = Field(default=None, description="Peak Ground Acceleration (g)")
+    depremKaynak: Optional[str] = Field(default=None, description="Veri kaynağı: AFAD veya Statik Harita")
 
     aiEtiket: Optional[str] = None
     aiYorum: Optional[str] = None

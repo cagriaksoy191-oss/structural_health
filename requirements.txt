@@ -7,6 +7,7 @@ joblib
 torch
 pydantic
 requests
+httpx
 scikit-fuzzy
 packaging
 scipy

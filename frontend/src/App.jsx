@@ -87,6 +87,14 @@ function App() {
                 <span className="pill"><strong>Beton:</strong> {result.basincDayanimi ? result.basincDayanimi.toFixed(1) + " MPa" : "Veri Yok"}</span>
                 <span className="pill"><strong>Korozyon:</strong> {result.corrosion} mV</span>
                 <span className="pill"><strong>Zemin:</strong> {result.zeminSinifi || "Tahmin"}</span>
+                {result.pga != null && (
+                  <span className="pill" style={{ borderColor: '#ef4444', color: '#fca5a5' }}><strong>PGA:</strong> {result.pga.toFixed(4)}g</span>
+                )}
+                {result.depremKaynak && (
+                  <span className="pill" style={{ borderColor: result.depremKaynak === "AFAD" ? '#22c55e' : '#6b7280', color: result.depremKaynak === "AFAD" ? '#86efac' : '#d1d5db' }}>
+                    <strong>Kaynak:</strong> {result.depremKaynak === "AFAD" ? "📡 AFAD Canlı" : "📋 Statik Harita"}
+                  </span>
+                )}
               </div>
 
               <div className="pill-row">
