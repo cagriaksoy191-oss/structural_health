@@ -9,7 +9,7 @@ Yapı Sağlığı İzleme (Structural Health Monitoring) — Web Tabanlı Ön Ta
 ### Backend: FastAPI (Python)
 
 - **Giriş noktası:** `main.py` — FastAPI app, CORS ayarları, backward-compat re-export'lar
-- **Konfigürasyon:** `config.py` — Supabase bağlantısı (SUPABASE_URL + SUPABASE_KEY), CSV_LOCK (thread safety)
+- **Konfigürasyon:** `config.py` — Supabase bağlantısı, CSV_LOCK (thread safety), AFAD API ayarları
 - **Ortam değişkenleri:** `.env` dosyası (`.env.example` şablondan kopyalanır)
 - **Port:** `127.0.0.1:8000` (uvicorn)
 - **CORS:** `ALLOWED_ORIGINS` env var'ı ile virgülle ayrılmış origin listesi
@@ -22,8 +22,8 @@ Yapı Sağlığı İzleme (Structural Health Monitoring) — Web Tabanlı Ön Ta
 
 ```text
 main.py                    → FastAPI app + backward-compat re-exports
-config.py                  → Supabase client + CSV_LOCK
-models/schemas.py          → RiskRequest (17 alan) + RiskResponse (17 alan)
+config.py                  → Supabase client + CSV_LOCK + AFAD API config
+models/schemas.py          → RiskRequest (19 alan) + RiskResponse (19 alan)
 routes/risk.py             → /api/risk-hesapla endpoint (6 aşamalı pipeline)
 services/
   normalize.py             → Türkçe karakter normalizasyonu (ğ→g, ş→s, ı→i)
@@ -39,7 +39,7 @@ services/
 
 ### Risk Hesaplama Pipeline (6 Aşama)
 
-1. **Deprem Analizi:** `earthquake.py` — il/ilçe bazlı risk seviyesi (yüksek/orta/düşük) + zemin sınıfı (Z1-Z4) tahmini
+1. **Deprem Analizi:** `earthquake.py` → `deprem_analizi_async()` — Hybrid: önce AFAD Event API (PGA hesaplama), başarısız olursa statik haritaya fallback. Koordinat bazlı veya il/ilçe bazlı sorgu destekler.
 2. **Yapısal Skor:** `structural.py` — Yapım yılı, kat sayısı, hasar durumu, kısa kolon, çıkma, plan tipi, zemin sınıfı, çatlak puanı dahil 14 kriter, TBDY 2018 uyumlu
 3. **Beton Dayanımı:** `ml_models.py` — UPV + Rebound Number → RandomForest ile MPa tahmini, TBDY 2018 minimum C25 kontrolü
 4. **Korozyon:** `corrosion.py` — ASTM C876 standardı, -600 ile +100 mV arası sürekli interpolasyon, 5 seviye (Düşük → Çok Yüksek)
@@ -71,20 +71,24 @@ services/
 
 ### Pydantic Veri Modelleri
 
-**RiskRequest (17 alan):**
+**RiskRequest (19 alan):**
 
 - il, ilce, yapimYili (1800-güncel), katSayisi (1-100)
 - zeminDukkan, bitisik, hasar, kullanimAmaci
 - kisaKolon, agirCikma, planTipi, bitisikHiza
 - ultrasonikSesHizi (gt=0), geriSicramaSayisi (gt=0)
 - corrosion (mV), zeminSinifi (optional), crackPuan (0-3, optional)
+- **latitude (optional, float)** — Geolocation'dan gelen enlem
+- **longitude (optional, float)** — Geolocation'dan gelen boylam
 
-**RiskResponse (17 alan):**
+**RiskResponse (19 alan):**
 
 - healthScore, genelSeviye, aciklama
 - depremSeviye, depremPuan, yapisalSeviye, yapisalPuan, toplamYapisalRisk
 - zeminSinifi, basincDayanimi, detaylar (list)
 - fuzzyLabel, corrosion, aiEtiket, aiYorum
+- **pga (optional, float)** — Peak Ground Acceleration (g cinsinden)
+- **depremKaynak (optional, str)** — Veri kaynağı: "AFAD" veya "Statik Harita"
 
 ### Frontend: React (Vite)
 
@@ -93,7 +97,7 @@ services/
   - `RiskForm.jsx` (11.7 KB) — 17 alanlı form, il/ilçe seçici
   - `ResultCard.jsx` (4.6 KB) — Sonuç kartı, skor, pill'ler, AI yorum kutusu
   - `Header.jsx` — Başlık bileşeni
-- **Hooks:** `useGeolocation.js` — Tarayıcı konum API'si
+- **Hooks:** `useGeolocation.js` — Tarayıcı konum API'si (lat/lon + il/ilçe döndürür)
 - **Constants:** `cityData.js` (20.8 KB) — Tüm Türkiye il/ilçe listesi
 - **API URL:** `http://127.0.0.1:8000/api/risk-hesapla`
 - **Dev server:** Vite (localhost:5173)
@@ -131,6 +135,9 @@ services/
 ### Test Altyapısı
 
 - `tests/` — Pytest test klasörü
+  - `tests/test_afad_integration.py` (21 test) — AFAD API entegrasyon testleri
+  - `tests/quick_afad_test.py` — Hızlı API uçtan uca testi
+  - `tests/health_check.py` — Sistem sağlık kontrolü
 - `testsprite_tests/` (33 dosya) — TestSprite kapsamlı test suite
 - `test_performans.py` — Performans testleri
 - `test_supabase_integration.py` — Supabase entegrasyon testleri
@@ -143,6 +150,7 @@ services/
 - torch — PyTorch (ANFIS modeli)
 - scikit-fuzzy, scipy, networkx — Fuzzy logic
 - requests — HTTP (Ollama API)
+- httpx — Async HTTP (AFAD API)
 - python-dotenv — .env yükleme
 - supabase — Veritabanı
 - pinecone-client, gitpython — Senkronizasyon
@@ -168,6 +176,8 @@ services/
 ### Dış Bağlantılar
 
 - **Ollama:** localhost:11434 (Qwen3:8b modeli)
+- **AFAD Event API:** deprem.afad.gov.tr/apiv2/event/filter (JSON, halka açık)
+- **AFAD TDTH:** tdth.afad.gov.tr (PGA haritası — e-Devlet gerekli, henüz entegre değil)
 - **Supabase:** Cloud PostgreSQL
 - **Pinecone:** Vektör veritabanı (proje hafızası)
 - **GitHub:** cagriaksoy191-oss/structural_health
@@ -214,25 +224,46 @@ services/
 - Backward-compat: main.py'den eski importlar re-export ile korunuyor
 - Supabase yoksa uygulama yedek modda (CSV-only) çalışır
 - Fuzzy girdileri clamp ile sınırlandırılır, kullanıcıya uyarı verilir
+- AFAD API → Hybrid yaklaşım: API-first, hardcoded-fallback (TDTH e-Devlet gerektirdiği için Event API kullanılıyor)
+- AFAD PGA hesaplama: Basitleştirilmiş GMPE (Boore-Atkinson esinli), resmi PGA için TDTH lazım
+- AFAD cache: In-memory dict + TTL (1 saat), Redis gerektirmez
+- Pipeline artık async (`async def risk_hesapla`) — httpx async HTTP sorguları için
+- Frontend geolocation lat/lon bilgisi backend'e gönderiliyor (koordinat bazlı AFAD sorgusu için)
 
-## Files Modified (Son Oturum)
+## Files Modified (Son Oturum — 2026-02-28)
 
-- services/afad_api.py: YENİ — AFAD Event API client + PGA hesaplama + cache
-- services/earthquake.py: Hybrid sistem eklendi (deprem_analizi_async)
-- models/schemas.py: RiskRequest'e lat/lon, RiskResponse'a pga/depremKaynak eklendi
-- routes/risk.py: Pipeline async hale getirildi, AFAD entegrasyonu
-- config.py: AFAD API ayarları eklendi
-- .env.example: AFAD_CACHE_TTL eklendi
-- requirements.txt: httpx eklendi
-- frontend/src/hooks/useGeolocation.js: lat/lon return eklendi
-- frontend/src/components/RiskForm.jsx: lat/lon form data'ya eklendi
-- frontend/src/App.jsx: PGA ve kaynak pill'leri eklendi
-- tests/test_afad_integration.py: YENİ — 21 test
-- progress.md: Güncellendi
+### Yeni Dosyalar
+
+- `services/afad_api.py` — AFAD Event API client (280 satır): 81 il koordinat tablosu, async HTTP sorgu, GMPE PGA hesaplama, TTL cache
+- `tests/test_afad_integration.py` — 21 birim testi: koordinat, cache, PGA, risk, hybrid, backward-compat
+- `tests/quick_afad_test.py` — Hızlı API uçtan uca test scripti
+
+### Değiştirilen Dosyalar
+
+- `services/earthquake.py` — `deprem_analizi_async()` hybrid fonksiyonu eklendi (mevcut sync fonksiyonlar korundu)
+- `models/schemas.py` — RiskRequest: +latitude, +longitude; RiskResponse: +pga, +depremKaynak
+- `routes/risk.py` — Endpoint `async def` yapıldı, AFAD hybrid pipeline entegre edildi, detaylara kaynak bilgisi eklendi
+- `config.py` — AFAD_API_BASE_URL ve AFAD_CACHE_TTL sabitleri eklendi
+- `.env.example` — AFAD_CACHE_TTL opsiyonel ayarı eklendi
+- `requirements.txt` — httpx bağımlılığı eklendi
+- `frontend/src/hooks/useGeolocation.js` — lat/lon return değerleri eklendi
+- `frontend/src/components/RiskForm.jsx` — formData'ya latitude/longitude eklendi, backend'e gönderiliyor
+- `frontend/src/App.jsx` — Sonuç kartına PGA pill'i ve kaynak (AFAD/Statik) pill'i eklendi
+- `progress.md` — Kapsamlı güncelleme
+
+### Test Sonuçları (2026-02-28)
+
+- `tests/test_afad_integration.py`: 21/21 PASSED ✅
+- `testsprite_tests/TC015_earthquake_risk_map_verification.py`: 4/4 PASSED ✅ (backward-compat)
+- Swagger UI API testi: İstanbul/Kadıköy → healthScore=53, depremSeviye=yüksek, kaynak=Statik Harita ✅
+- AFAD API: HTTP 302 (e-Devlet redirect) → Fallback düzgün çalıştı ✅
+- Health Check: TÜM KRİTİK KONTROLLER BAŞARILI ✅
+- Git Push: Başarılı (13 dosya, +719/-16 satır) ✅
 
 ## Next Steps
 
-- Frontend UI/UX iyileştirmeleri (modern tasarım, animasyonlar)
-- Production deployment hazırlığı
+- Frontend UI/UX iyileştirmeleri (modern tasarım, animasyonlar, skor gösterimi)
+- Production deployment hazırlığı (Docker, domain, SSL)
 - AFAD TDTH doğrudan PGA sorgusu (e-Devlet API key alınırsa)
 - /compress workflow'unu uzun sohbette test et
+- ResultCard.jsx ve Header.jsx bileşenlerini App.jsx'e entegre et (şu an kullanılmıyor)
