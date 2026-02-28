@@ -1,4 +1,4 @@
-ï»¿**********************
+**********************
 Windows PowerShell transcript start
 Start time: 20260226173240
 Username: CAGRI\cagri
@@ -52,14 +52,14 @@ Transcript started, output file is transcript.txt
   >>            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
   >> UnicodeEncodeError: 'charmap' codec can't encode character '\u2705' in position 33: character maps to <undefined>
   >> Call stack:
-  >>   File "C:\Users\cagri\OneDrive\Resimler\MasaÂ³stÂ³\Final_Proje_Paketi - Kopya\scripts\smart_sync.py", line 343, in <module>
+  >>   File "C:\Users\cagri\OneDrive\Resimler\Masa³st³\Final_Proje_Paketi - Kopya\scripts\smart_sync.py", line 343, in <module>
   >>     main()
-  >>   File "C:\Users\cagri\OneDrive\Resimler\MasaÂ³stÂ³\Final_Proje_Paketi - Kopya\scripts\smart_sync.py", line 290, in main
+  >>   File "C:\Users\cagri\OneDrive\Resimler\Masa³st³\Final_Proje_Paketi - Kopya\scripts\smart_sync.py", line 290, in main
   >>     logger.info("\u2705 PINECONE BAGLANTISI BASARILI! (API Key Dogrulandi)")
   >> Message: '\u2705 PINECONE BAGLANTISI BASARILI! (API Key Dogrulandi)'
   >> Arguments: ()
   >> 2026-02-26 17:32:50,228 - INFO - Syncing changes from 7d5e9f6 to 0b882dd...
-  >> 2026-02-26 17:32:50,401 - INFO - Syncing 2 files: ['C:\\Users\\cagri\\OneDrive\\Resimler\\MasaÂ³stÂ³\\Final_Proje_Paketi - Kopya\\gunsonu_output.txt', 'C:\\Users\\cagri\\OneDrive\\Resimler\\MasaÂ³stÂ³\\Final_Proje_Paketi - Kopya\\transcript.txt']
+  >> 2026-02-26 17:32:50,401 - INFO - Syncing 2 files: ['C:\\Users\\cagri\\OneDrive\\Resimler\\Masa³st³\\Final_Proje_Paketi - Kopya\\gunsonu_output.txt', 'C:\\Users\\cagri\\OneDrive\\Resimler\\Masa³st³\\Final_Proje_Paketi - Kopya\\transcript.txt']
   >> 2026-02-26 17:32:53,257 - INFO - Sync state updated to 0b882dd
   >> 2026-02-26 17:32:53,257 - INFO - Memory sync completed successfully.
   >> Hafiza senkronizasyonu tamamlandi.
@@ -89,3 +89,4 @@ Transcript started, output file is transcript.txt
 Windows PowerShell transcript end
 End time: 20260226173254
 **********************
+

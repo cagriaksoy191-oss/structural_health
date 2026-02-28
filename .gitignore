@@ -20,6 +20,7 @@ frontend/dist/
 frontend/build/
 .DS_Store
 .pinecone_sync_state
+.sabah_cache
 Thumbs.db
 veri_kayitlari.csv
 test_request.bat

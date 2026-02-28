@@ -1,5 +1,5 @@
 ---
-description: Context sıkıştırma — uzun sohbetlerde bağlamı temizle ve progress.md güncelle
+description: Context sıkıştırma — uzun sohbetlerde bağlamı temizle ve AGENTS.md güncelle
 ---
 
 # Context Compression Workflow
@@ -9,19 +9,18 @@ description: Context sıkıştırma — uzun sohbetlerde bağlamı temizle ve pr
 2. Apply **Anchored Iterative Summarization** strategy:
    - Identify the session intent, modified files, decisions, and next steps as "anchors"
    - Summarize only newly accumulated content
-   - Merge with existing progress.md sections
+   - Merge with existing AGENTS.md sections
 
-3. Update `progress.md` with these sections:
-   - **Session Intent**: What are we working on
-   - **Completed**: Mark finished items with [x]
-   - **In Progress**: Current tasks
-   - **Decisions**: Key technical decisions made
-   - **Files Modified**: List of files changed in this session
-   - **Next Steps**: What to do next
+3. Update `AGENTS.md` with these sections:
+   - **Tamamlanan Geliştirmeler**: Mark finished items with [x]
+   - **Mimari Kararlar**: Key technical decisions made
+   - **Son Değişiklikler**: List of files changed in this session
 
-4. Remove from context:
+4. If new development goals emerged, add them to `progress.md`
+
+5. Remove from context:
    - Failed attempts and dead-end explorations
-   - Redundant explanations already captured in progress.md
+   - Redundant explanations already captured in AGENTS.md
    - Verbose tool outputs that are no longer relevant
 
-5. Confirm compression completed with a brief summary of what was preserved and what was removed
+6. Confirm compression completed with a brief summary of what was preserved and what was removed
