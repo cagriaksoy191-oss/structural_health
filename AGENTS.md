@@ -126,6 +126,7 @@ services/
 
 ### Scriptler
 
+- `scripts/sabah_rutini.ps1` — /sabah workflow statik scripti (hash-tabanlı cache, dizin doğrulama, git pull, bağımlılık kontrolü)
 - `scripts/gunsonu.ps1` (12.9 KB) — Gün sonu otomasyonu (git sync, test, deploy)
 - `scripts/smart_sync.py` (11.6 KB) — Pinecone akıllı senkronizasyon
 - `scripts/memory_prep_logic.py` (1.9 KB) — Memory-bank hazırlık
@@ -161,7 +162,7 @@ services/
 
 ### Workflow'lar (.agent/workflows)
 
-- `/sabah` — Günü başlat: git pull, venv aktivasyonu
+- `/sabah` — Günü başlat: `scripts/sabah_rutini.ps1` tetikler (hash-tabanlı cache, tek dosya çalıştırma)
 - `/gunsonu` — Gün sonu: CI/CD döngüsü, git sync, test
 - `/test` — Lokal test: health check, sunucu
 - `/gonder` — Git add, commit, push
@@ -231,6 +232,13 @@ services/
 - **Mekanizma:** requirements.txt ve package.json SHA256 hash'leri `.sabah_cache` (JSON) dosyasında tutulur, değişiklik yoksa pip/npm install atlanır
 - **Loglama:** `--quiet` ve `Out-Null` kaldırıldı, `--progress-bar off` (pip) ve `--loglevel warn` (npm) kullanılıyor
 - **Test sonucu:** 4/4 PASS — cache yok, değişiklik yok (12ms), requirements değişikliği, package.json değişikliği
+
+### /sabah Statik Script Taşıma
+
+- `scripts/sabah_rutini.ps1` oluşturuldu — tüm inline PowerShell mantığı statik dosyaya taşındı
+- `.agent/workflows/sabah.md` sadeleştirildi — tek satır tetikleyici: `powershell -ExecutionPolicy Bypass -File scripts\sabah_rutini.ps1`
+- **Dizin güvenliği:** Script başlangıcında `main.py`, `requirements.txt`, `AGENTS.md` varlık kontrolü (yanlış dizin koruması)
+- **Problem çözüldü:** Agent multiline PowerShell'i terminale yapıştırma → ParserError döngüsü ortadan kalktı
 
 ### Yeni Dosyalar
 
