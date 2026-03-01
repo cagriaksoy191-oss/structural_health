@@ -1,5 +1,6 @@
 """Yapı Sağlığı — Risk Hesaplama API Rotası"""
 
+import asyncio
 from datetime import datetime
 
 from fastapi import APIRouter
@@ -136,8 +137,9 @@ async def risk_hesapla(req: RiskRequest):
     else:
         genel_seviye = "Düşük"
 
-    # --- AI YORUM ---
-    aciklama = get_llm_comment(
+    # --- AI YORUM (Async: senkron requests.post thread'e atılıyor) ---
+    aciklama = await asyncio.to_thread(
+        get_llm_comment,
         skor=int(health_score),
         risk_durumu=fuzzy_label,
         beton=round(basinc_dayanimi, 1),

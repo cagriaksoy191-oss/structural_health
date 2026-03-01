@@ -220,12 +220,28 @@ services/
 - AFAD API → Hybrid yaklaşım: API-first, hardcoded-fallback (TDTH e-Devlet gerektirdiği için Event API kullanılıyor)
 - AFAD PGA hesaplama: Basitleştirilmiş GMPE (Boore-Atkinson esinli), resmi PGA için TDTH lazım
 - AFAD cache: In-memory dict + TTL (1 saat), Redis gerektirmez
+- **AFAD cache kısıtlaması:** Tek-worker (uvicorn) senaryoda GIL + asyncio sayesinde thread-safe. Çoklu-worker'da (gunicorn -w N) her process kendi cache kopyasını tutar — paylaşımlı cache için Redis'e geçiş gerekir
 - Pipeline artık async (`async def risk_hesapla`) — httpx async HTTP sorguları için
+- **AI yorum (Ollama) async fix:** `get_llm_comment()` senkron `requests.post` (120s timeout) kullanıyor; `asyncio.to_thread()` ile thread pool'a atılıyor — event loop bloklanmaz, backward compat korunur
+- **AFAD konfigürasyon merkezileştirmesi (DRY):** Tüm AFAD sabitleri (`AFAD_API_BASE_URL`, `AFAD_TIMEOUT`, `AFAD_CACHE_TTL`) `config.py`'de tanımlı, `afad_api.py` bunları import eder
 - Frontend geolocation lat/lon bilgisi backend'e gönderiliyor (koordinat bazlı AFAD sorgusu için)
 
-## Son Değişiklikler (2026-02-28)
+## Son Değişiklikler (2026-03-01)
 
-### /sabah Workflow Optimizasyonu
+### AFAD Entegrasyonu Mimari Denetim & Düzeltmeleri
+
+- **P0 Fix (Async Blocker):** `routes/risk.py` — `get_llm_comment()` çağrısı `asyncio.to_thread()` ile sarıldı; event loop artık LLM inference sırasında bloklanmaz
+- **P1 Fix (DRY):** `afad_api.py` — Hardcoded AFAD sabitleri silindi, `config.py`'den import ediliyor; `config.py`'ye `AFAD_TIMEOUT` eklendi
+- **P1 Fix (Dokümantasyon):** AGENTS.md Mimari Kararlar'a cache kısıtlaması ve async düzeltme notları eklendi
+- **Backward compat:** `ai_comment.py` dokunulmadı, eski `get_llm_comment` importları çalışmaya devam ediyor
+
+### Frontend BOM Fix
+
+- `frontend/package.json` — UTF-8 BOM (EF BB BF) kaldırıldı; Vite PostCSS config yükleyicisi `JSON.parse()` BOM'u parse edemiyordu
+- 767 → 764 byte (sadece BOM silindi, içerik aynı)
+- Hata: `[plugin:vite:css] Failed to load PostCSS config: Unexpected token ''`
+
+### /sabah Workflow Optimizasyonu (2026-02-28)
 
 - `.agent/workflows/sabah.md` — Adım 2 tamamen yeniden yazıldı: SHA256 hash-tabanlı akıllı bağımlılık kontrolü
 - `.gitignore` — `.sabah_cache` eklendi
@@ -246,7 +262,7 @@ services/
 - `tests/test_afad_integration.py` — 21 birim testi: koordinat, cache, PGA, risk, hybrid, backward-compat
 - `tests/quick_afad_test.py` — Hızlı API uçtan uca test scripti
 
-### Değiştirilen Dosyalar
+### Değiştirilen Dosyalar (2026-02-28)
 
 - `services/earthquake.py` — `deprem_analizi_async()` hybrid fonksiyonu eklendi (mevcut sync fonksiyonlar korundu)
 - `models/schemas.py` — RiskRequest: +latitude, +longitude; RiskResponse: +pga, +depremKaynak
@@ -258,6 +274,13 @@ services/
 - `frontend/src/components/RiskForm.jsx` — formData'ya latitude/longitude eklendi, backend'e gönderiliyor
 - `frontend/src/App.jsx` — Sonuç kartına PGA pill'i ve kaynak (AFAD/Statik) pill'i eklendi
 
+### Değiştirilen Dosyalar (2026-03-01)
+
+- `routes/risk.py` — `asyncio` import + `get_llm_comment` çağrısı `asyncio.to_thread()` ile sarıldı (P0 fix)
+- `config.py` — `AFAD_TIMEOUT` sabiti eklendi (P1 DRY fix)
+- `services/afad_api.py` — Hardcoded sabitler silindi, `config.py`'den import; kullanılmayan `os` import kaldırıldı (P1 DRY fix)
+- `frontend/package.json` — UTF-8 BOM kaldırıldı (Vite PostCSS fix)
+
 ### Test Sonuçları (2026-02-28)
 
 - `tests/test_afad_integration.py`: 21/21 PASSED ✅
@@ -266,3 +289,9 @@ services/
 - AFAD API: HTTP 302 (e-Devlet redirect) → Fallback düzgün çalıştı ✅
 - Health Check: TÜM KRİTİK KONTROLLER BAŞARILI ✅
 - Git Push: Başarılı (13 dosya, +719/-16 satır) ✅
+
+### Test Sonuçları (2026-03-01)
+
+- `tests/test_afad_integration.py`: 21/21 PASSED ✅ (P0/P1 fix sonrası regresyon yok)
+- Backward compat import testleri: `ai_comment`, `afad_api`, `risk.py`, `config.py` tümü OK ✅
+- `frontend/package.json` BOM fix: byte-level doğrulama (0x7B ile başlıyor) ✅

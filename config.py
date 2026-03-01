@@ -32,4 +32,5 @@ CSV_LOCK = threading.Lock()
 
 # --- AFAD Deprem API Ayarları ---
 AFAD_API_BASE_URL = "https://deprem.afad.gov.tr/apiv2/event/filter"
+AFAD_TIMEOUT = int(os.getenv("AFAD_TIMEOUT", "10"))  # saniye (HTTP timeout)
 AFAD_CACHE_TTL = int(os.getenv("AFAD_CACHE_TTL", "3600"))  # saniye (varsayılan 1 saat)

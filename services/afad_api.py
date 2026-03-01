@@ -7,21 +7,20 @@ In-memory cache ile aynı sorguları önbelleğe alır.
 
 import math
 import time
-import os
 import logging
 from datetime import datetime, timedelta
 from typing import Optional, Dict, Tuple, List
 
 import httpx
 
+from config import AFAD_API_BASE_URL, AFAD_TIMEOUT, AFAD_CACHE_TTL
+
 logger = logging.getLogger(__name__)
 
 # ─────────────────────────────────────────────
-#  KONFİGÜRASYON
+#  KONFİGÜRASYON (config.py'den import ediliyor)
 # ─────────────────────────────────────────────
-AFAD_API_BASE = "https://deprem.afad.gov.tr/apiv2/event/filter"
-AFAD_TIMEOUT = 10  # saniye
-AFAD_CACHE_TTL = int(os.getenv("AFAD_CACHE_TTL", "3600"))  # varsayılan 1 saat
+AFAD_API_BASE = AFAD_API_BASE_URL  # alias (modül içi kullanım için)
 
 # ─────────────────────────────────────────────
 #  IN-MEMORY CACHE
@@ -143,6 +142,7 @@ CITY_COORDINATES: Dict[str, Tuple[float, float]] = {
 def get_city_coordinates(il: str, ilce: str = "") -> Optional[Tuple[float, float]]:
     """İl adından merkez koordinatını döndürür."""
     from services.normalize import normalize_key
+
     il_key = normalize_key(il)
     return CITY_COORDINATES.get(il_key)
 
@@ -193,7 +193,9 @@ async def get_afad_earthquakes(
             data = response.json()
 
             if isinstance(data, list):
-                logger.info(f"AFAD API: {len(data)} deprem bulundu ({lat:.2f}, {lon:.2f})")
+                logger.info(
+                    f"AFAD API: {len(data)} deprem bulundu ({lat:.2f}, {lon:.2f})"
+                )
                 return data
             else:
                 logger.warning(f"AFAD API beklenmeyen format: {type(data)}")
@@ -241,7 +243,7 @@ def _estimate_pga_from_earthquake(magnitude: float, distance_km: float) -> float
         distance_km = 1.0
 
     log_pga = 0.35 * magnitude - 1.4 - 1.2 * math.log10(distance_km + 10)
-    pga = 10 ** log_pga
+    pga = 10**log_pga
 
     # Fiziksel sınırlar
     return max(0.0, min(pga, 2.0))
@@ -330,7 +332,9 @@ async def calculate_seismic_hazard(
     events = await get_afad_earthquakes(lat, lon)
 
     if not events:
-        logger.info(f"AFAD API: {il}/{ilce} için deprem verisi bulunamadı veya API erişilemedi")
+        logger.info(
+            f"AFAD API: {il}/{ilce} için deprem verisi bulunamadı veya API erişilemedi"
+        )
         return None
 
     # PGA hesapla
