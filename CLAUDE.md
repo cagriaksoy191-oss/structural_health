@@ -24,6 +24,15 @@
 - Görev yapma, kod yazma, değişiklik önerme.
 - Sadece "Projeyi okudum, hazırım. Ne yapmamı istersin?" şeklinde yanıt ver.
 
+## 🧠 Pinecone MCP Zorunlu Arama Kuralı (SADECE MCP YÜKLÜYSE)
+
+**ÖNEMLİ:** Eğer bu sohbette `mcp_pinecone-mcp-server` araçları (tools) **YOKSA**, bu adımı atla ve standart çalışmana devam et. Ekip arkadaşlarının MCP'si olmayabilir, bu durumda normal RAG/Dosya okuma veya `AGENTS.md` bilgilerini kullan.
+
+Eğer `mcp_pinecone-mcp-server` araçları **VARSA**:
+
+- Kullanıcı projeye ait teorik veriler, TBDY 2018 kuralları, korozyon, ASTM standartları, AFAD hesaplamaları veya sistemin çalışma mantığı ile ilgili herhangi bir soru sorduğunda **İLK OLARAK KESİNLİKLE** `mcp_pinecone-mcp-server_search-records` aracıyla `deprem-hafiza` indeksinde arama yapacaksın (`proje` veya `referanslar` namespace).
+- Kendi hafızanı veya dosyalardaki kodları taramadan **ÖNCE** mutlaka ilgili konuyu Pinecone'a sorup cevabını Pinecone'dan gelen referans belgelere göre oluşturmalısın.
+
 ## Architecture
 
 - Backend: FastAPI (Python) — modular structure (routes/, services/, models/)
