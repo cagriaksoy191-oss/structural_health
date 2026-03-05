@@ -14,9 +14,9 @@ concrete_model = None
 try:
     if CONCRETE_MODEL_PATH.exists():
         concrete_model = joblib.load(CONCRETE_MODEL_PATH)
-        print("✅ Beton Modeli (RandomForest) yüklendi.")
+        print("[BASARILI] Beton Modeli (RandomForest) yüklendi.")
     else:
-        print("⚠️ Beton Modeli bulunamadı.")
+        print("[UYARI] Beton Modeli bulunamadı.")
 except Exception as e:
     print(f"Model yükleme hatası: {e}")
 
@@ -28,11 +28,11 @@ risk_model = None
 try:
     if RISK_MODEL_PATH.exists():
         risk_model = joblib.load(RISK_MODEL_PATH)
-        print("✅ Risk Modeli (RandomForest) yüklendi.")
+        print("[BASARILI] Risk Modeli (RandomForest) yüklendi.")
     else:
-        print("⚠️ Risk Modeli bulunamadı. Fuzzy-only modda çalışılacak.")
+        print("[UYARI] Risk Modeli bulunamadı. Fuzzy-only modda çalışılacak.")
 except Exception as e:
-    print(f"⚠️ Risk Modeli yükleme hatası: {e}")
+    print(f"[UYARI] Risk Modeli yükleme hatası: {e}")
 
 RF_CLASS_SCORES = {"Düşük": 80, "Orta": 50, "Yüksek": 20}
 
@@ -68,7 +68,7 @@ def rf_health_score(req, zemin_sinifi: str, basinc_dayanimi: float):
         classes = risk_model.classes_
         return sum(p * RF_CLASS_SCORES.get(c, 50) for p, c in zip(probas, classes))
     except Exception as e:
-        print(f"⚠️ RF tahmin hatası: {e}")
+        print(f"[UYARI] RF tahmin hatası: {e}")
         return None
 
 

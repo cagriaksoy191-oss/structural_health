@@ -34,3 +34,7 @@
 - [ ] P2 cache eviction değerlendirmesi (gerekli mi?)
 - [x] Git push (bugünkü P0/P1 fix + BOM fix + Git Senkronizasyon Altyapısı eklendi)
 - [ ] Frontend UI iyileştirmeleri (kullanıcının belirttiği geliştirme alanları)
+
+## Bug Logs / Çözülenler
+
+- Pinecone paket adı güncellendi ve ml_models.py emoji encoding hatası çözüldü
