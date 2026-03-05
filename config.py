@@ -18,12 +18,12 @@ supabase: Optional[Client] = None
 if SUPABASE_URL and SUPABASE_KEY:
     try:
         supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
-        print("✅ Supabase bağlantısı kuruldu.")
+        print("[BASARILI] Supabase baglantisi kuruldu.")
     except Exception as e:
-        print(f"❌ Supabase bağlantı hatası: {e}")
+        print(f"[HATA] Supabase baglanti hatasi: {e}")
 else:
     print(
-        "⚠️ UYARI: SUPABASE_URL veya SUPABASE_KEY eksik! Veriler sadece CSV'ye yazılabilir (yedek mod)."
+        "[UYARI] SUPABASE_URL veya SUPABASE_KEY eksik! Veriler sadece CSV'ye yazilabilir (yedek mod)."
     )
 
 # --- CSV THREAD LOCK ---

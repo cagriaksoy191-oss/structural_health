@@ -41,13 +41,13 @@ def kayit_ekle_supabase(record_dict: dict):
     Bağlantı yoksa veya hata olursa konsola yazar (Prod: Kuyruğa atılmalı).
     """
     if not supabase:
-        print("❌ Supabase istemcisi yüklü değil! Kayıt atlandı.")
+        print("[HATA] Supabase istemcisi yuklu degil! Kayit atlandi.")
         return
 
     try:
         # Arka planda (async değil ama hızlı) gönderim
         # .execute() sonucu bekler.
         response = supabase.table("bina_analizleri").insert(record_dict).execute()
-        # print(f"✅ Supabase Kayıt Başarılı: {response}")
+        # print(f"[BASARILI] Supabase Kayit Basarili: {response}")
     except Exception as e:
-        print(f"❌ Supabase Yazma Hatası: {e}")
+        print(f"[HATA] Supabase Yazma Hatasi: {e}")

@@ -16,13 +16,15 @@ def run_all_tests():
 
     if result.wasSuccessful():
         print("\n" + "=" * 60)
-        print(f"✅  TÜM TESTSPRITE TESTLERİ BAŞARIYLA GEÇTİ ({result.testsRun} TEST)")
+        print(
+            f"[BASARILI]  TUM TESTSPRITE TESTLERI BASARIYLA GECTI ({result.testsRun} TEST)"
+        )
         print("=" * 60 + "\n")
         return 0
     else:
         print("\n" + "=" * 60)
         print(
-            f"❌  BAZI TESTLER BAŞARISIZ OLDU ({len(result.failures)} HATA, {len(result.errors)} KRİTİK HATA)"
+            f"[HATA]  BAZI TESTLER BASARISIZ OLDU ({len(result.failures)} HATA, {len(result.errors)} KRITIK HATA)"
         )
         return 1
 
