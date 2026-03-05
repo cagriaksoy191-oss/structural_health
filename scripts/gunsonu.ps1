@@ -115,7 +115,7 @@ catch {
 Write-Host "[4/11] Git Fetch + Remote Kontrol..."
 try {
     # Remote'daki son durumu indir (merge yapmaz)
-    $fetchOutput = cmd /c "git fetch origin main" 2>&1
+    $null = cmd /c "git fetch origin main" 2>&1
     Write-Host "  >> Fetch tamamlandi"
 
     # Remote'da bizden kac commit ileride oldugunu say
@@ -308,7 +308,8 @@ catch {
 $venvPath = ""
 if (Test-Path ".venv\Scripts\python.exe") {
     $venvPath = ".venv"
-} elseif (Test-Path "venv\Scripts\python.exe") {
+}
+elseif (Test-Path "venv\Scripts\python.exe") {
     $venvPath = "venv"
 }
 
@@ -324,7 +325,8 @@ try {
             & $venvPath\Scripts\pip install -r requirements.txt --quiet 2>&1 | Out-Null
             Write-Host "  >> Python bagimliliklari senkronize edildi ($venvPath kullanildi)"
         }
-    } else {
+    }
+    else {
         Write-Host "  >> Python venv. bulunamadi (atlanildi)." -ForegroundColor Yellow
     }
     
