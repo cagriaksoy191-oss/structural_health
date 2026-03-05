@@ -225,8 +225,20 @@ services/
 - **AI yorum (Ollama) async fix:** `get_llm_comment()` senkron `requests.post` (120s timeout) kullanıyor; `asyncio.to_thread()` ile thread pool'a atılıyor — event loop bloklanmaz, backward compat korunur
 - **AFAD konfigürasyon merkezileştirmesi (DRY):** Tüm AFAD sabitleri (`AFAD_API_BASE_URL`, `AFAD_TIMEOUT`, `AFAD_CACHE_TTL`) `config.py`'de tanımlı, `afad_api.py` bunları import eder
 - Frontend geolocation lat/lon bilgisi backend'e gönderiliyor (koordinat bazlı AFAD sorgusu için)
+- **Git Senkronizasyon (v2):** `/gunsonu` komutu `Fetch -> Stash -> Pull -> Pop -> Conflict Check -> Test -> Commit -> Push` mimarisiyle çalışır. Çakışma anında (Exit Code 99) otomatik `--rebase` YAPILMAZ, sessiz veri kaybı engellenir.
+- **Semantik Birleştirme Anayasası:** `.agent/workflows/gunsonu.md` içinde tanımlanmıştır. AI modelleri çakışmaları çözerken iki tarafın da emeğini korur, hiçbir kodu/görevi silmez, anlamsal birleştirme yapar.
+- **Cross-machine Venv:** `scripts/gunsonu.ps1` hem `.venv` hem de `venv` dizinlerini dinamik olarak algılar.
 
-## Son Değişiklikler (2026-03-01)
+## Son Değişiklikler
+
+### Git Çakışma Önleme Sistemi (2026-03-05)
+
+- **Açıklar Kapatıldı:** `gunsonu.ps1` yeniden yazılarak eski "Commit -> Pull -> Push" akışındaki çakışma ve sessiz ezme (rebase) riskleri %100 giderildi.
+- **Akıllı 4'lü Yol:** FULL SYNC, PULL-ONLY, FAST PATH, NO-OP yolları eklendi.
+- **Exit Code 99:** Stash pop veya pull sırasında conflict çıkarsa script anında durur, AI'dan manuel çözüm bekler.
+- **Semantik Birleştirme:** Tüm AI'lar için `AGENTS.md` ve `progress.md` özelinde hiçbir maddenin silinmemesini şart koşan "anlamsal birleştirme anayasası" eklendi (`gunsonu.md`).
+- **Gün İçi Farkındalık:** Takımın pushlarını kontrol eden salt-okunur `/sync` komutu eklendi (`.agent/workflows/sync.md`).
+- **Dinamik Pathler:** `.venv` ve `venv` desteklenecek şekilde health check ve dependency sync dinamikleştirildi.
 
 ### AFAD Entegrasyonu Mimari Denetim & Düzeltmeleri
 

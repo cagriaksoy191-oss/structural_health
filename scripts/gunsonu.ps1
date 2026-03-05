@@ -493,10 +493,10 @@ catch {
 Write-Host "[10/11] Pinecone Hafiza Kontrolu..."
 try {
     $syncScript = "scripts\smart_sync.py"
-    if ((Test-Path $syncScript) -and (Test-Path "venv\Scripts\python.exe")) {
+    if ((Test-Path $syncScript) -and $venvPath -and (Test-Path "$venvPath\Scripts\python.exe")) {
         Write-Host "  >> Akilli hafiza senkronizasyonu baslatiliyor..."
         
-        $syncOutput = & venv\Scripts\python.exe $syncScript 2>&1
+        $syncOutput = & $venvPath\Scripts\python.exe $syncScript 2>&1
         $syncExitCode = $LASTEXITCODE
         
         if ($syncOutput) {
@@ -516,7 +516,7 @@ try {
         }
     }
     else {
-        Write-Host "  >> smart_sync.py veya venv bulunamadi. Atlaniyor."
+        Write-Host "  >> smart_sync.py veya venv ($venvPath) bulunamadi. Atlaniyor."
         $rapor.Pinecone = "Script Yok"
     }
 }

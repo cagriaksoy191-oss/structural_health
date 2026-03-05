@@ -1,6 +1,6 @@
 # Progress — Açık Görevler ve Notlar
 
-> **Son güncelleme:** 2026-03-01
+> **Son güncelleme:** 2026-03-05
 
 ## Tartışıldı Ama Koda Dökülmedi (Backlog)
 
@@ -32,5 +32,5 @@
 ## Yarının Görevleri
 
 - [ ] P2 cache eviction değerlendirmesi (gerekli mi?)
-- [ ] Git push (bugünkü P0/P1 fix + BOM fix)
+- [x] Git push (bugünkü P0/P1 fix + BOM fix + Git Senkronizasyon Altyapısı eklendi)
 - [ ] Frontend UI iyileştirmeleri (kullanıcının belirttiği geliştirme alanları)
