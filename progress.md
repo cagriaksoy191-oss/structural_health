@@ -1,6 +1,6 @@
 # Progress — Açık Görevler ve Notlar
 
-> **Son güncelleme:** 2026-03-05
+> **Son güncelleme:** 2026-03-06
 
 ## Tartışıldı Ama Koda Dökülmedi (Backlog)
 
@@ -38,3 +38,5 @@
 ## Bug Logs / Çözülenler
 
 - Pinecone paket adı güncellendi ve ml_models.py emoji encoding hatası çözüldü
+- **(2026-03-06)** Windows PowerShell (cp1254) UnicodeEncodeError — konsol `print()` satırlarındaki emojiler (✅❌⚠️🧠📂🤖🏆📊📉📈⭐📡🎉👉) ASCII taglarla değiştirildi (`[BASARILI]`, `[HATA]`, `[UYARI]`). Web sitesi UI emojileri (`corrosion.py`, `risk.py`, `structural.py`, `ai_comment.py`) korundu, değiştirilmedi.
+- **(2026-03-06)** VS Code "Select Python Interpreter" sarı uyarısı — `.vscode/settings.json` oluşturuldu (`python.defaultInterpreterPath: ${workspaceFolder}\.venv\Scripts\python.exe`). `.vscode/` zaten `.gitignore`'da olduğu için ekip arkadaşlarını etkilemez.

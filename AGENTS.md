@@ -205,6 +205,8 @@ services/
 - [x] In-memory cache (TTL bazlı, 1 saat)
 - [x] AFAD entegrasyon testleri (21 test)
 - [x] /sabah workflow optimizasyonu — SHA256 hash-tabanlı cache (.sabah_cache), pip/npm install sadece değişiklik varsa çalışır (~40dk → ~5sn)
+- [x] Windows konsol emoji fix (UnicodeEncodeError) — konsol çıktıları ASCII, web UI emojileri korundu
+- [x] VS Code Python interpreter config — `.vscode/settings.json` (`${workspaceFolder}\.venv`, `.gitignore`’da)
 
 ## Mimari Kararlar
 
@@ -239,6 +241,12 @@ services/
 - **Semantik Birleştirme:** Tüm AI'lar için `AGENTS.md` ve `progress.md` özelinde hiçbir maddenin silinmemesini şart koşan "anlamsal birleştirme anayasası" eklendi (`gunsonu.md`).
 - **Gün İçi Farkındalık:** Takımın pushlarını kontrol eden salt-okunur `/sync` komutu eklendi (`.agent/workflows/sync.md`).
 - **Dinamik Pathler:** `.venv` ve `venv` desteklenecek şekilde health check ve dependency sync dinamikleştirildi.
+
+### Windows Konsol Emoji Fix + VS Code Interpreter (2026-03-06)
+
+- **UnicodeEncodeError:** Windows PowerShell (cp1254 encoding) konsol `print()` satırlarındaki UTF-8 emojiler ASCII taglarla değiştirildi (`[BASARILI]`, `[HATA]`, `[UYARI]`). Etkilenen dosyalar: `config.py`, `services/ml_models.py`, `services/data_service.py`, `services/ai_comment.py`, `scripts/smart_sync.py`, `debug_import.py`, `migrate_data.py`, `test_supabase_integration.py`, `test_performans.py`, `testsprite_tests/run_all_testsprite_tests.py`.
+- **UI Emojileri Korundu:** API response’lardaki web sitesi emojileri (`corrosion.py` 🟢🟡🟠🔴, `risk.py` 📡📋🚨🤖) değiştirilmedi.
+- **VS Code Interpreter:** `.vscode/settings.json` oluşturuldu (`python.defaultInterpreterPath: ${workspaceFolder}\.venv\Scripts\python.exe`). `.vscode/` `.gitignore`’da olduğu için ekip üyelerini etkilemez.
 
 ### AFAD Entegrasyonu Mimari Denetim & Düzeltmeleri
 
