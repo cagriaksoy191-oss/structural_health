@@ -4,6 +4,11 @@ import os
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+
+# statik dosyalar için dizin oluştur (PDF vs.)
+if not os.path.exists("static"):
+    os.makedirs("static")
 
 # --- Route İmport ---
 from routes.risk import router as risk_router
@@ -18,6 +23,9 @@ def _parse_origins(raw: str) -> list:
 
 
 app = FastAPI(title="Yapı Sağlığı Ön Tarama API")
+
+# --- STATIC FILES ---
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # --- CORS AYARLARI ---
 app.add_middleware(

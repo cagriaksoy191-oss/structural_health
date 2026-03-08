@@ -347,6 +347,7 @@ async def calculate_seismic_hazard(
         "deprem_sayisi": len(events),
         "kaynak": "AFAD",
         "koordinat": {"lat": lat, "lon": lon},
+        "events": events,
     }
 
     # Cache'e yaz

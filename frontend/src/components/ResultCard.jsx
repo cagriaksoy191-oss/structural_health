@@ -32,7 +32,12 @@ const ResultCard = ({ result, loading }) => {
         corrosion,
         zeminSinifi,
         detaylar,
-        aciklama
+        aciklama,
+        bks,
+        binaYukseklik,
+        dts,
+        earthquakeClasses,
+        pdfDownloadUrl
     } = result;
 
     const badgeColors = {
@@ -61,6 +66,9 @@ const ResultCard = ({ result, loading }) => {
                 <StatPill label="Beton" value={basincDayanimi ? `${basincDayanimi.toFixed(1)} MPa` : 'N/A'} />
                 <StatPill label="Korozyon" value={`${corrosion} mV`} />
                 <StatPill label="Zemin" value={zeminSinifi || 'Tahmin'} />
+                <StatPill label="BKS" value={bks || '-'} />
+                <StatPill label="BYS" value={binaYukseklik ? `${binaYukseklik}m` : '-'} />
+                <StatPill label="DTS" value={dts || '-'} />
             </div>
 
             <div className="flex flex-wrap gap-2 mb-8">
@@ -79,6 +87,28 @@ const ResultCard = ({ result, loading }) => {
                     {aciklama}
                 </p>
             </div>
+
+            {earthquakeClasses && Object.keys(earthquakeClasses).length > 0 && (
+                <div className="bg-slate-800 border border-slate-700 rounded-lg p-4 mb-6">
+                    <div className="text-sm font-bold text-slate-300 mb-2">📡 AFAD Son 50 Yıl Deprem Verisi (Bölge)</div>
+                    <div className="flex flex-wrap gap-4">
+                        {Object.entries(earthquakeClasses).map(([cls, count]) => (
+                            <div key={cls} className="text-xs text-slate-400 bg-slate-900 border border-slate-600 px-3 py-1 rounded">
+                                <span className="font-bold text-slate-200">{cls}:</span> {count} Adet
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {pdfDownloadUrl && (
+                <div className="flex justify-center mb-6">
+                    <a href={`http://127.0.0.1:8000${pdfDownloadUrl}`} target="_blank" rel="noreferrer"
+                        className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-6 rounded-xl transition-all flex items-center gap-2 shadow-lg hover:shadow-purple-500/50">
+                        📄 Yapay Zeka Analiz Raporunu İndir (PDF)
+                    </a>
+                </div>
+            )}
 
             <div className="bg-amber-500/10 border border-dashed border-amber-500/50 rounded-lg p-3 text-center">
                 <p className="text-[10px] text-amber-200 leading-tight">

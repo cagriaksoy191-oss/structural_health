@@ -19,6 +19,7 @@ from services.earthquake import (
 from services.structural import yapisal_skor_hesapla, yapisal_seviye_etiketi
 from services.ai_comment import get_llm_comment
 from services.data_service import kayit_ekle_supabase
+from services.pdf_report import create_ai_pdf_report
 
 
 router = APIRouter()
@@ -137,6 +138,62 @@ async def risk_hesapla(req: RiskRequest):
     else:
         genel_seviye = "Düşük"
 
+    # AI YORUM Oncesi BKS, H_N, DTS, BYS, Deprem Siniflari hesaplamalari
+    amaci_lower = req.kullanimAmaci.lower()
+    if "hastane" in amaci_lower or "okul" in amaci_lower:
+        bks = 1
+        i_kats = 1.5
+    elif "isyeri" in amaci_lower or "sanayi" in amaci_lower:
+        bks = 2
+        i_kats = 1.2
+    else:
+        bks = 3
+        i_kats = 1.0
+
+    bina_turu = "Yeni Yapilacak Bina" if req.yapimYili >= 2019 else "Mevcut Bina"
+
+    h_n = 0
+    if req.zeminDukkan == "evet":
+        h_n += 4.5 + (req.katSayisi - 1) * 3.5
+    elif bks == 2:
+        h_n += req.katSayisi * 3.8
+    else:
+        h_n += req.katSayisi * 3.5
+
+    if pga_value is not None:
+        if pga_value >= 0.40: dts = "1a" if bks == 1 else "1"
+        elif pga_value >= 0.30: dts = "2a" if bks == 1 else "2"
+        elif pga_value >= 0.20: dts = "3a" if bks == 1 else "3"
+        else: dts = "4a" if bks == 1 else "4"
+    else:
+        dts = "Bilinmiyor"
+
+    if h_n > 70: bys = "BYS 1"
+    elif h_n > 56: bys = "BYS 2"
+    elif h_n > 42: bys = "BYS 3"
+    elif h_n > 28: bys = "BYS 4"
+    elif h_n > 17.5: bys = "BYS 5"
+    elif h_n > 10.5: bys = "BYS 6"
+    else: bys = "BYS 7" 
+
+    counts = {"DD-1": 0, "DD-2": 0, "DD-3": 0, "DD-4": 0}
+    events = deprem_result.get("events", [])
+    for d in events:
+        try:
+            mag = float(d.get('magnitude', d.get('mag', 0)))
+            if mag >= 7.5: counts["DD-1"] += 1
+            elif 6.5 <= mag < 7.5: counts["DD-2"] += 1
+            elif 5.0 <= mag < 6.5: counts["DD-3"] += 1
+            elif mag >= 3.0: counts["DD-4"] += 1
+        except: pass
+
+    if health_score < 50:
+        phase2_advice = "ACİL: Yapı risk puanı eşiğin altında. 2. Aşama Detaylı İnceleme (Karot, röntgen vb.) ŞARTTIR."
+    elif health_score < 70:
+        phase2_advice = "UYARI: Orta risk. 2. Aşama İnceleme Önerilir."
+    else:
+        phase2_advice = "Bilgi: Risk görece düşük. Ancak standart mühendis incelemesi tavsiye edilir."
+
     # --- AI YORUM (Async: senkron requests.post thread'e atılıyor) ---
     aciklama = await asyncio.to_thread(
         get_llm_comment,
@@ -145,6 +202,103 @@ async def risk_hesapla(req: RiskRequest):
         beton=round(basinc_dayanimi, 1),
         korozyon=req.corrosion,
         risk_puani=int(toplam_yapisal_risk),
+        dts=dts,
+        bys=bys,
+        phase2_advice=phase2_advice
+    )
+
+    pdf_params = {
+        "kullanim_amaci": req.kullanimAmaci, "bks": bks, "i_katsayisi": i_kats,
+        "yapim_yili": req.yapimYili, "bina_turu": bina_turu, "bys": bys, "dts": dts,
+        "kat_sayisi": req.katSayisi, "h_n": round(h_n, 1), "zemin_kat_dukkan": req.zeminDukkan == "evet"
+    }
+
+    evaluations = []
+    
+    # 1. Yapi Yili
+    if req.yapimYili < 2000:
+        evaluations.append(("Eski Yapı (2000 Öncesi)", "Beton teknolojisi ve kalite kontrol standartları 1990'larda günümüzden daha düşüktür.", "+15 Puan"))
+    else:
+        evaluations.append(("Yeni/Yakın Zamanlı Yapı", "Güncel yönetmeliklere daha uygun malzeme ve işçiliği gösterir.", "0 Puan"))
+        
+    # 2. Kat Sayisi
+    if req.katSayisi >= 5:
+        evaluations.append((f"Orta-Yüksek Bina ({req.katSayisi} Kat)", "Yükseklik arttıkça sismik yanıt ve deformasyon riski yükselir.", "+6 Puan"))
+        
+    # 3. Zemin Dukkan
+    if req.zeminDukkan == "evet":
+        evaluations.append(("Zayıf Kat Riski (Zemin Dükkan)", "Dükkan katı, taşıyıcı sistemden izole edilmemiş; çökme, kayma ve aşırı deformasyona yol açabilir.", "+18 Puan"))
+
+    # 4. Cikma Durumu
+    if req.agirCikma == "evet":
+        evaluations.append(("Ağır Çıkma", "Üst kısımlarda ek yük oluşturur ve kesme kuvvetlerini artırır.", "+10 Puan"))
+    elif req.agirCikma == "hafif":
+        evaluations.append(("Hafif Çıkma", "Çatı ve dış cephe elemanları hafif; ancak bu faktör tek başına kritik değildir.", "+3 Puan"))
+
+    # 5. Kisa Kolon
+    if req.kisaKolon == "evet":
+        evaluations.append(("Kısa Kolon Etkisi", "Deprem anında kesme kuvvetlerini kolonların kısa bölümüne yığarak ani kırılmalara neden olabilir.", "+20 Puan"))
+
+    # 6. Plan / Bitisik
+    if req.bitisik == "evet":
+        if req.bitisikHiza == "hayir":
+            evaluations.append(("Plan Düzensizliği (Kat Hizası Yok)", "Kat hizası bitişik nizamda yok; katlar arası deformasyon dağılımını eşit tutmaz ve çarpışma (çekiçleme) etkisini artırır.", "+10 Puan"))
+        else:
+            evaluations.append(("Bitişik Nizam (Kat Hizalı)", "Aynı hizada bitişik durum nispeten uyumlu salınıma olanak tanır.", "+5 Puan"))
+
+    # 7. Catlak
+    if req.hasar != "yok":
+        evaluations.append((f"Fiziksel Hasar Gözlemi ({req.hasar.capitalize()})", "Görsel olarak saptanan çatlaklar, betonun iç yapısal bütünlüğünün bozulmuş olabileceğinin göstergesidir.", f"+{req.crackPuan or 8} Puan"))
+
+    # 8. Beton Dayanimi
+    if basinc_dayanimi < 25.0:
+        evaluations.append((f"Çok Düşük Beton Dayanımı ({basinc_dayanimi:.1f} Mpa)", "Tasarım dayanımı (genellikle >= 25 MPa) çok altında; taşıma kapasitesi ciddi şekilde azalır.", "+20 Puan"))
+    else:
+        evaluations.append((f"Yeterli Beton Dayanımı ({basinc_dayanimi:.1f} MPa)", "Tasarım dayanımı sınırlarında veya kabul edilebilir durumda.", "0 Puan"))
+
+    # 9. Korozyon
+    evaluations.append((f"Korozyon Potansiyeli ({req.corrosion} mV)", f"{kor_seviye} korozyon riski. Donatıların paslanma hızı taşıyıcı kesit kayıplarına yol açabilir.", "-"))
+
+    # --- TBDY 2018 UYUM TABLOSU ---
+    tbdy_uyum = []
+    # BKS
+    bks_desc = "Konut, genel risk." if bks == 3 else ("Ticari/Sanayi" if bks == 2 else "Okul/Hastane, kritik bina.")
+    tbdy_uyum.append(("Bina Kullanım Sınıfı (BKS)", f"BKS-{bks}", "Uygun", 'U', bks_desc))
+    
+    # DTS
+    tbdy_uyum.append(("Deprem Tasarım Sınıfı (DTS)", f"DTS-{dts}", "Uygun", 'U', "Bölgesel deprem ivmesine göre belirlenmiştir."))
+    
+    # Yapısal Skor
+    if health_score >= 80:
+        tbdy_uyum.append(("Yapısal Skor ≥ 80", f"{health_score:.0f}", "Uygun", 'U', "Skor yüksek; yapı güvenli görünüyor."))
+    elif health_score >= 50:
+        tbdy_uyum.append(("Yapısal Skor ≥ 50", f"{health_score:.0f}", "Uyarı", 'D', "Orta risk; detaylı inceleme önerilir."))
+    else:
+        tbdy_uyum.append(("Yapısal Skor ≥ 50", f"{health_score:.0f}", "Uygun Değil", 'R', "Skor düşük; güçlendirme/önlem şart."))
+
+    # Beton Dayanımı
+    if basinc_dayanimi >= 25.0:
+        tbdy_uyum.append(("Beton Dayanımı ≥ 25 MPa", f"{basinc_dayanimi:.1f} MPa", "Uygun", 'U', "TBDY 2018 minimum tasarım standardını karşılıyor."))
+    else:
+        tbdy_uyum.append(("Beton Dayanımı ≥ 25 MPa", f"{basinc_dayanimi:.1f} MPa", "Uygun Değil", 'R', "Kritik eksik; ciddi deprem hasarı riski taşır."))
+        
+    # Korozyon
+    if req.corrosion >= -200:
+        tbdy_uyum.append(("Korozyon Potansiyeli ≥ -200 mV", f"{req.corrosion:.0f} mV", "Uygun", 'U', "Korozyon riski düşük (%10)."))
+    elif req.corrosion >= -350:
+        tbdy_uyum.append(("Korozyon Potansiyeli > -350 mV", f"{req.corrosion:.0f} mV", "Uyarı", 'D', "Orta risk; koruyucu önlemler alınmalı."))
+    else:
+        tbdy_uyum.append(("Korozyon Potansiyeli > -350 mV", f"{req.corrosion:.0f} mV", "Uygun Değil", 'R', "Yüksek korozyon; donatı kesit kaybı muhtemel."))
+        
+    # Zayıf Kat
+    tbdy_uyum.append(("Zayıf Kat (B2) Varlığı", "Var" if req.zeminDukkan == "evet" else "Yok", "Uyarı" if req.zeminDukkan == "evet" else "Uygun", 'D' if req.zeminDukkan == "evet" else 'U', "Zemin kat dükkan." if req.zeminDukkan == "evet" else "Yumuşak kat etkisi gözlenmedi."))
+
+
+    pdf_url = await asyncio.to_thread(
+        create_ai_pdf_report,
+        params=pdf_params, counts=counts, risk_skoru=health_score,
+        anfis_mpa=basinc_dayanimi, ai_text=aciklama, phase2_advice=phase2_advice,
+        evaluations=evaluations, tbdy_uyum=tbdy_uyum
     )
 
     # Kayıt (Supabase)
@@ -195,4 +349,9 @@ async def risk_hesapla(req: RiskRequest):
         depremKaynak=deprem_kaynak,
         aiEtiket=fuzzy_label,
         aiYorum=aciklama,
+        bks=bks,
+        binaYukseklik=round(h_n, 2),
+        dts=dts,
+        earthquakeClasses=counts,
+        pdfDownloadUrl=pdf_url,
     )

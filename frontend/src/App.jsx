@@ -87,6 +87,9 @@ function App() {
                 <span className="pill"><strong>Beton:</strong> {result.basincDayanimi ? result.basincDayanimi.toFixed(1) + " MPa" : "Veri Yok"}</span>
                 <span className="pill"><strong>Korozyon:</strong> {result.corrosion} mV</span>
                 <span className="pill"><strong>Zemin:</strong> {result.zeminSinifi || "Tahmin"}</span>
+                <span className="pill"><strong>BKS:</strong> {result.bks || "-"}</span>
+                <span className="pill"><strong>BYS:</strong> {result.binaYukseklik ? `${result.binaYukseklik}m` : "-"}</span>
+                <span className="pill"><strong>DTS:</strong> {result.dts || "-"}</span>
                 {result.pga != null && (
                   <span className="pill" style={{ borderColor: '#ef4444', color: '#fca5a5' }}><strong>PGA:</strong> {result.pga.toFixed(4)}g</span>
                 )}
@@ -103,8 +106,30 @@ function App() {
 
               <div className="ai-box">
                 <div className="ai-title">🤖 Yapay Zeka Değerlendirmesi</div>
-                {result.aciklama}
+                <div style={{ fontStyle: 'italic', marginBottom: '15px' }}>{result.aciklama}</div>
               </div>
+
+              {result.earthquakeClasses && Object.keys(result.earthquakeClasses).length > 0 && (
+                <div className="ai-box" style={{ background: 'rgba(30, 41, 59, 0.5)', borderColor: '#334155' }}>
+                  <div className="ai-title">📡 AFAD Son 50 Yıl Deprem Verisi (Bölge)</div>
+                  <div className="pill-row">
+                    {Object.entries(result.earthquakeClasses).map(([cls, count]) => (
+                      <span key={cls} className="pill" style={{ borderColor: '#475569', color: '#cbd5e1' }}>
+                        <strong>{cls}:</strong> {count} Adet
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {result.pdfDownloadUrl && (
+                <div style={{ textAlign: 'center', margin: '20px 0' }}>
+                  <a href={`http://127.0.0.1:8000${result.pdfDownloadUrl}`} target="_blank" rel="noreferrer"
+                    style={{ display: 'inline-block', backgroundColor: '#9333ea', color: 'white', padding: '12px 24px', borderRadius: '8px', textDecoration: 'none', fontWeight: 'bold' }}>
+                    📄 Yapay Zeka Analiz Raporunu İndir (PDF)
+                  </a>
+                </div>
+              )}
 
               <div className="warning">
                 <strong>⚠️ Yasal Uyarı:</strong> Bu rapor bir ön bilgilendirmedir. Resmi belge niteliği taşımaz. Kesin sonuç için lisanslı kuruluşlara başvurunuz.

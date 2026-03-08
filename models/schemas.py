@@ -72,6 +72,12 @@ class RiskResponse(BaseModel):
     # AFAD API verileri
     pga: Optional[float] = Field(default=None, description="Peak Ground Acceleration (g)")
     depremKaynak: Optional[str] = Field(default=None, description="Veri kaynağı: AFAD veya Statik Harita")
+    
+    bks: Optional[int] = None
+    binaYukseklik: Optional[float] = None
+    dts: Optional[str] = None
+    earthquakeClasses: Optional[dict] = None
+    pdfDownloadUrl: Optional[str] = None
 
     aiEtiket: Optional[str] = None
     aiYorum: Optional[str] = None
