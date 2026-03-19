@@ -131,6 +131,80 @@ function App() {
                 </div>
               )}
 
+              {/* Engine Metadata */}
+              <div className="engine-meta">
+                <span>Motor:</span>
+                <span className="meta-tag">{result.engineVersion || 'N/A'}</span>
+                {result.fuzzyTrace?.raw_score != null && result.fuzzyTrace?.capped_score != null && (
+                  <>
+                    <span>|</span>
+                    {result.fuzzyTrace.raw_score !== result.fuzzyTrace.capped_score ? (
+                      <span className="score-delta">
+                        Skor: {result.fuzzyTrace.raw_score.toFixed(1)} → {result.fuzzyTrace.capped_score.toFixed(1)} (sınırlandırıldı)
+                      </span>
+                    ) : (
+                      <span>Skor: {result.fuzzyTrace.capped_score.toFixed(1)}</span>
+                    )}
+                  </>
+                )}
+              </div>
+
+              {/* Fuzzy Trace Panel */}
+              {result.fuzzyTrace && (result.fuzzyTrace.fired_rules?.length > 0 || result.fuzzyTrace.applied_caps?.length > 0) && (
+                <details className="trace-panel">
+                  <summary className="trace-summary">
+                    🔍 Teknik Detay: Karar Motoru İzleme
+                  </summary>
+                  <div className="trace-content">
+                    {result.fuzzyTrace.fired_rules?.length > 0 && (
+                      <div className="trace-section">
+                        <div className="trace-section-title">Tetiklenen Kurallar</div>
+                        {result.fuzzyTrace.fired_rules.map((rule, i) => (
+                          <div key={i} className="rule-card">
+                            <div className="rule-card-header">
+                              <span className="rule-id">{rule.id}</span>
+                              <span className="rule-output">→ {rule.output}</span>
+                              <span className="rule-activation">
+                                {(rule.activation * 100).toFixed(0)}%
+                                <span className="rule-activation-bar">
+                                  <span className="rule-activation-fill" style={{ width: `${Math.min(rule.activation * 100, 100)}%` }}></span>
+                                </span>
+                              </span>
+                            </div>
+                            {rule.rationale && (
+                              <div className="rule-rationale">{rule.rationale}</div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {result.fuzzyTrace.applied_caps?.length > 0 && (
+                      <div className="trace-section">
+                        <div className="trace-section-title">Güvenlik Sınırları (Policy Caps)</div>
+                        {result.fuzzyTrace.applied_caps.map((cap, i) => (
+                          <div key={i} className={`cap-card ${cap.effective ? 'cap-effective' : 'cap-ineffective'}`}>
+                            <div className="cap-card-header">
+                              <span className="cap-name">{cap.cap_name}</span>
+                              <span className="cap-status">
+                                {cap.effective ? '⚠ Aktif — Skor Sınırlandırıldı' : '✓ Etkisiz — Koşul Sağlandı Ama Skor Zaten Altında'}
+                              </span>
+                            </div>
+                            {cap.original_score != null && cap.capped_score != null && (
+                              <div className="cap-scores">
+                                {cap.effective
+                                  ? `${cap.original_score.toFixed(1)} → ${cap.capped_score.toFixed(1)}`
+                                  : `Mevcut skor: ${cap.capped_score.toFixed(1)}`
+                                }
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </details>
+              )}
+
               <div className="warning">
                 <strong>⚠️ Yasal Uyarı:</strong> Bu rapor bir ön bilgilendirmedir. Resmi belge niteliği taşımaz. Kesin sonuç için lisanslı kuruluşlara başvurunuz.
               </div>

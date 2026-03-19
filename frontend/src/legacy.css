@@ -298,3 +298,243 @@ button:disabled {
 .hidden {
     display: none;
 }
+
+/* ——— Engine Metadata ——— */
+.engine-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin: 15px 0;
+    padding: 10px 14px;
+    border-radius: 8px;
+    background: #0f172a;
+    border: 1px solid #1e293b;
+    font-size: 0.78rem;
+    color: #94a3b8;
+}
+
+.engine-meta .meta-tag {
+    background: #1e293b;
+    border: 1px solid #334155;
+    padding: 3px 8px;
+    border-radius: 6px;
+    font-family: monospace;
+    font-size: 0.75rem;
+    color: #a78bfa;
+}
+
+.engine-meta .score-delta {
+    color: #f59e0b;
+    font-weight: 600;
+}
+
+/* ——— Trace Panel (details/summary) ——— */
+.trace-panel {
+    margin: 15px 0;
+    border: 1px solid #1e293b;
+    border-radius: 12px;
+    background: #0f172a;
+    overflow: hidden;
+}
+
+.trace-panel[open] {
+    background: #020617;
+}
+
+.trace-summary {
+    padding: 12px 16px;
+    cursor: pointer;
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: #94a3b8;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    list-style: none;
+    user-select: none;
+    transition: color 0.2s;
+}
+
+.trace-summary::-webkit-details-marker {
+    display: none;
+}
+
+.trace-summary::before {
+    content: "▶";
+    font-size: 0.7rem;
+    transition: transform 0.2s;
+}
+
+.trace-panel[open] > .trace-summary::before {
+    transform: rotate(90deg);
+}
+
+.trace-summary:hover {
+    color: #e2e8f0;
+}
+
+.trace-content {
+    padding: 0 16px 16px;
+}
+
+.trace-section {
+    margin-bottom: 16px;
+}
+
+.trace-section:last-child {
+    margin-bottom: 0;
+}
+
+.trace-section-title {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid #1e293b;
+}
+
+/* ——— Rule Cards ——— */
+.rule-card {
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-bottom: 8px;
+}
+
+.rule-card:last-child {
+    margin-bottom: 0;
+}
+
+.rule-card-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+}
+
+.rule-id {
+    background: #0f172a;
+    border: 1px solid #475569;
+    color: #38bdf8;
+    font-family: monospace;
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 4px;
+}
+
+.rule-output {
+    color: #e2e8f0;
+    font-weight: 600;
+    font-size: 0.82rem;
+}
+
+.rule-activation {
+    margin-left: auto;
+    color: #94a3b8;
+    font-size: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.rule-activation-bar {
+    display: inline-block;
+    width: 40px;
+    height: 4px;
+    background: #334155;
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.rule-activation-fill {
+    display: block;
+    height: 100%;
+    background: #38bdf8;
+    border-radius: 2px;
+}
+
+.rule-rationale {
+    color: #94a3b8;
+    font-size: 0.78rem;
+    font-style: italic;
+    line-height: 1.4;
+}
+
+/* ——— Cap Cards ——— */
+.cap-card {
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-bottom: 8px;
+    font-size: 0.82rem;
+}
+
+.cap-card:last-child {
+    margin-bottom: 0;
+}
+
+.cap-effective {
+    background: rgba(239, 68, 68, 0.08);
+    border: 1px solid #991b1b;
+}
+
+.cap-ineffective {
+    background: rgba(100, 116, 139, 0.08);
+    border: 1px solid #334155;
+}
+
+.cap-card-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+}
+
+.cap-name {
+    font-family: monospace;
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 4px;
+}
+
+.cap-effective .cap-name {
+    background: rgba(239, 68, 68, 0.15);
+    border: 1px solid #b91c1c;
+    color: #fca5a5;
+}
+
+.cap-ineffective .cap-name {
+    background: #0f172a;
+    border: 1px solid #475569;
+    color: #94a3b8;
+}
+
+.cap-status {
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.cap-effective .cap-status {
+    color: #f87171;
+}
+
+.cap-ineffective .cap-status {
+    color: #64748b;
+}
+
+.cap-scores {
+    color: #94a3b8;
+    font-size: 0.78rem;
+}
+
+.cap-effective .cap-scores {
+    color: #cbd5e1;
+}

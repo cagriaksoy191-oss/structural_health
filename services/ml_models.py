@@ -21,7 +21,9 @@ except Exception as e:
     print(f"Model yükleme hatası: {e}")
 
 # -------------------------------------------------
-#  RİSK MODELİ (RandomForest Classifier — Ensemble)
+#  RİSK MODELİ (RandomForest Classifier)
+#  DEPRECATED: v2_fuzzy27'de karar üretiminde kullanılmıyor.
+#  Backward-compat geçiş süresi için korunuyor.
 # -------------------------------------------------
 RISK_MODEL_PATH = Path("risk_model.joblib")
 risk_model = None
@@ -38,7 +40,13 @@ RF_CLASS_SCORES = {"Düşük": 80, "Orta": 50, "Yüksek": 20}
 
 
 def rf_health_score(req, zemin_sinifi: str, basinc_dayanimi: float):
-    """RF predict_proba ile 0-100 sağlık skoru üretir. Hata olursa None döner."""
+    """DEPRECATED: v2_fuzzy27'de kullanılmıyor. RF predict_proba ile 0-100 sağlık skoru üretir."""
+    import warnings
+    warnings.warn(
+        "rf_health_score() v2_fuzzy27'de kullanılmıyor. Karar motoru Fuzzy + Policy Layer.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
     if risk_model is None:
         return None
     try:

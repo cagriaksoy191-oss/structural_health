@@ -1,8 +1,28 @@
 # Progress — Açık Görevler ve Notlar
 
-> **Son güncelleme:** 2026-03-06
+> **Son güncelleme:** 2026-03-19
 
-## Tartışıldı Ama Koda Dökülmedi (Backlog)
+## Backlog — Açık Görevler
+
+### v1 Fuzzy Kodu Temizliği
+
+- `fuzzy_engine.py` içinde v1 kodu (5 kural) backward-compat amaçlı korunuyor
+- v2 artık %100 aktif → v1 güvenle silinebilir
+- **Risk:** Düşük — v1'i import eden harici test/script kalmadığı doğrulanmalı
+
+### `risk_model.joblib` Kaldırma
+
+- 8.5 MB dosya repoda duruyor ama aktif runtime'da kullanılmıyor (DEPRECATED)
+- Repo boyut optimizasyonu için kaldırılabilir
+- **Risk:** Düşük — kullanılmıyor, silmek güvenli
+
+### CAP Kalibrasyon Refinement
+
+- CAP_SINGLE=40, CAP_DUAL=25 — provisional değerler
+- Saha verileriyle kalibre edilmesi önerilir
+- Faz 3 testleriyle mevcut değerler çelişmiyor
+
+## Tartışıldı Ama Koda Dökülmedi
 
 ### P2 — Cache Eviction Eksikliği
 
@@ -15,28 +35,19 @@
 
 - `calculate_pga_from_events()` tüm depremlerin max PGA'sını alıyor (conservative)
 - Ön tarama için güvenli taraf (overestimate > underestimate) ama kullanıcıya abartılmış PGA sunulabilir
-- **Öneri:** Detaylara bir uyarı notu eklenebilir ("Bu en kötü senaryo tahminidir" gibi)
-
-### ~~Frontend Tam E2E Test~~ ✅ TAMAMLANDI
-
-- `frontend/package.json` BOM fix yapıldı, byte-level doğrulandı
-- `baslat.bat` ile frontend + backend birlikte çalıştırıldı, uçtan uca test edildi (2026-03-01 03:43)
-- Afyonkarahisar/Çobanlar testi: healthScore=52, depremSeviye=ORTA, Beton=39.4 MPa, AI yorum üretildi ✅
+- **Öneri:** Detaylara bir uyarı notu eklenebilir
 
 ## Çözülemeyen / Bilinen Kısıtlamalar
 
 - AFAD TDTH (tdth.afad.gov.tr) e-Devlet yetkilendirmesi gerektiriyor — resmi PGA verisi alınamıyor
 - AFAD Event API bazen HTTP 302 (e-Devlet redirect) atıyor — statik harita fallback her zaman devreye giriyor
 - GMPE formülü basitleştirilmiş Boore-Atkinson esinli; resmi GMPE için TDTH verisi şart
-
-## Yarının Görevleri
-
-- [ ] P2 cache eviction değerlendirmesi (gerekli mi?)
-- [x] Git push (bugünkü P0/P1 fix + BOM fix + Git Senkronizasyon Altyapısı eklendi)
-- [ ] Frontend UI iyileştirmeleri (kullanıcının belirttiği geliştirme alanları)
+- `ResultCard.jsx` repoda mevcut ama aktif render path değil (Tailwind sınıfları, import edilmiyor)
 
 ## Bug Logs / Çözülenler
 
 - Pinecone paket adı güncellendi ve ml_models.py emoji encoding hatası çözüldü
-- **(2026-03-06)** Windows PowerShell (cp1254) UnicodeEncodeError — konsol `print()` satırlarındaki emojiler (✅❌⚠️🧠📂🤖🏆📊📉📈⭐📡🎉👉) ASCII taglarla değiştirildi (`[BASARILI]`, `[HATA]`, `[UYARI]`). Web sitesi UI emojileri (`corrosion.py`, `risk.py`, `structural.py`, `ai_comment.py`) korundu, değiştirilmedi.
-- **(2026-03-06)** VS Code "Select Python Interpreter" sarı uyarısı — `.vscode/settings.json` oluşturuldu (`python.defaultInterpreterPath: ${workspaceFolder}\.venv\Scripts\python.exe`). `.vscode/` zaten `.gitignore`'da olduğu için ekip arkadaşlarını etkilemez.
+- **(2026-03-06)** Windows PowerShell (cp1254) UnicodeEncodeError — konsol emojiler ASCII taglarla değiştirildi
+- **(2026-03-06)** VS Code "Select Python Interpreter" — `.vscode/settings.json` oluşturuldu
+- **(2026-03-19)** fuzzyTrace walkthrough örneği API contract ile uyumsuzdu — route'un expose etmediği alanlar (references, membership_detail, threshold, reason, recommendation) kaldırıldı, API vs internal trace ayrımı netleştirildi
+- **(2026-03-19)** Supabase rollout runbook "sessizce yok sayar" ifadesi fazla kesindi — teknik olarak savunulabilir dile düzeltildi

@@ -1,4 +1,4 @@
-﻿fastapi
+fastapi
 uvicorn
 pandas
 numpy<2
@@ -17,3 +17,4 @@ supabase
 pinecone
 gitpython
 matplotlib
+fpdf2                       # PDF rapor üretimi (services/pdf_report.py)

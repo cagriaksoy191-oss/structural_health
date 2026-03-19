@@ -180,7 +180,7 @@ def draw_evaluation_row(pdf, risk_factor, explanation, points, bg_color=None):
     
     pdf.set_xy(x, y + h)
 
-def create_ai_pdf_report(params, counts, risk_skoru, anfis_mpa, ai_text, phase2_advice, evaluations=[], tbdy_uyum=[]):
+def create_ai_pdf_report(params, counts, risk_skoru, anfis_mpa, ai_text, phase2_advice, evaluations=[], tbdy_uyum=[], engine_version=None):
     request_id = str(uuid.uuid4())[:8]
     pie_path, bar_path = generate_charts(counts, risk_skoru, request_id)
     
@@ -317,10 +317,13 @@ def create_ai_pdf_report(params, counts, risk_skoru, anfis_mpa, ai_text, phase2_
     pdf.multi_cell(0, 6, f">> NİHAİ SONUÇ: {phase2_advice}")
     pdf.set_text_color(0, 0, 0)
     
-    # Footer - Yasal Uyarı
+    # Footer - Motor Versiyonu + Yasal Uyarı
     pdf.ln(15)
     pdf.set_font('Arial', 'I', 8)
     pdf.set_text_color(100, 100, 100)
+    if engine_version:
+        pdf.cell(0, 4, f"Motor Versiyonu: {engine_version}", ln=True, align='C')
+        pdf.ln(2)
     pdf.multi_cell(0, 4, "Yasal Uyari: Bu rapor bir on degerlendirme araci tarafindan AI destekli olarak uretilmistir, kesin yapi sagligi veya oturum izni yerine gecmez. Guvenli sonuclar icin laboratuvar testleri ile lisansli yapi denetim kuruluslarina basvurulmalidir.", align='C')
     
     filename = f"AI_Deprem_Raporu_{request_id}.pdf"

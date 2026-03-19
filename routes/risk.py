@@ -1,15 +1,19 @@
-"""Yapı Sağlığı — Risk Hesaplama API Rotası"""
+"""Yapı Sağlığı — Risk Hesaplama API Rotası (v2_fuzzy27)"""
 
 import asyncio
 from datetime import datetime
 
 from fastapi import APIRouter
-from skfuzzy import control as ctrl
 
 from models.schemas import RiskRequest, RiskResponse
-from services.fuzzy_engine import fuzzy_control_system, get_fuzzy_label, clamp
+from services.fuzzy_engine import (
+    compute_health_v2,
+    get_fuzzy_label,
+    clamp,
+    ENGINE_VERSION,
+)
 from services.corrosion import korozyon_olasiligi
-from services.ml_models import concrete_model, rf_health_score, tahmin_beton_dayanimi
+from services.ml_models import concrete_model, tahmin_beton_dayanimi
 from services.earthquake import (
     deprem_seviyesi_bul,
     deprem_seviyesi_puan,
@@ -18,7 +22,7 @@ from services.earthquake import (
 )
 from services.structural import yapisal_skor_hesapla, yapisal_seviye_etiketi
 from services.ai_comment import get_llm_comment
-from services.data_service import kayit_ekle_supabase
+from services.data_service import kayit_ekle_supabase, kayit_ekle_csv
 from services.pdf_report import create_ai_pdf_report
 
 
@@ -66,18 +70,6 @@ async def risk_hesapla(req: RiskRequest):
     if concrete_model is None:
         detaylar.append("UYARI: Beton modeli yok, varsayılan (C25) kullanıldı.")
 
-    # --- YÖNETMELİK: Minimum Beton Sınıfı Kontrolü (TBDY 2018 Madde 7.2.5.3) ---
-    # Deprem etkisi alacak elemanlarda en düşük beton sınıfı C25 (25 MPa) olmalıdır.
-    if basinc_dayanimi < 25.0:
-        detaylar.append(
-            f"🚨 YÖNETMELİK UYARISI: Tahmini beton dayanımı ({basinc_dayanimi:.1f} MPa) "
-            f"TBDY 2018 minimum sınırının (C25 = 25 MPa) altında! "
-            f"Bu bina mevcut yönetmelik şartlarını karşılamıyor."
-        )
-        # Yapısal risk skoruna ciddi ceza ekle
-        toplam_yapisal_risk += 5
-        detaylar.append("Yönetmelik altı beton nedeniyle ek risk (+5)")
-
     # --- Korozyon Olasılığı (ASTM C876 standardı, sürekli interpolasyon) ---
     kor_yuzde, kor_seviye, kor_ikon = korozyon_olasiligi(req.corrosion)
     detaylar.append(
@@ -85,52 +77,65 @@ async def risk_hesapla(req: RiskRequest):
         f"[{req.corrosion:.0f} mV — ASTM C876]"
     )
 
-    # 4. Fuzzy Logic (Şeffaf Sınırlandırma ile)
+    # ==================================================================
+    #  4. v2 FUZZY + POLICY LAYER (compute_health_v2)
+    #  Ensemble kaldırıldı. Karar motoru: %100 Fuzzy + Policy Layer.
+    # ==================================================================
     try:
-        sim = ctrl.ControlSystemSimulation(fuzzy_control_system)
-
-        # Clamp ve Uyarı Mekanizması
-        f_strength = clamp(float(basinc_dayanimi), 0.0, 80.0)
-        if f_strength != float(basinc_dayanimi):
-            detaylar.append(
-                f"NOT: Beton dayanımı fuzzy limitine sınırlandı ({basinc_dayanimi:.1f} -> {f_strength:.1f})"
-            )
-
-        f_corrosion = clamp(float(req.corrosion), -600.0, 100.0)
-        if f_corrosion != float(req.corrosion):
-            detaylar.append(
-                f"NOT: Korozyon fuzzy limitine sınırlandı ({req.corrosion:.0f} -> {f_corrosion:.0f})"
-            )
-
-        f_survey = clamp(float(toplam_yapisal_risk), 0.0, 50.0)
-        if f_survey != float(toplam_yapisal_risk):
-            detaylar.append(
-                f"NOT: Yapısal risk fuzzy limitine sınırlandı ({toplam_yapisal_risk} -> {f_survey})"
-            )
-
-        sim.input["strength"] = f_strength
-        sim.input["corrosion"] = f_corrosion
-        sim.input["survey_risk"] = f_survey
-
-        sim.compute()
-        health_score = sim.output["health"]
-    except Exception as e:
-        print(f"Fuzzy hesaplama hatası: {e}")
-        health_score = 50.0
-
-    # 5. Ensemble: Fuzzy + RF (predict_proba tabanlı)
-    fuzzy_raw = clamp(health_score, 0.0, 100.0)
-    rf_score = rf_health_score(req, zemin_sinifi, basinc_dayanimi)
-    if rf_score is not None:
-        health_score = 0.6 * fuzzy_raw + 0.4 * rf_score
-        detaylar.append(
-            f"🤖 Ensemble: Fuzzy({fuzzy_raw:.0f}) + RF({rf_score:.0f}) → {health_score:.0f}"
+        v2_result = compute_health_v2(
+            strength_val=float(basinc_dayanimi),
+            corrosion_val=float(req.corrosion),
+            survey_val=float(toplam_yapisal_risk),
+            basinc_dayanimi=float(basinc_dayanimi),
         )
-    else:
-        health_score = fuzzy_raw
-    health_score = clamp(health_score, 0.0, 100.0)
-    fuzzy_label = get_fuzzy_label(health_score)
 
+        health_score = v2_result["capped_score"]
+        fuzzy_label = v2_result["label"]
+        fired_rules = v2_result["fired_rules"]
+        applied_caps = v2_result["applied_caps"]
+        raw_score = v2_result["raw_score"]
+
+    except Exception as e:
+        print(f"Fuzzy v2 hesaplama hatasi: {e}")
+        health_score = 50.0
+        fuzzy_label = get_fuzzy_label(50.0)
+        fired_rules = []
+        applied_caps = []
+        raw_score = 50.0
+
+    # --- Policy Cap Detayları → kullanıcıya dönük uyarılar ---
+    for cap in applied_caps:
+        # Guardrail eşleşti → kullanıcı bilgilendirilmeli (effective olsa da olmasa da)
+        if cap["cap_name"] == "CAP_DUAL":
+            detaylar.append(
+                f"🚨 KRİTİK ÖN TARAMA UYARISI: {cap['reason']}"
+            )
+            detaylar.append(f"📋 Öneri: {cap['recommendation']}")
+        elif cap["cap_name"] == "TBDY_ONELEME_CAP":
+            detaylar.append(
+                f"🚨 KRİTİK ÖN TARAMA UYARISI: {cap['reason']}"
+            )
+            detaylar.append(f"📋 Öneri: {cap['recommendation']}")
+        elif cap["cap_name"] == "ASTM_C876_CAP":
+            detaylar.append(
+                f"🚨 {cap['reason']}"
+            )
+            detaylar.append(f"📋 Öneri: {cap['recommendation']}")
+
+        if cap.get("effective"):
+            detaylar.append(
+                f"⚠️ Skor sınırlandırıldı: {cap['original_score']:.0f} → {cap['capped_score']:.0f}"
+            )
+
+    # --- Explainability: Top-N Kurallar (teknik detay) ---
+    if fired_rules:
+        top_rule = fired_rules[0]
+        detaylar.append(
+            f"🔍 Ana kural: {top_rule['id']} ({top_rule['output']}) "
+            f"— {top_rule['rationale']}"
+        )
+
+    # genel seviye belirleme
     if health_score < 45:
         genel_seviye = "Yüksek"
     elif health_score < 65:
@@ -230,18 +235,18 @@ async def risk_hesapla(req: RiskRequest):
         evaluations.append(("Zayıf Kat Riski (Zemin Dükkan)", "Dükkan katı, taşıyıcı sistemden izole edilmemiş; çökme, kayma ve aşırı deformasyona yol açabilir.", "+18 Puan"))
 
     # 4. Cikma Durumu
-    if req.agirCikma == "evet":
+    if req.agirCikma == "buyuk":
         evaluations.append(("Ağır Çıkma", "Üst kısımlarda ek yük oluşturur ve kesme kuvvetlerini artırır.", "+10 Puan"))
     elif req.agirCikma == "hafif":
         evaluations.append(("Hafif Çıkma", "Çatı ve dış cephe elemanları hafif; ancak bu faktör tek başına kritik değildir.", "+3 Puan"))
 
     # 5. Kisa Kolon
-    if req.kisaKolon == "evet":
+    if req.kisaKolon == "var":
         evaluations.append(("Kısa Kolon Etkisi", "Deprem anında kesme kuvvetlerini kolonların kısa bölümüne yığarak ani kırılmalara neden olabilir.", "+20 Puan"))
 
     # 6. Plan / Bitisik
     if req.bitisik == "evet":
-        if req.bitisikHiza == "hayir":
+        if req.bitisikHiza == "farkli":
             evaluations.append(("Plan Düzensizliği (Kat Hizası Yok)", "Kat hizası bitişik nizamda yok; katlar arası deformasyon dağılımını eşit tutmaz ve çarpışma (çekiçleme) etkisini artırır.", "+10 Puan"))
         else:
             evaluations.append(("Bitişik Nizam (Kat Hizalı)", "Aynı hizada bitişik durum nispeten uyumlu salınıma olanak tanır.", "+5 Puan"))
@@ -298,37 +303,63 @@ async def risk_hesapla(req: RiskRequest):
         create_ai_pdf_report,
         params=pdf_params, counts=counts, risk_skoru=health_score,
         anfis_mpa=basinc_dayanimi, ai_text=aciklama, phase2_advice=phase2_advice,
-        evaluations=evaluations, tbdy_uyum=tbdy_uyum
+        evaluations=evaluations, tbdy_uyum=tbdy_uyum,
+        engine_version=ENGINE_VERSION,
     )
 
-    # Kayıt (Supabase)
-    kayit_ekle_supabase(
-        {
-            "created_at": datetime.now().isoformat(timespec="seconds"),
-            "il": req.il,
-            "ilce": req.ilce,
-            "yapim_yili": req.yapimYili,
-            "kat_sayisi": req.katSayisi,
-            "zemin_dukkan": req.zeminDukkan,
-            "bitisik_nizam": req.bitisik,
-            "hasar_durumu": req.hasar,
-            "kullanim_amaci": req.kullanimAmaci,
-            "kisa_kolon": req.kisaKolon,
-            "agir_cikma": req.agirCikma,
-            "plan_tipi": req.planTipi,
-            "bitisik_hiza": req.bitisikHiza,
-            "zemin_sinifi": zemin_sinifi,
-            "crack_puan": req.crackPuan if req.crackPuan is not None else 0,
-            "deprem_seviye": deprem_seviye,
-            "deprem_puan": deprem_puan,
-            "yapisal_puan": yapisal_puan,
-            "toplam_risk_puani": toplam_yapisal_risk,
-            "yapisal_seviye": yapisal_seviye,
-            "genel_seviye": genel_seviye,
-            "ai_etiket": fuzzy_label,
-            "ai_yorum": aciklama,
-        }
-    )
+    # --- Kayıt: Supabase + CSV (aynı dict) ---
+    record_dict = {
+        "created_at": datetime.now().isoformat(timespec="seconds"),
+        "il": req.il,
+        "ilce": req.ilce,
+        "yapim_yili": req.yapimYili,
+        "kat_sayisi": req.katSayisi,
+        "zemin_dukkan": req.zeminDukkan,
+        "bitisik_nizam": req.bitisik,
+        "hasar_durumu": req.hasar,
+        "kullanim_amaci": req.kullanimAmaci,
+        "kisa_kolon": req.kisaKolon,
+        "agir_cikma": req.agirCikma,
+        "plan_tipi": req.planTipi,
+        "bitisik_hiza": req.bitisikHiza,
+        "zemin_sinifi": zemin_sinifi,
+        "crack_puan": req.crackPuan if req.crackPuan is not None else 0,
+        "deprem_seviye": deprem_seviye,
+        "deprem_puan": deprem_puan,
+        "yapisal_puan": yapisal_puan,
+        "toplam_risk_puani": toplam_yapisal_risk,
+        "yapisal_seviye": yapisal_seviye,
+        "genel_seviye": genel_seviye,
+        "ai_etiket": fuzzy_label,
+        "ai_yorum": aciklama,
+        "engine_version": ENGINE_VERSION,
+    }
+    kayit_ekle_supabase(record_dict)
+    kayit_ekle_csv(record_dict)
+
+    # --- Explainability Trace (teknik JSON) ---
+    fuzzy_trace = {
+        "raw_score": raw_score,
+        "capped_score": round(health_score, 2),
+        "fired_rules": [
+            {
+                "id": r["id"],
+                "output": r["output"],
+                "activation": r["activation"],
+                "rationale": r["rationale"],
+            }
+            for r in fired_rules
+        ],
+        "applied_caps": [
+            {
+                "cap_name": c["cap_name"],
+                "effective": c.get("effective", True),
+                "original_score": c["original_score"],
+                "capped_score": c["capped_score"],
+            }
+            for c in applied_caps
+        ],
+    }
 
     return RiskResponse(
         # İnsani Yuvarlama (Round)
@@ -354,4 +385,6 @@ async def risk_hesapla(req: RiskRequest):
         dts=dts,
         earthquakeClasses=counts,
         pdfDownloadUrl=pdf_url,
+        engineVersion=ENGINE_VERSION,
+        fuzzyTrace=fuzzy_trace,
     )

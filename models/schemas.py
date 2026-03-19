@@ -1,6 +1,6 @@
 """Yapı Sağlığı — Pydantic Veri Modelleri"""
 
-from typing import List, Optional, Literal
+from typing import Dict, List, Optional, Literal
 from datetime import datetime
 
 from pydantic import BaseModel, Field, field_validator
@@ -81,3 +81,7 @@ class RiskResponse(BaseModel):
 
     aiEtiket: Optional[str] = None
     aiYorum: Optional[str] = None
+
+    # v2 Fuzzy Engine
+    engineVersion: Optional[str] = Field(default=None, description="Karar motoru versiyonu (v2_fuzzy27)")
+    fuzzyTrace: Optional[Dict] = Field(default=None, description="Teknik explainability trace (fired_rules, caps)")

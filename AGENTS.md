@@ -5,7 +5,7 @@
 
 ## Proje Tanımı
 
-Yapı Sağlığı İzleme (Structural Health Monitoring) — Web Tabanlı Ön Tarama Aracı. Kullanıcı bina verilerini girer, sistem deprem riski, yapısal skor, beton dayanımı, korozyon analizi, fuzzy logic ve ML ensemble ile sağlık skoru hesaplar, Qwen3 LLM ile Türkçe uzman yorumu üretir.
+Yapı Sağlığı İzleme (Structural Health Monitoring) — Web Tabanlı Ön Tarama Aracı. Kullanıcı bina verilerini girer, sistem deprem riski, yapısal skor, beton dayanımı, korozyon analizi, v2 fuzzy logic (27 kural + policy layer) ile sağlık skoru hesaplar, Qwen3 LLM ile Türkçe uzman yorumu üretir.
 
 ## Proje Mimarisi
 
@@ -26,35 +26,39 @@ Yapı Sağlığı İzleme (Structural Health Monitoring) — Web Tabanlı Ön Ta
 ```text
 main.py                    → FastAPI app + backward-compat re-exports
 config.py                  → Supabase client + CSV_LOCK + AFAD API config
-models/schemas.py          → RiskRequest (19 alan) + RiskResponse (19 alan)
-routes/risk.py             → /api/risk-hesapla endpoint (6 aşamalı pipeline)
+models/schemas.py          → RiskRequest (19 alan) + RiskResponse (24 alan, +engineVersion, +fuzzyTrace)
+routes/risk.py             → /api/risk-hesapla endpoint (v2 fuzzy pipeline)
 services/
   normalize.py             → Türkçe karakter normalizasyonu (ğ→g, ş→s, ı→i)
   earthquake.py            → 81 il deprem risk haritası + zemin sınıfı (Z1-Z4) + AFAD hybrid
   afad_api.py              → AFAD Event API client + PGA hesaplama + in-memory cache
   structural.py            → 14 kritere göre yapısal skor hesaplama
-  fuzzy_engine.py          → scikit-fuzzy 3-girdi/5-kural sistemi
-  ml_models.py             → RandomForest beton + risk modeli (joblib)
+  fuzzy_engine.py          → v1 (5 kural, backward-compat) + v2 (27 kural, RULE_MATRIX, policy layer)
+  ml_models.py             → RandomForest beton modeli (aktif) + risk modeli (DEPRECATED)
   corrosion.py             → ASTM C876 korozyon olasılığı (sürekli interpolasyon)
   ai_comment.py            → Qwen3:8b LLM entegrasyonu (Ollama localhost:11434)
-  data_service.py          → Supabase + CSV veri kayıt
+  data_service.py          → Supabase + CSV veri kayıt (kayit_ekle_supabase + kayit_ekle_csv)
+  pdf_report.py            → FPDF2 ile yapı sağlığı PDF raporu (engine_version footer)
 ```
 
-### Risk Hesaplama Pipeline (6 Aşama)
+### Risk Hesaplama Pipeline (v2 — 6 Aşama)
 
 1. **Deprem Analizi:** `earthquake.py` → `deprem_analizi_async()` — Hybrid: önce AFAD Event API (PGA hesaplama), başarısız olursa statik haritaya fallback. Koordinat bazlı veya il/ilçe bazlı sorgu destekler.
 2. **Yapısal Skor:** `structural.py` — Yapım yılı, kat sayısı, hasar durumu, kısa kolon, çıkma, plan tipi, zemin sınıfı, çatlak puanı dahil 14 kriter, TBDY 2018 uyumlu
 3. **Beton Dayanımı:** `ml_models.py` — UPV + Rebound Number → RandomForest ile MPa tahmini, TBDY 2018 minimum C25 kontrolü
 4. **Korozyon:** `corrosion.py` — ASTM C876 standardı, -600 ile +100 mV arası sürekli interpolasyon, 5 seviye (Düşük → Çok Yüksek)
-5. **Fuzzy + Ensemble:** `fuzzy_engine.py` + `ml_models.py` — Fuzzy Logic (strength, corrosion, survey_risk → health 0-100) %60 + RandomForest Classifier %40 ağırlıklı ensemble
+5. **Fuzzy v2 + Policy Layer:** `fuzzy_engine.py` → `compute_health_v2()` — 27 kural RULE_MATRIX, trapmf çıktılar, policy cap guardrails, explainability trace. RF ensemble kaldırıldı.
 6. **AI Yorum:** `ai_comment.py` — Qwen3:8b modeli (Ollama üzerinden), skor/risk/beton/korozyon verilerinden Türkçe uzman paragrafı üretir
 
-### Fuzzy Logic Detayları
+### Fuzzy Logic v2 Detayları
 
+- **Motor versiyonu:** `v2_fuzzy27` (ENGINE_VERSION sabiti)
 - **Girdiler:** strength (0-80 MPa), corrosion (-600 ile 100 mV), survey_risk (0-50 puan)
 - **Çıktı:** health (0-100 skor)
-- **Üyelik fonksiyonları:** trapmf + trimf
-- **5 kural:** very_bad, bad, medium, good, very_good
+- **Üyelik fonksiyonları:** trapmf + trimf (girdi), trapmf (çıktı)
+- **27 kural:** RULE_MATRIX (3×3×3 tam kapsama), her kural id/inputs/output/rationale/references
+- **Policy Layer:** TBDY C25 cap (CAP_SINGLE=40), ASTM C876 cap (CAP_SINGLE=40), çift kritik cap (CAP_DUAL=25)
+- **Explainability:** `get_fired_rules()` + `apply_policy_caps()` → `fuzzyTrace` response alanı
 - **Clamp mekanizması:** Girdiler fuzzy evren sınırlarına sınırlandırılır, uyarı loglanır
 
 ### ANFIS Modeli
@@ -67,7 +71,7 @@ services/
 ### ML Model Dosyaları
 
 - `concrete_model.joblib` (4.2 MB) — Beton dayanımı tahmini (RandomForest Regressor)
-- `risk_model.joblib` (8.5 MB) — Risk sınıflandırma (RandomForest Classifier, predict_proba)
+- `risk_model.joblib` (8.5 MB) — Risk sınıflandırma (RandomForest Classifier) — **DEPRECATED, v2 fuzzy ile kullanılmıyor**
 - `etiket_encoder.joblib` — Label encoder
 - `anfis_model_agirliklari.pth` — ANFIS PyTorch ağırlıkları
 - `scaler_x.pkl`, `scaler_y.pkl` — ANFIS normalizasyon
@@ -84,7 +88,7 @@ services/
 - **latitude (optional, float)** — Geolocation'dan gelen enlem
 - **longitude (optional, float)** — Geolocation'dan gelen boylam
 
-**RiskResponse (19 alan):**
+**RiskResponse (24 alan):**
 
 - healthScore, genelSeviye, aciklama
 - depremSeviye, depremPuan, yapisalSeviye, yapisalPuan, toplamYapisalRisk
@@ -92,22 +96,30 @@ services/
 - fuzzyLabel, corrosion, aiEtiket, aiYorum
 - **pga (optional, float)** — Peak Ground Acceleration (g cinsinden)
 - **depremKaynak (optional, str)** — Veri kaynağı: "AFAD" veya "Statik Harita"
+- bks (optional), binaYukseklik (optional), dts (optional), earthquakeClasses (optional)
+- **pdfDownloadUrl (optional, str)** — PDF rapor indirme URL'i
+- **engineVersion (optional, str)** — Karar motoru versiyonu (v2_fuzzy27)
+- **fuzzyTrace (optional, Dict)** — Teknik explainability trace (fired_rules, applied_caps)
 
 ### Frontend: React (Vite)
 
-- **Ana:** `App.jsx` — State management (result, loading, error), API çağrısı, sonuç gösterimi
+- **Ana:** `App.jsx` — State management, API çağrısı, sonuç gösterimi (aktif rendering path)
+  - Engine metadata satırı (`engineVersion` pill + raw/capped skor delta)
+  - Teknik trace paneli (`<details>` accordion — fired rules + policy caps)
 - **Bileşenler:**
   - `RiskForm.jsx` (11.7 KB) — 17 alanlı form, il/ilçe seçici
-  - `ResultCard.jsx` (4.6 KB) — Sonuç kartı, skor, pill'ler, AI yorum kutusu
+  - `ResultCard.jsx` (4.6 KB) — Repoda mevcut ama **aktif render path değil** (Tailwind sınıfları, import edilmiyor)
   - `Header.jsx` — Başlık bileşeni
 - **Hooks:** `useGeolocation.js` — Tarayıcı konum API'si (lat/lon + il/ilçe döndürür)
 - **Constants:** `cityData.js` (20.8 KB) — Tüm Türkiye il/ilçe listesi
+- **Stil:** `legacy.css` — Vanilla CSS (pill, ai-box, engine-meta, trace-panel, rule-card, cap-card)
 - **API URL:** `http://127.0.0.1:8000/api/risk-hesapla`
 - **Dev server:** Vite (localhost:5173)
 
 ### Veritabanı: Supabase
 
 - **Tablo:** `bina_analizleri` — Her analiz sonucunun kaydı
+- **Kolon:** `engine_version` TEXT — Karar motoru versiyonu (canlı migration uygulandı, default: `v2_fuzzy27`)
 - **Yedek mod:** Supabase yoksa konsola uyarı yazdırılır, uygulama çalışmaya devam eder
 - **CSV yedek:** `veri_kayitlari.csv` (thread-safe, CSV_LOCK ile)
 
@@ -129,6 +141,7 @@ services/
 - `scripts/sabah_rutini.ps1` — /sabah workflow statik scripti (hash-tabanlı cache, dizin doğrulama, git pull, bağımlılık kontrolü)
 - `scripts/gunsonu.ps1` (12.9 KB) — Gün sonu otomasyonu (git sync, test, deploy)
 - `scripts/smart_sync.py` (11.6 KB) — Pinecone akıllı senkronizasyon
+- `scripts/migrate_engine_version.py` — Supabase engine_version kolonu migration (print-only SQL helper)
 - `scripts/memory_prep_logic.py` (1.9 KB) — Memory-bank hazırlık
 - `sentetik_veri_uret.py` — Sentetik bina verisi üreteci
 - `train_model.py` — ML model eğitim scripti
@@ -139,6 +152,9 @@ services/
 ### Test Altyapısı
 
 - `tests/` — Pytest test klasörü
+  - `tests/test_fuzzy_v2_faz1.py` (15 test) — Faz 1 v2 fuzzy motor doğrulama
+  - `tests/test_faz2_regression.py` (11 test) — Faz 2 route cutover regression
+  - `tests/test_faz3_validation.py` (38 test) — Faz 3 boundary/mono/determ/explain/guard/stab/cap
   - `tests/test_afad_integration.py` (21 test) — AFAD API entegrasyon testleri
   - `tests/quick_afad_test.py` — Hızlı API uçtan uca testi
   - `tests/health_check.py` — Sistem sağlık kontrolü
@@ -155,10 +171,12 @@ services/
 - scikit-fuzzy, scipy, networkx — Fuzzy logic
 - requests — HTTP (Ollama API)
 - httpx — Async HTTP (AFAD API)
+- fpdf2 — PDF rapor üretimi
 - python-dotenv — .env yükleme
 - supabase — Veritabanı
-- pinecone-client, gitpython — Senkronizasyon
+- pinecone, gitpython — Senkronizasyon
 - matplotlib — Görselleştirme
+- packaging — Versiyon karşılaştırma
 
 ### Workflow'lar (.agent/workflows)
 
@@ -193,7 +211,7 @@ services/
 - [x] Qwen3:8b LLM entegrasyonu (Ollama üzerinden)
 - [x] Deprem haritası (81 il, ilçe bazlı risk + zemin sınıfı)
 - [x] Yapısal skor hesaplama (14 kriter, TBDY 2018 uyumlu)
-- [x] Ensemble model (Fuzzy %60 + RF %40)
+- [x] Ensemble model (Fuzzy %60 + RF %40) — **v2 ile kaldırıldı, yerine v2 fuzzy + policy layer**
 - [x] Workflow scripts (/sabah, /gunsonu, /test, /gonder, /kontrol, /runner)
 - [x] Context management entegrasyonu (CLAUDE.md, AGENTS.md, memory-bank, /compress)
 - [x] Backward compatibility (eski importlar main.py'den hala çalışır)
@@ -208,14 +226,25 @@ services/
 - [x] Windows konsol emoji fix (UnicodeEncodeError) — konsol çıktıları ASCII, web UI emojileri korundu
 - [x] VS Code Python interpreter config — `.vscode/settings.json` (`${workspaceFolder}\.venv`, `.gitignore`’da)
 
+- [x] v2 Fuzzy Logic (27 kural RULE_MATRIX + policy layer + explainability) - Faz 1 staged altyapi
+- [x] v2 Pipeline Cutover - Faz 2 atomik cutover (ensemble kaldirildi, compute_health_v2 aktif)
+- [x] engineVersion / fuzzyTrace / CSV / PDF audit trail entegrasyonu
+- [x] Faz 3 dogrulama ve kalibrasyon (85/85 test: boundary, monotonicity, determinism, explainability, guardrail)
+- [x] Supabase migration hazirligi (scripts/migrate_engine_version.py - print-only SQL helper)
+- [x] Supabase canli migration (engine_version kolonu — legacy: v1_ensemble, yeni: v2_fuzzy27)
+- [x] Frontend engineVersion + fuzzyTrace gorunurlugu (App.jsx: engine-meta + trace-panel accordion)
+
 ## Mimari Kararlar
 
 - Anchored Iterative Summarization stratejisi kullanılacak (context-compression)
 - MCP Memory-Bank ile dış hafıza kullanılacak
 - CLAUDE.md otomatik okunacak, PROJECT-RULES.md kaldırıldı
-- Ensemble ağırlık: Fuzzy %60, RF %40 — daha yorumlanabilir sonuç
-- TBDY 2018 minimum beton sınıfı (C25) kontrolü yapılıyor
-- ASTM C876 sürekli interpolasyon (kesikli eşik yerine)
+- **Karar motoru: %100 v2 Fuzzy + Policy Layer** (eski RF ensemble kaldırıldı)
+- `concrete_model` (RF Regressor) aktif, `risk_model` (RF Classifier) DEPRECATED
+- CAP_SINGLE=40, CAP_DUAL=25 — provisional, Faz 3 testleriyle çelişmiyor
+- MF gap bölgelerinde (strength 15-20, 40-50) partition sum < 1.0 — fuzzy tasarımın doğal sonucu
+- TBDY 2018 minimum beton sınıfı (C25) policy cap olarak uygulanıyor
+- ASTM C876 sürekli interpolasyon (kesikli eşik yerine) + policy cap (≤ -350 mV)
 - Backward-compat: main.py'den eski importlar re-export ile korunuyor
 - Supabase yoksa uygulama yedek modda (CSV-only) çalışır
 - Fuzzy girdileri clamp ile sınırlandırılır, kullanıcıya uyarı verilir
@@ -315,3 +344,14 @@ services/
 - `tests/test_afad_integration.py`: 21/21 PASSED ✅ (P0/P1 fix sonrası regresyon yok)
 - Backward compat import testleri: `ai_comment`, `afad_api`, `risk.py`, `config.py` tümü OK ✅
 - `frontend/package.json` BOM fix: byte-level doğrulama (0x7B ile başlıyor) ✅
+
+### Supabase Canli Migration + Frontend Explainability (2026-03-19)
+
+- **Supabase engine_version canli migration:** 3 adimli rollout SQL Editor'da basariyla uygulandi. Legacy kayitlar v1_ensemble, yeni kayitlar v2_fuzzy27. Post-migration smoke check gecti.
+- **Frontend engineVersion gorunurlugu:** App.jsx - engine-meta satiri (motor versiyonu pill + raw/capped skor delta, PDF'e bagli degil)
+- **Frontend fuzzyTrace paneli:** App.jsx - details accordion (varsayilan kapali): fired rules kartlari + policy caps kartlari (effective durumuna gore kirmizi/gri ayrim)
+- **CSS:** legacy.css - engine-meta, trace-panel, rule-card, cap-card, cap-effective/cap-ineffective siniflari eklendi
+- **Null-safe rendering:** Tum opsiyonel alanlar optional chaining + fallback ile korunuyor
+- **Walkthrough duzeltmesi:** docs/fuzzy_v2_walkthrough.md - fuzzyTrace API contract hizalamasi, migration durumu guncellendi
+- **Rollout runbook:** docs/supabase_engine_version_rollout.md - durum uygulandi olarak guncellendi
+- **Frontend build:** npm run build - vite v7.3.1, hatasiz (514ms, 227 KB gzip)

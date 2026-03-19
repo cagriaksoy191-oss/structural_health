@@ -1,4 +1,4 @@
-﻿.env
+.env
 venv/
 venv_temp/
 __pycache__/
@@ -25,3 +25,7 @@ Thumbs.db
 veri_kayitlari.csv
 test_request.bat
 docs/referanslar/
+static/
+
+.venv/
+_venv_backup/

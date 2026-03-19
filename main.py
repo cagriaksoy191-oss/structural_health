@@ -61,6 +61,9 @@ from services.fuzzy_engine import (
     fuzzy_control_system,
     get_fuzzy_label,
     clamp,
+    # v2 yardımcıları
+    compute_health_v2,
+    ENGINE_VERSION,
 )  # noqa: E402, F401
 from services.corrosion import korozyon_olasiligi  # noqa: E402, F401
 from services.ml_models import (
@@ -78,7 +81,7 @@ from services.structural import (
     yapisal_seviye_etiketi,
 )  # noqa: E402, F401
 from services.ai_comment import get_llm_comment  # noqa: E402, F401
-from services.data_service import kayit_ekle_supabase  # noqa: E402, F401
+from services.data_service import kayit_ekle_supabase, kayit_ekle_csv  # noqa: E402, F401
 from routes.risk import risk_hesapla  # noqa: E402, F401
 
 
