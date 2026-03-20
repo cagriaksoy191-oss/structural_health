@@ -1,5 +1,7 @@
 import os
 import uuid
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from fpdf import FPDF
 

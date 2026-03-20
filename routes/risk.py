@@ -199,17 +199,31 @@ async def risk_hesapla(req: RiskRequest):
     else:
         phase2_advice = "Bilgi: Risk görece düşük. Ancak standart mühendis incelemesi tavsiye edilir."
 
+    # --- Ana Risk Sürücüsü Belirleme (Sadece LLM için) ---
+    if basinc_dayanimi < 25.0:
+        ana_risk_kaynagi = "Düşük Beton Dayanımı (< 25 MPa)"
+    elif req.corrosion <= -350.0:
+        ana_risk_kaynagi = "Kritik Korozyon Seviyesi"
+    elif health_score < 70:
+        ana_risk_kaynagi = "Yapısal Risk Faktörleri (Genel skor düşüklüğü)"
+    else:
+        ana_risk_kaynagi = "Belirgin tekil bir risk tespit edilmedi"
+
+    # --- Korozyon Metni Hazırlığı (LLM için) ---
+    korozyon_metni = f"{req.corrosion:.0f} mV (%{kor_yuzde} - {kor_seviye})"
+
     # --- AI YORUM (Async: senkron requests.post thread'e atılıyor) ---
     aciklama = await asyncio.to_thread(
         get_llm_comment,
         skor=int(health_score),
         risk_durumu=fuzzy_label,
         beton=round(basinc_dayanimi, 1),
-        korozyon=req.corrosion,
+        korozyon_metni=korozyon_metni,
         risk_puani=int(toplam_yapisal_risk),
         dts=dts,
         bys=bys,
-        phase2_advice=phase2_advice
+        phase2_advice=phase2_advice,
+        ana_risk_kaynagi=ana_risk_kaynagi
     )
 
     pdf_params = {

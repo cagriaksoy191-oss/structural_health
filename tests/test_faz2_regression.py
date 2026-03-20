@@ -228,6 +228,47 @@ class TestPdfAndMisc:
         assert data["genelSeviye"] in ("Yüksek", "Orta", "Düşük")
 
 
+class TestLlmContext:
+    """LLM'e giden verilerin doğruluğunu kontrol et."""
+
+    def test_llm_receives_rich_corrosion_context(self, client, monkeypatch):
+        """Dayanıklı test: LLM'e giden korozyon argümanı raw float değil, korozyon_olasiligi'nden gelen zengin bağlam (mV, yüzde, seviye) olmalı."""
+        from services.corrosion import korozyon_olasiligi
+        
+        test_corrosion_value = -220.0
+        payload = VALID_PAYLOAD.copy()
+        payload["corrosion"] = test_corrosion_value
+        
+        # korozyon_olasiligi çıktısını dinamik olarak al
+        kor_yuzde, kor_seviye, _ = korozyon_olasiligi(test_corrosion_value)
+        expected_context = f"{test_corrosion_value:.0f} mV (%{kor_yuzde} - {kor_seviye})"
+        
+        # routes.risk modülünde import edilmiş referansı mock/spy yap
+        mock_get_llm_comment = MagicMock(return_value="Mock AI yorum.")
+        monkeypatch.setattr("routes.risk.get_llm_comment", mock_get_llm_comment)
+        
+        resp = client.post("/api/risk-hesapla", json=payload)
+        assert resp.status_code == 200
+        
+        mock_get_llm_comment.assert_called_once()
+        kwargs = mock_get_llm_comment.call_args.kwargs
+        
+        assert "korozyon_metni" in kwargs, "get_llm_comment korozyon_metni argümanını almalı"
+        passed_text = kwargs["korozyon_metni"]
+        
+        # Exact string assert yerine, içeriği kontrol et (kırılganlığı önle)
+        assert f"{test_corrosion_value:.0f} mV" in passed_text
+        assert str(kor_yuzde) in passed_text
+        assert kor_seviye in passed_text
+        # Ya da direk expected_context kontrolü
+        assert expected_context in passed_text, f"Beklenen bağlam geçmedi. Gelen: {passed_text}"
+
+        assert "ana_risk_kaynagi" in kwargs, "get_llm_comment ana_risk_kaynagi argümanını almalı"
+        ana_risk = kwargs["ana_risk_kaynagi"]
+        assert isinstance(ana_risk, str)
+        assert len(ana_risk) > 5
+
+
 # ---------- Standalone runner ----------
 if __name__ == "__main__":
     pytest.main([__file__, "-v", "--tb=short"])
