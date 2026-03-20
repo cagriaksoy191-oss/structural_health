@@ -262,6 +262,13 @@ services/
 
 ## Son Değişiklikler
 
+### P0/P1 Hata Düzeltmeleri ve Repo Hijyeni (2026-03-21)
+
+- **[P0] PDF Thread-Safe Backend (Crash Fix):** `services/pdf_report.py` içinde Matplotlib'in 0x80000003 uygulama çökmelerine yol açmasını engellemek için `import pyplot` öncesinde `matplotlib.use('Agg')` eklendi. Arkaplan thread'inde PDF grafik üretimi cross-thread olarak izole edildi ve güvenli hale getirildi.
+- **[P1] AI Hatalı Nedensellik (Causality) Çözümü:** İkincil parametrelerin (orta-düşük korozyon) LLM tarafından "Aciliyet" nedeni sanılması engellendi. `routes/risk.py` içerisinde `ana_risk_kaynagi` ("Düşük Beton", "Kritik Korozyon" vb.) değerlendirilerek API response dışı arkaplan bağlamıyla `services/ai_comment.py`'ye iletildi. Prompta katı kurallarla aciliyet izahı sadece belirlenen ana kaynağa yüklendi.
+- **Mimarinin Korunması:** Tüm API endpoint'leri, `fuzzy_engine.py`, UI katmanı hiçbir hasar veya schema değişikliği almadan korundu.
+- **Testler:** `tests/test_faz2_regression.py` içine yeni bağlamları denetleyen sertifikasyon assert'leri eklendi.
+
 ### Git Çakışma Önleme Sistemi (2026-03-05)
 
 - **Açıklar Kapatıldı:** `gunsonu.ps1` yeniden yazılarak eski "Commit -> Pull -> Push" akışındaki çakışma ve sessiz ezme (rebase) riskleri %100 giderildi.

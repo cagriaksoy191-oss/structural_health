@@ -24,6 +24,10 @@
 
 ## Tartışıldı Ama Koda Dökülmedi
 
+### LLM Non-Determinism (Hallucination) Limitleri
+- P1 düzeltmeleri kapsamında Qwen3:8b modelinin küçük ölçekli mimarisinden kaynaklı ikincil faktörleri (örneğin korozyonu) cümle bağlamak için rastgele kullanma eğilimi gözlemlendi.
+- Prompt mühendisliği ile `ana_risk_kaynagi` değişkeni verilerek nedensellik hataları büyük ölçüde düzeltildi. Ancak küçük modellerin doğası gereği tam sentaktik determinizm her denemede garanti edilmeyebilir. Mevcut durumda maliyet/fayda optimizasyonu sebebiyle daha fazla karmaşık prompt zinciri kurulmadı.
+
 ### P2 — Cache Eviction Eksikliği
 
 - `services/afad_api.py` içindeki in-memory cache'te proaktif temizleme (eviction) yok
