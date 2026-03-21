@@ -1,90 +1,113 @@
-# 🚀 V12 Titanium - Proje Kullanım Kılavuzu
+# Yapı Sağlığı Ön Tarama Sistemi
 
-Merhaba ekip! 👇 Projeyi kendi bilgisayarınızda çalıştırmak için bu adımları takip edin.
+Bu proje, yapısal sağlık taraması yapmak üzere geliştirilmiş, makine öğrenmesi ve bulanık mantık (v2 fuzzy logic) tabanlı bir web aracıdır.
 
----
+## ⚙️ Sistem Mimarisi ve Temel Özellikler
 
-## 🛠️ İlk Kurulum (Sadece 1 Kez - Projeyi İlk İndirdiğinde)
+Sistem, 6 aşamalı bir analiz pipeline'ından oluşmaktadır:
+*   **AFAD Hybrid Deprem Verisi:** AFAD Event API entegrasyonu (başarısızlık durumunda statik harita fallback desteği).
+*   **Yapısal Skor:** TBDY uyumlu 14 ayrı kritere göre yapısal risk hesaplaması.
+*   **Beton Dayanım Tahmini:** Random Forest tabanlı makine öğrenmesi modeli ile (UPV ve Rebound).
+*   **Korozyon Analizi:** ASTM C876 standardına göre sürekli interpolasyon.
+*   **Karar Motoru:** Yüksek doğruluklu `v2_fuzzy27` bulanık mantık motoru ve kısıtlayıcı politika katmanı (Policy Layer).
+*   **AI Uzman Yorumu:** Ollama ve Qwen3:8b büyük dil modeli ile veriye dayalı Türkçe yorum.
 
-1.  **Projeyi GitHub'dan indir:**
+## 📋 Gereksinimler (Prerequisites)
+
+*   **Zorunlu:** 
+    *   Python 3.x
+    *   Node.js (Frontend bağımlılıkları için zorunlu)
+    *   Git
+*   **İsteğe Bağlı (AI Yorum Özelliği İçin):** 
+    *   Ollama ortamı ve `qwen3:8b` modeli. 
+    *   *Not:* Ollama kapalıysa veya eksikse sistem çökmeyecektir; sadece yapay zeka yorum özelliği uyarı dönecektir.
+
+## 🚀 Hızlı Başlangıç (Happy Path)
+
+Sistemi Windows ortamında en hızlı şekilde kurmak ve başlatmak için aşağıdaki adımları sırasıyla izleyin:
+
+1.  **Projeyi Klonlayın:**
     ```bash
     git clone https://github.com/cagriaksoy191-oss/structural_health.git
-    ```
-
-2.  **Proje klasörüne gir:**
-    ```bash
     cd structural_health
     ```
 
-3.  **Sanal Ortam (Venv) oluştur:**
+2.  **Ortam Değişkenlerini (Konfigürasyon) Edin:**
+    *   Güvenlik politikası gereği repoda `.env.example` yoktur.
+    *   Sistem yetkilisinden anahtar listesini isteyip kök dizine `.env` dosyası oluşturarak kaydedin. 
+    *   *(Uyarı: Elinizde `.env` dosyası (örn. Supabase bağlantısı) yoksa endişelenmeyin! Sistem tamamen çökmez, veritabanı entegrasyonu olmadan "CSV" yedek modunda sınırlı çalışmaya devam eder).*
+
+3.  **Otomatik Kurulum:**
+    Aşağıdaki dosyaya çift tıklayın veya çağırın. Bu betik Python paketlerini (`pip`) ve Frontend paketlerini (`npm`) sizin yerinize kuracaktır.
     ```bash
-    python -m venv venv
+    kurulum.bat
     ```
 
-4.  **Sanal Ortamı aktif et:**
+4.  **Projeyi Başlatma:**
+    Aşağıdaki dosyaya çift tıklayın. Backend ve Frontend sunucularınız otomatik açılacaktır.
     ```bash
+    baslat.bat
+    ```
+
+## 🔐 .env Konfigürasyon Detayları
+
+Eğitim veya geliştirme için `.env` dosyanızda olması beklenen temel (ancak tamamen zorunlu olmayan) değişkenler şunlardır:
+*   `SUPABASE_URL` ve `SUPABASE_KEY`: Veritabanı entegrasyonu için.
+*   `ALLOWED_ORIGINS` (Opsiyonel): CORS kabul listesi.
+*   `AFAD_TIMEOUT` ve `AFAD_CACHE_TTL` (Opsiyonel): Deprem API limitleri.
+*   `PINECONE_API_KEY`: Sadece takım içi akıllı senkronizasyon scripti (`/gunsonu`) için.
+
+## 🛠️ Manuel Başlatma ve Hata Ayıklama (İleri Düzey)
+
+Eğer `baslat.bat` kullanmak istemiyorsanız sistemi manuel olarak başlatabilirsiniz. **Uyarı:** İşletim sistemindeki "global" Python yorumlayıcısını (interpreter) tetiklememek için mutlaka sanal ortamınızı (`.venv` veya `venv`) aktif etmelisiniz.
+
+1.  **Backend'i başlat:**
+    Aşağıdaki komutlardan sizin kurulumunuza uyan dizini aktif edip projeyi başlatabilirsiniz:
+    ```bash
+    # Eğer .venv klasörü oluşmuşsa:
+    .\.venv\Scripts\activate
+    
+    # Veya venv klasörü oluşmuşsa:
     .\venv\Scripts\activate
+    
+    # Ortam aktifleşince projeyi başlat:
+    python main.py
     ```
-    ✅ Başında **`(venv)`** yazısı çıkmalı.
+    *Backend `http://127.0.0.1:8000` portunda açılacaktır.*
 
-5.  **Kütüphaneleri yükle:**
+2.  **Frontend'i başlat (Ayrı bir terminalde):**
     ```bash
-    pip install -r requirements.txt
+    cd frontend
+    npm run dev
     ```
+    *Frontend arayüzü `http://localhost:5173` portunda hizmet verecektir.*
 
-6.  **Gizli Anahtar Dosyasını Oluştur:**
-    *   Proje klasöründe sağ tık → Yeni Metin Belgesi oluştur.
-    *   Adını **`.env`** yap (sonunda `.txt` kalmasın!).
-    *   Çağrı'nın size özelden attığı **SUPABASE_URL** ve **SUPABASE_KEY** satırlarını içine yapıştırıp kaydedin.
+## 🔌 API Özeti
 
----
+Sistem ağırlıklı olarak tek bir endpoint üzerinden hizmet sunar:
+*   **POST** `/api/risk-hesapla` (Backend Port: 8000)
+    *   Girdi: JSON formatında yapı, deprem ve tahribatsız test verileri (`RiskRequest`).
+    *   Çıktı: Skorlar, fuzzy explainability trace, korozyon sonucu ve AI yorumu (`RiskResponse`).
 
-## 🟢 Günlük Kullanım (Her Gün - Bilgisayarı Her Açtığında)
+## 🧪 Test ve Doğrulama
+Kod tabanı testlerle korunmaktadır. Hızlı validasyon ve kalite kontrolü için:
+*   Uçtan uca API Sağlaması (Smoke Test): Repoda yerleşik bulunan `python tests/health_check.py` dosyasını çalıştırıp sisteminizin genel sağlığını ek bağımlılık kurmadan anında test edebilirsiniz.
+*   Birim Testleri (Geliştirme Ortamı): Eğer ortamınıza kendiniz `pytest` kütüphanesini kurduysanız (varsayılan sürüm gereksinimlerinde zorunlu gelmez), `pytest tests/` komutuyla kapsamlı testleri koşturabilirsiniz.
 
-**En kolay yol:** Proje klasörüne girip **`baslat.bat`** dosyasına çift tıklayın. Her şeyi otomatik yapar! ✅
+## 🤖 Takım İçi İş Akışları (Opsiyonel / Sınırlı)
 
-**Veya CMD ile manuel:**
+Ekip için tasarlanmış iki özel PowerShell betiği bulunmaktadır:
+*   **`/sabah` (`scripts/sabah_rutini.ps1`):** Güne başlarken kod senkronizasyonu ve paket hash eşleşmesi yapar. Şu anda yalnızca standart `venv` klasör yapısıyla uyumludur.
+*   **`/gunsonu` (`scripts/gunsonu.ps1`):** Gün bitiminde güvenli commit, çakışma testleri ve Pinecone MCP hafıza senkronizasyonunu yönetir. 
 
-1.  Proje klasörüne gidin:
-    ```bash
-    cd "proje_klasor_yolunuz"
-    ```
+## 📌 Bilinen Sınırlamalar / Notlar
 
-2.  Sanal ortamı aktif edin:
-    ```bash
-    .\venv\Scripts\activate
-    ```
+*   **LLM Bağımlılığı:** Ollama ortamı yoksa API işlemleri hata (crash) vermez, sadece "AI Yorum" alanı için opsiyonel uyarı metni oluşturur.
+*   **İzolasyon:** Bu repoda kurulu bir Docker veya Devcontainer mekanizması bulunmamaktadır; doğrudan Windows native ortam (bat/ps1) baz alınmıştır.
+*   **Sabah Scripti:** Yukarıda değinildiği gibi `/sabah` akışı henüz `.venv` dizinine değil, daha çok `venv` dizin yapısına göre kontrol sağlar.
 
-3.  Projeyi çalıştırın:
-    ```bash
-    uvicorn main:app --reload
-    ```
-    ✅ **"Application startup complete"** yazısı görünce hazır!
+## 📚 Geliştirme Referansı (AGENTS.md)
 
----
+Bu README.md operasyonel bir giriş dokümanıdır. Sistemin iç kuralları, tasarım kararları (v2 fuzzy matrisi vb.) detaylı olarak repo içindeki **`AGENTS.md`** belgesinde incelenebilir. 
 
-## 🌙 Gün Sonu Rutini (Kod Değiştirdiyseniz - İş Bitince)
-
-Kodlarda değişiklik yaptıysanız, günün sonunda mutlaka şunu çalıştırın:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File scripts\gunsonu.ps1
-```
-
-**Ne İşe Yarar?** Kodlarınızı güvenli şekilde GitHub'a gönderir (yedekler + CI/CD tetikler).
-
----
-
-## ❓ Sıkça Sorulan Sorular
-
-*   **S:** "Module not found" hatası alıyorum?
-    *   **C:** `.\venv\Scripts\activate` komutunu unuttun. Önce onu yap, sonra tekrar dene.
-
-*   **S:** Swagger UI / Site açılmıyor?
-    *   **C:** CMD penceresini (siyah ekranı) kapattın mı? O hep açık kalmalı.
-
-*   **S:** Veriler nereye gidiyor?
-    *   **C:** Hepsi buluttaki (Supabase) ortak veritabanımıza gidiyor. Herkes sonuçları orada görebilir.
-
-*   **S:** `.env` dosyası nedir?
-    *   **C:** Supabase bağlantı anahtarları. Bu dosyayı Çağrı size özelden atacak. GitHub'a gitmez, güvenlidir.
+**Önemli Uyarı:** Kod tabanı (`*.py`, `*.js`, `*.ps1`, `*.bat`) her zaman birinci derece doğruluk kaynağıdır. AGENTS.md veya bu README dosyası ile yazılımın davranışları arasında bir çelişki görülürse, scriptlerin/kodun aktif davranışı esas alınmalıdır.
