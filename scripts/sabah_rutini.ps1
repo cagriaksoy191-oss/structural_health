@@ -79,32 +79,52 @@ $cachedReqHash = if ($cache) { $cache.requirements_hash } else { $null }
 $cachedPkgHash = if ($cache) { $cache.package_json_hash } else { $null }
 
 # --- PYTHON ---
-if (Test-Path "venv\Scripts\python.exe") {
-    Write-Host "Python venv mevcut" -ForegroundColor Green
-    & venv\Scripts\python -c "import fastapi; import torch; print('Kritik kutuphaneler yuklu')" 2>&1
+$venvPath = $null
+if (Test-Path ".venv\Scripts\python.exe") {
+    $venvPath = ".venv"
+} elseif (Test-Path "venv\Scripts\python.exe") {
+    $venvPath = "venv"
+}
 
-    if ($currentReqHash -eq $cachedReqHash) {
-        $shortHash = $currentReqHash.Substring(0, 12)
-        Write-Host "requirements.txt degismemis (hash: $shortHash), pip install atlaniyor" -ForegroundColor Green
-    }
-    else {
-        Write-Host "requirements.txt degismis, bagimliliklar guncelleniyor..." -ForegroundColor Yellow
-        & venv\Scripts\pip install -r requirements.txt --progress-bar off 2>&1
-        if ($LASTEXITCODE -eq 0) {
-            Write-Host "Python bagimliliklari guncellendi" -ForegroundColor Green
-        }
-        else {
-            Write-Host "pip install basarisiz! (exit code: $LASTEXITCODE)" -ForegroundColor Red
-            Write-Host "Cache guncellenmedi, sonraki calistirmada tekrar denenecek" -ForegroundColor Yellow
-            $currentReqHash = $cachedReqHash
-        }
-    }
+if ($null -eq $venvPath) {
+    Write-Host "[HATA] Sanal ortam bozuk veya eksik (-Scripts\python.exe- bulunamadi)." -ForegroundColor Red
+    Write-Host "Lutfen projeyi baslatmadan once kurulum.bat dosyasini calistirin." -ForegroundColor Yellow
+    exit 1
+}
+
+Write-Host "Python venv mevcut ($venvPath algilandi)" -ForegroundColor Green
+
+# Saglik Kontrolu (Proxy Import)
+$healthCheckCmd = 'import fastapi, torch, skfuzzy, supabase, httpx, dotenv'
+$null = & "$venvPath\Scripts\python.exe" -c $healthCheckCmd 2>&1
+$healthOk = ($LASTEXITCODE -eq 0)
+
+$forcePip = $false
+if (-not $healthOk) {
+    Write-Host "UYARI: Temsili paketler eksik veya bozuk! Hash bypass ediliyor." -ForegroundColor Yellow
+    $forcePip = $true
+}
+
+if (-not $forcePip -and ($currentReqHash -eq $cachedReqHash)) {
+    $shortHash = $currentReqHash.Substring(0, 12)
+    Write-Host "requirements.txt degismemis (hash: $shortHash), pip install atlaniyor" -ForegroundColor Green
 }
 else {
-    Write-Host "venv bulunamadi. Olusturuluyor..." -ForegroundColor Yellow
-    python -m venv venv
-    & venv\Scripts\pip install -r requirements.txt --progress-bar off 2>&1
-    Write-Host "venv olusturuldu ve bagimliliklar yuklendi" -ForegroundColor Green
+    if ($forcePip -and ($currentReqHash -eq $cachedReqHash)) {
+        Write-Host "Eksik kutuphane tespit edildi, pip zorlaniyor..." -ForegroundColor Yellow
+    } else {
+        Write-Host "requirements.txt degismis, bagimliliklar guncelleniyor..." -ForegroundColor Yellow
+    }
+    
+    & "$venvPath\Scripts\python.exe" -m pip install -r requirements.txt --progress-bar off 2>&1
+    if ($LASTEXITCODE -eq 0) {
+        Write-Host "Python bagimliliklari guncellendi" -ForegroundColor Green
+    }
+    else {
+        Write-Host "pip install basarisiz! (exit code: $LASTEXITCODE)" -ForegroundColor Red
+        Write-Host "Cache guncellenmedi, sonraki calistirmada tekrar denenecek" -ForegroundColor Yellow
+        $currentReqHash = $cachedReqHash
+    }
 }
 
 # --- FRONTEND ---

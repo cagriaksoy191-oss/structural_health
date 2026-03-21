@@ -1,11 +1,11 @@
 ---
-description: Günü başlat - Git pull ve venv aktivasyonu
+description: Günü başlat - Git pull ve bağımlılık doğrulaması
 ---
 
 # /sabah - Günü Başlat Workflow
 
 Bu workflow, her sabah çalışmaya başlamadan önce projeyi güncel hale getirir.
-Hash-tabanlı akıllı cache ile bağımlılık kontrolü — değişiklik yoksa pip/npm install atlanır.
+Geçerli sanal ortamı (`.venv` veya `venv`) otomatik algılar, hash-tabanlı akıllı cache ve proxy sağlık kontrolüyle bağımlılıkları doğrular. Değişiklik yoksa `pip/npm install` işlemi atlanır. Sanal ortam yoksa işlem durdurularak kullanıcı `kurulum.bat` dosyasına yönlendirilir (otomatik kurulum yapmaz).
 
 > **NOT:** Tüm mantık `scripts/sabah_rutini.ps1` dosyasındadır. Bu dosya sadece tetikleyicidir.
 
@@ -36,9 +36,13 @@ powershell -ExecutionPolicy Bypass -File scripts\sabah_rutini.ps1
 --- 1. Git Pull ---
 Already up to date.
 --- 2. Bagimlilik Kontrolu ---
-Python venv mevcut
+Python venv mevcut (.venv algilandi)
 requirements.txt degismemis (hash: abc123...), pip install atlaniyor
 Frontend bagimliliklari guncel (package.json degismemis)
+
 --- 3. Durum Raporu ---
+Git pull: Tamamlandi
+Python venv: Hazir
+Cache: Guncellendi (.sabah_cache)
 Calismaya hazirsin!
 ```

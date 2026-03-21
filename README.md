@@ -97,14 +97,13 @@ Kod tabanı testlerle korunmaktadır. Hızlı validasyon ve kalite kontrolü iç
 ## 🤖 Takım İçi İş Akışları (Opsiyonel / Sınırlı)
 
 Ekip için tasarlanmış iki özel PowerShell betiği bulunmaktadır:
-*   **`/sabah` (`scripts/sabah_rutini.ps1`):** Güne başlarken kod senkronizasyonu ve paket hash eşleşmesi yapar. Şu anda yalnızca standart `venv` klasör yapısıyla uyumludur.
+*   **`/sabah` (`scripts/sabah_rutini.ps1`):** Güne başlarken kod senkronizasyonu, bağımlılık doğrulaması ve paket hash eşleşmesi yapar. İlk kurulum scripti değildir; `.venv` veya `venv` dizinlerinden geçerli olan ilk Python ortamını otomatik seçip kullanır. Ortam eksikse `kurulum.bat` dosyasına yönlendirir.
 *   **`/gunsonu` (`scripts/gunsonu.ps1`):** Gün bitiminde güvenli commit, çakışma testleri ve Pinecone MCP hafıza senkronizasyonunu yönetir. 
 
 ## 📌 Bilinen Sınırlamalar / Notlar
 
 *   **LLM Bağımlılığı:** Ollama ortamı yoksa API işlemleri hata (crash) vermez, sadece "AI Yorum" alanı için opsiyonel uyarı metni oluşturur.
 *   **İzolasyon:** Bu repoda kurulu bir Docker veya Devcontainer mekanizması bulunmamaktadır; doğrudan Windows native ortam (bat/ps1) baz alınmıştır.
-*   **Sabah Scripti:** Yukarıda değinildiği gibi `/sabah` akışı henüz `.venv` dizinine değil, daha çok `venv` dizin yapısına göre kontrol sağlar.
 
 ## 📚 Geliştirme Referansı (AGENTS.md)
 
