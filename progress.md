@@ -1,6 +1,6 @@
 # Progress — Açık Görevler ve Notlar
 
-> **Son güncelleme:** 2026-03-19
+> **Son güncelleme:** 2026-03-21
 
 ## Backlog — Açık Görevler
 
@@ -23,6 +23,12 @@
 - Faz 3 testleriyle mevcut değerler çelişmiyor
 
 ## Tartışıldı Ama Koda Dökülmedi
+
+### README.md Modernizasyonu
+- Karar motorundaki (v2 fuzzy, AFAD API, vb.) yeni mimari gelişimlere hitap edebilmesi adına `README.md` dosyasının gözden geçirilip güncellenmesi gerekiyor.
+
+### `scripts/sabah_rutini.ps1` VENV Tutarlılığı
+- Geliştirilen ve `.bat` scriptlerinde kullanılan katı `.venv` / `venv` dinamik algılama mantığının, `sabah_rutini.ps1` power shell betiği ile de tam hizalı ve tutarlı donanıma getirilmesi hedeflenebilir.
 
 ### LLM Non-Determinism (Hallucination) Limitleri
 - P1 düzeltmeleri kapsamında Qwen3:8b modelinin küçük ölçekli mimarisinden kaynaklı ikincil faktörleri (örneğin korozyonu) cümle bağlamak için rastgele kullanma eğilimi gözlemlendi.

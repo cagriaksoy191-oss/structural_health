@@ -13,7 +13,7 @@ Yapı Sağlığı İzleme (Structural Health Monitoring) — Web Tabanlı Ön Ta
 
 - **Giriş noktası:** `main.py` — FastAPI app, CORS ayarları, backward-compat re-export'lar
 - **Konfigürasyon:** `config.py` — Supabase bağlantısı, CSV_LOCK (thread safety), AFAD API ayarları
-- **Ortam değişkenleri:** `.env` dosyası (`.env.example` şablondan kopyalanır)
+- **Ortam değişkenleri:** `.env` dosyası kullanılır (repoda şu anda `.env.example` şablonu bulunmuyor)
 - **Port:** `127.0.0.1:8000` (uvicorn)
 - **CORS:** `ALLOWED_ORIGINS` env var'ı ile virgülle ayrılmış origin listesi
 
@@ -262,6 +262,12 @@ services/
 
 ## Son Değişiklikler
 
+### Batch Script Modernizasyonu (2026-03-21)
+
+- **`baslat.bat` Güvenilirliği:** Backend `cmd /k` relative path ile başlatılarak iç içe tırnak karmaşası ve boşluklu dizin kırılganlığı (nested quote parsing issues) tamamen çözüldü. Gerçek terminalde başarıyla smoke-check testinden geçti (Backend API ve Frontend erişilebilir).
+- **`kurulum.bat` İyileştirmeleri:** Hardcoded paket listesi silindi; `requirements.txt` ve `npm install` tabanlı otomasyona geçildi. Bozuk veya kısmi `venv` ortamları `Scripts\python.exe` kontrolüyle engellendi.
+- **Terminal Ön Kontrolleri:** Dinamik `.venv` / `venv` tespiti, `python` / `py -3` fallback stratejisi, `npm` ve `node_modules` preflight kontrolleri scriptlere sorunsuz entegre edildi.
+
 ### P0/P1 Hata Düzeltmeleri ve Repo Hijyeni (2026-03-21)
 
 - **[P0] PDF Thread-Safe Backend (Crash Fix):** `services/pdf_report.py` içinde Matplotlib'in 0x80000003 uygulama çökmelerine yol açmasını engellemek için `import pyplot` öncesinde `matplotlib.use('Agg')` eklendi. Arkaplan thread'inde PDF grafik üretimi cross-thread olarak izole edildi ve güvenli hale getirildi.
@@ -324,7 +330,7 @@ services/
 - `models/schemas.py` — RiskRequest: +latitude, +longitude; RiskResponse: +pga, +depremKaynak
 - `routes/risk.py` — Endpoint `async def` yapıldı, AFAD hybrid pipeline entegre edildi, detaylara kaynak bilgisi eklendi
 - `config.py` — AFAD_API_BASE_URL ve AFAD_CACHE_TTL sabitleri eklendi
-- `.env.example` — AFAD_CACHE_TTL opsiyonel ayarı eklendi
+- `.env.example` (historical, şu an repoda yok) — AFAD_CACHE_TTL opsiyonel ayarı eklendi
 - `requirements.txt` — httpx bağımlılığı eklendi
 - `frontend/src/hooks/useGeolocation.js` — lat/lon return değerleri eklendi
 - `frontend/src/components/RiskForm.jsx` — formData'ya latitude/longitude eklendi, backend'e gönderiliyor
