@@ -1,6 +1,6 @@
 # Progress — Açık Görevler ve Notlar
 
-> **Son güncelleme:** 2026-03-21
+> **Son güncelleme:** 2026-03-26
 
 ## Backlog — Açık Görevler
 
@@ -24,15 +24,29 @@
 
 ## Tartışıldı Ama Koda Dökülmedi
 
-### README.md Modernizasyonu
-- Karar motorundaki (v2 fuzzy, AFAD API, vb.) yeni mimari gelişimlere hitap edebilmesi adına `README.md` dosyasının gözden geçirilip güncellenmesi gerekiyor.
+### Golden Runtime Testleri
+- Aktif v2 pipeline için sabit referans girdi/çıktı vakaları üreten ayrı bir golden regression katmanı planlandı.
+- Amaç: cleanup, cap review ve AFAD iyileştirmeleri öncesinde route-seviyesi operasyonel guardrail sağlamak.
+- **Durum:** Tasarlandı, bugün kodlanmadı.
 
-### `scripts/sabah_rutini.ps1` VENV Tutarlılığı
-- Geliştirilen ve `.bat` scriptlerinde kullanılan katı `.venv` / `venv` dinamik algılama mantığının, `sabah_rutini.ps1` power shell betiği ile de tam hizalı ve tutarlı donanıma getirilmesi hedeflenebilir.
+### AFAD Doğruluğu İyileştirmesi
+- AFAD/GMPE tarafında yaklaşık PGA hesabının daha güvenilir hale getirilmesi konuşuldu.
+- Bu iş, veri/saha gerçekliği olmadan en fazla heuristic/teknik review düzeyinde ilerleyebilir.
+- **Durum:** Planlama seviyesinde, bugün kodlanmadı.
+
+### Fallback Transparency Sonrası Kozmetik Follow-up
+- Fallback transparency tamamlandı, ancak fallback anında frontend/PDF başlıklarının "Yapay Zeka ..." ifadesini koruması küçük bir kozmetik tutarsızlık yaratabilir.
+- Mevcut durumda bu bir doğruluk veya API contract problemi değil; yalnızca düşük öncelikli UX/metin hizası işi.
+- **Durum:** Bilinçli olarak bugün kapsam dışı bırakıldı.
 
 ### LLM Non-Determinism (Hallucination) Limitleri
 - P1 düzeltmeleri kapsamında Qwen3:8b modelinin küçük ölçekli mimarisinden kaynaklı ikincil faktörleri (örneğin korozyonu) cümle bağlamak için rastgele kullanma eğilimi gözlemlendi.
 - Prompt mühendisliği ile `ana_risk_kaynagi` değişkeni verilerek nedensellik hataları büyük ölçüde düzeltildi. Ancak küçük modellerin doğası gereği tam sentaktik determinizm her denemede garanti edilmeyebilir. Mevcut durumda maliyet/fayda optimizasyonu sebebiyle daha fazla karmaşık prompt zinciri kurulmadı.
+
+### `/sabah` Scripti için `.venv` vs `venv` Sınırlaması
+- Bugün README modernizasyonu sırasında `/sabah` (`scripts/sabah_rutini.ps1`) betiğinin öncelikli olarak sadece `venv` klasör yapısına göre tam tasarlandığı not edildi. Betik `.venv` desteklese de, fallback senaryoları tam hibrit değil.
+- Bu durum bilinen bir kısıtlama olarak `README.md`'de belirtildi, ancak betiğin içinin tamamen agnostik yapılması koda dökülmedi.
+- **Durum:** Bilinçli olarak kapsam dışı bırakıldı, projenin çalışmasına engel değil.
 
 ### P2 — Cache Eviction Eksikliği
 
@@ -53,6 +67,7 @@
 - AFAD Event API bazen HTTP 302 (e-Devlet redirect) atıyor — statik harita fallback her zaman devreye giriyor
 - GMPE formülü basitleştirilmiş Boore-Atkinson esinli; resmi GMPE için TDTH verisi şart
 - `ResultCard.jsx` repoda mevcut ama aktif render path değil (Tailwind sınıfları, import edilmiyor)
+- Gerçek cap kalibrasyonu için saha/etiketli veri gerekiyor; veri olmadan yapılacak cap çalışması ancak heuristic review seviyesinde kalır
 
 ## Bug Logs / Çözülenler
 

@@ -241,6 +241,10 @@ services/
 - CLAUDE.md otomatik okunacak, PROJECT-RULES.md kaldırıldı
 - **Karar motoru: %100 v2 Fuzzy + Policy Layer** (eski RF ensemble kaldırıldı)
 - `concrete_model` (RF Regressor) aktif, `risk_model` (RF Classifier) DEPRECATED
+- **Fallback Transparency (availability-first):** Fuzzy motor exception durumunda response 200 korunur; `detaylar` ve `fuzzyTrace` üzerinden sanitize fallback sinyali döner, LLM yorumu ve `phase2_advice` deterministik fallback metnine geçer
+- **Beton fallback sinyali:** `tahmin_beton_dayanimi()` içsel olarak `(value, used_fallback)` döner; 25.0 MPa varsayılanı sessiz kalmaz, route katmanında kullanıcıya uyarı verilir
+- **PDF degrade modu:** PDF üretimi başarısız olursa ana risk response'u korunur; `pdfDownloadUrl=None` + detay uyarısı ile devam edilir, endpoint 500 vermez
+- **Ollama sanitize:** LLM servis hataları kullanıcıya teknik exception leak etmeden Türkçe fallback metniyle döner; ham hata sadece log tarafında kalır
 - CAP_SINGLE=40, CAP_DUAL=25 — provisional, Faz 3 testleriyle çelişmiyor
 - MF gap bölgelerinde (strength 15-20, 40-50) partition sum < 1.0 — fuzzy tasarımın doğal sonucu
 - TBDY 2018 minimum beton sınıfı (C25) policy cap olarak uygulanıyor
@@ -368,3 +372,21 @@ services/
 - **Walkthrough duzeltmesi:** docs/fuzzy_v2_walkthrough.md - fuzzyTrace API contract hizalamasi, migration durumu guncellendi
 - **Rollout runbook:** docs/supabase_engine_version_rollout.md - durum uygulandi olarak guncellendi
 - **Frontend build:** npm run build - vite v7.3.1, hatasiz (514ms, 227 KB gzip)
+
+### /sabah Venv Tutarlılığı + Fallback Şeffaflığı (2026-03-26)
+
+- **`scripts/sabah_rutini.ps1` hizalaması:** `/sabah` artık `.venv\Scripts\python.exe` → `venv\Scripts\python.exe` sırasıyla geçerli ortamı seçer; ortam yoksa yeni `venv` oluşturmaz, kullanıcıyı `kurulum.bat` dosyasına yönlendirir.
+- **`/sabah` sağlık kontrolü:** Hash cache korunurken `fastapi`, `torch`, `skfuzzy`, `supabase`, `httpx`, `dotenv` proxy import kontrolü eklendi; hash eşleşse bile ortam bozuksa `pip install` zorlanır.
+- **Dokümantasyon hizası:** `README.md` ve `.agent/workflows/sabah.md`, `/sabah`ın ilk kurulum değil mevcut `.venv` / `venv` ortamını doğrulayan workflow olduğunu yansıtacak şekilde güncellendi.
+- **Fuzzy fallback görünürlüğü:** `routes/risk.py` tarafında fuzzy motor exception durumları artık sessiz değil; `detaylar` ve `fuzzyTrace` içinde sanitize fallback sinyalleri dönüyor.
+- **LLM/PDF dürüst fallback:** Fuzzy fallback sırasında normal LLM yorumu atlanıyor, `aciklama` / `aiYorum` / `phase2_advice` aynı dürüst fallback semantiğine çekiliyor; PDF hataları ana endpoint'i düşürmüyor.
+- **Beton / log hijyeni:** `tahmin_beton_dayanimi()` explicit fallback sinyali dönüyor, `services/ai_comment.py` teknik hata leak etmiyor, `services/data_service.py` `print()` yerine logger kullanıyor.
+- **Kanıt:** `tests/test_fallback_transparency.py` (11), `tests/test_faz2_regression.py` (12), `tests/test_faz3_validation.py` (38), `tests/test_afad_integration.py` (21), `tests/test_fuzzy_v2_faz1.py` (15) → toplam **97/97 PASSED**.
+
+### README.md Modernizasyonu ve Repozitory Hijyeni (2026-03-26)
+
+- **Repo-Gerçekliği Hizalaması:** `README.md` projenin güncel mimarisiyle %100 uyumlu hale getirildi. Artık v2 Fuzzy Logic (27 Kural + Policy Layer) ana karar motoru olarak vitrine çıkarıldı, eski ensemble modeller (v1 ve risk_model) dokümantasyondan temizlendi.
+- **Sınırlamaların Dürüst Beyanı:** Ollama (Qwen3) zorunluluk değil, "AI yorum özelliği için opsiyonel" olarak konumlandırıldı; AI yorumları, Supabase ve PDF üretimi de dahil olmak üzere dürüst fallback katmanlarına sahip olduğu açıkça belirtildi.
+- **Güvenli Başlatma Akışı (Happy Path):** Hızlı Başlangıç bölümü Windows terminal (`kurulum.bat` ve `baslat.bat`) öncelikli olacak şekilde güncellendi.
+- **Venv/Interpreter Netliği:** Manuel başlatma komutlarına `.venv\Scripts\python.exe` / `venv\Scripts\python.exe` ibaresi eklendi; kullanıcıyı global Python yürütme hatasından koruyacak uyarılar dahil edildi.
+- **Doğrulama ve Test:** Dış bağımlılık gerektiren `pytest` komutu yerine, repodan out-of-the-box çıkan `python tests/health_check.py` smoke-check testi birincil doğrulama aracı olarak öne çıkarıldı.
