@@ -1,6 +1,10 @@
 """Yapı Sağlığı — Qwen3 LLM Entegrasyonu"""
 
+import logging
+
 import requests
+
+logger = logging.getLogger(__name__)
 
 
 def get_llm_comment(skor, risk_durumu, beton, korozyon=None, risk_puani=None, dts=None, bys=None, phase2_advice=None, korozyon_metni=None, ana_risk_kaynagi=None):
@@ -69,7 +73,16 @@ def get_llm_comment(skor, risk_durumu, beton, korozyon=None, risk_puani=None, dt
             # Chat modunda cevap 'message' -> 'content' içindedir
             return response.json()["message"]["content"].strip()
         else:
-            return f"⚠️ Bağlantı Hatası (Kod: {response.status_code}). Ollama açık mı?"
+            logger.warning("Ollama HTTP hatasi: status=%s", response.status_code)
+            return (
+                "Yapay zeka yorum servisi su anda yanitlamiyor. "
+                "Analiz sonuclari gecerlidir; uzman yorumu icin lutfen tekrar deneyin."
+            )
 
     except Exception as e:
-        return f"⚠️ Yapay Zeka Cevap Vermedi: {str(e)}"
+        logger.warning("Ollama baglanti hatasi: %s", e)
+        return (
+            "Yapay zeka yorum servisi su anda erisilemiyor. "
+            "Analiz sonuclari gecerlidir; uzman yorumu icin lutfen tekrar deneyin."
+        )
+

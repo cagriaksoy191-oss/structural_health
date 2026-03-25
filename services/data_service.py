@@ -1,9 +1,12 @@
 """Yapı Sağlığı — CSV ve Supabase Veri Kayıt"""
 
 import csv
+import logging
 from pathlib import Path
 
 from config import supabase, CSV_LOCK
+
+logger = logging.getLogger(__name__)
 
 
 # -------------------------------------------------
@@ -55,7 +58,7 @@ def kayit_ekle_csv(record_dict: dict):
                     writer.writeheader()
                 writer.writerow(record_dict)
     except Exception as e:
-        print(f"[HATA] CSV Yazma Hatasi: {e}")
+        logger.warning("CSV yazma hatasi: %s", e)
 
 
 def kayit_ekle_supabase(record_dict: dict):
@@ -64,7 +67,7 @@ def kayit_ekle_supabase(record_dict: dict):
     Bağlantı yoksa veya hata olursa konsola yazar (Prod: Kuyruğa atılmalı).
     """
     if not supabase:
-        print("[HATA] Supabase istemcisi yuklu degil! Kayit atlandi.")
+        logger.warning("Supabase istemcisi yuklu degil, kayit atlandi.")
         return
 
     try:
@@ -73,4 +76,4 @@ def kayit_ekle_supabase(record_dict: dict):
         response = supabase.table("bina_analizleri").insert(record_dict).execute()
         # print(f"[BASARILI] Supabase Kayit Basarili: {response}")
     except Exception as e:
-        print(f"[HATA] Supabase Yazma Hatasi: {e}")
+        logger.warning("Supabase yazma hatasi: %s", e)

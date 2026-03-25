@@ -1,9 +1,12 @@
 """Yapı Sağlığı — Risk Hesaplama API Rotası (v2_fuzzy27)"""
 
 import asyncio
+import logging
 from datetime import datetime
 
 from fastapi import APIRouter
+
+logger = logging.getLogger(__name__)
 
 from models.schemas import RiskRequest, RiskResponse
 from services.fuzzy_engine import (
@@ -13,7 +16,7 @@ from services.fuzzy_engine import (
     ENGINE_VERSION,
 )
 from services.corrosion import korozyon_olasiligi
-from services.ml_models import concrete_model, tahmin_beton_dayanimi
+from services.ml_models import tahmin_beton_dayanimi
 from services.earthquake import (
     deprem_seviyesi_bul,
     deprem_seviyesi_puan,
@@ -64,11 +67,11 @@ async def risk_hesapla(req: RiskRequest):
     yapisal_seviye = yapisal_seviye_etiketi(toplam_yapisal_risk)
 
     # 3. Beton Dayanımı
-    basinc_dayanimi = tahmin_beton_dayanimi(
+    basinc_dayanimi, beton_fallback = tahmin_beton_dayanimi(
         req.ultrasonikSesHizi, req.geriSicramaSayisi
     )
-    if concrete_model is None:
-        detaylar.append("UYARI: Beton modeli yok, varsayılan (C25) kullanıldı.")
+    if beton_fallback:
+        detaylar.append("⚠️ UYARI: Beton dayanımı tahmin edilemedi; varsayılan (C25 = 25.0 MPa) kullanıldı.")
 
     # --- Korozyon Olasılığı (ASTM C876 standardı, sürekli interpolasyon) ---
     kor_yuzde, kor_seviye, kor_ikon = korozyon_olasiligi(req.corrosion)
@@ -81,6 +84,7 @@ async def risk_hesapla(req: RiskRequest):
     #  4. v2 FUZZY + POLICY LAYER (compute_health_v2)
     #  Ensemble kaldırıldı. Karar motoru: %100 Fuzzy + Policy Layer.
     # ==================================================================
+    _fuzzy_fallback = False
     try:
         v2_result = compute_health_v2(
             strength_val=float(basinc_dayanimi),
@@ -96,12 +100,17 @@ async def risk_hesapla(req: RiskRequest):
         raw_score = v2_result["raw_score"]
 
     except Exception as e:
-        print(f"Fuzzy v2 hesaplama hatasi: {e}")
+        logger.error("Fuzzy v2 hesaplama hatasi: %s", e, exc_info=True)
         health_score = 50.0
         fuzzy_label = get_fuzzy_label(50.0)
         fired_rules = []
         applied_caps = []
         raw_score = 50.0
+        _fuzzy_fallback = True
+        detaylar.append(
+            "⚠️ UYARI: Yapı sağlığı hesaplama motorunda hata oluştu; "
+            "gösterilen skor tahminidir. Lütfen sonuçları uzman ile doğrulayın."
+        )
 
     # --- Policy Cap Detayları → kullanıcıya dönük uyarılar ---
     for cap in applied_caps:
@@ -199,6 +208,14 @@ async def risk_hesapla(req: RiskRequest):
     else:
         phase2_advice = "Bilgi: Risk görece düşük. Ancak standart mühendis incelemesi tavsiye edilir."
 
+    # Fuzzy fallback → phase2_advice de dürüst fallback çizgisinde olmalı
+    if _fuzzy_fallback:
+        phase2_advice = (
+            "Hesaplama motoru geçici olarak varsayılan modda çalıştı. "
+            "Gösterilen skor tahminidir. Lütfen analizi tekrar çalıştırın "
+            "veya sonuçları bir uzmanla doğrulayın."
+        )
+
     # --- Ana Risk Sürücüsü Belirleme (Sadece LLM için) ---
     if basinc_dayanimi < 25.0:
         ana_risk_kaynagi = "Düşük Beton Dayanımı (< 25 MPa)"
@@ -213,18 +230,27 @@ async def risk_hesapla(req: RiskRequest):
     korozyon_metni = f"{req.corrosion:.0f} mV (%{kor_yuzde} - {kor_seviye})"
 
     # --- AI YORUM (Async: senkron requests.post thread'e atılıyor) ---
-    aciklama = await asyncio.to_thread(
-        get_llm_comment,
-        skor=int(health_score),
-        risk_durumu=fuzzy_label,
-        beton=round(basinc_dayanimi, 1),
-        korozyon_metni=korozyon_metni,
-        risk_puani=int(toplam_yapisal_risk),
-        dts=dts,
-        bys=bys,
-        phase2_advice=phase2_advice,
-        ana_risk_kaynagi=ana_risk_kaynagi
-    )
+    if _fuzzy_fallback:
+        # Fuzzy motor fallback — LLM'e fabricated 50.0 skoru göndermek yanlış güven yaratır.
+        # Sabit, dürüst metin kullanılıyor.
+        aciklama = (
+            "Yapı sağlığı karar motoru geçici olarak varsayılan modda çalıştı. "
+            "Gösterilen skor (50) tahmini bir değerdir ve güvenilir kabul edilmemelidir. "
+            "Lütfen analizi tekrar çalıştırın veya sonuçları bir uzmanla doğrulayın."
+        )
+    else:
+        aciklama = await asyncio.to_thread(
+            get_llm_comment,
+            skor=int(health_score),
+            risk_durumu=fuzzy_label,
+            beton=round(basinc_dayanimi, 1),
+            korozyon_metni=korozyon_metni,
+            risk_puani=int(toplam_yapisal_risk),
+            dts=dts,
+            bys=bys,
+            phase2_advice=phase2_advice,
+            ana_risk_kaynagi=ana_risk_kaynagi
+        )
 
     pdf_params = {
         "kullanim_amaci": req.kullanimAmaci, "bks": bks, "i_katsayisi": i_kats,
@@ -313,13 +339,18 @@ async def risk_hesapla(req: RiskRequest):
     tbdy_uyum.append(("Zayıf Kat (B2) Varlığı", "Var" if req.zeminDukkan == "evet" else "Yok", "Uyarı" if req.zeminDukkan == "evet" else "Uygun", 'D' if req.zeminDukkan == "evet" else 'U', "Zemin kat dükkan." if req.zeminDukkan == "evet" else "Yumuşak kat etkisi gözlenmedi."))
 
 
-    pdf_url = await asyncio.to_thread(
-        create_ai_pdf_report,
-        params=pdf_params, counts=counts, risk_skoru=health_score,
-        anfis_mpa=basinc_dayanimi, ai_text=aciklama, phase2_advice=phase2_advice,
-        evaluations=evaluations, tbdy_uyum=tbdy_uyum,
-        engine_version=ENGINE_VERSION,
-    )
+    try:
+        pdf_url = await asyncio.to_thread(
+            create_ai_pdf_report,
+            params=pdf_params, counts=counts, risk_skoru=health_score,
+            anfis_mpa=basinc_dayanimi, ai_text=aciklama, phase2_advice=phase2_advice,
+            evaluations=evaluations, tbdy_uyum=tbdy_uyum,
+            engine_version=ENGINE_VERSION,
+        )
+    except Exception as e:
+        logger.error("PDF rapor uretim hatasi: %s", e, exc_info=True)
+        pdf_url = None
+        detaylar.append("⚠️ PDF raporu olusturulamadı.")
 
     # --- Kayıt: Supabase + CSV (aynı dict) ---
     record_dict = {
@@ -374,6 +405,11 @@ async def risk_hesapla(req: RiskRequest):
             for c in applied_caps
         ],
     }
+
+    if _fuzzy_fallback:
+        fuzzy_trace["fallback"] = True
+        fuzzy_trace["fallback_code"] = "FUZZY_ENGINE_ERROR"
+        fuzzy_trace["fallback_message"] = "Karar motoru gecici olarak varsayilan modda calisti"
 
     return RiskResponse(
         # İnsani Yuvarlama (Round)
