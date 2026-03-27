@@ -1,6 +1,6 @@
 # Progress — Açık Görevler ve Notlar
 
-> **Son güncelleme:** 2026-03-26
+> **Son güncelleme:** 2026-03-27
 
 ## Backlog — Açık Görevler
 
@@ -22,12 +22,24 @@
 - Saha verileriyle kalibre edilmesi önerilir
 - Faz 3 testleriyle mevcut değerler çelişmiyor
 
+## Yarının Görevleri / Sıradaki Adımlar
+
+### Cleanup ve Hijyen
+- `fuzzy_engine.py` içindeki v1 kodunun tamamen silinmesi. Harici bir test/script bağımlılığı kalmadığı doğrulandı, sadece operasyonel temizlik yapılacak.
+- `risk_model.joblib` makine öğrenmesi modelinin `services/ml_models.py`'den ve repodan tamamen çıkarılması (DEPRECATED). Golden testlerin korumasına güvenilecek.
+
+### CAP Kalibrasyon Refinement
+- CAP_SINGLE=40, CAP_DUAL=25 gibi guardrail sınırlarının testleri ve varlığı `test_golden_runtime.py` ile korumaya alındı. Yarın veya sonraki adımlarda bu eşiklerin daha fazla saha senaryosu ile gözden geçirilmesi (heuristic review) değerlendirilecek.
+
+### AFAD Doğruluğu İyileştirmesi
+- Mevcut GMPE altyapısında üretilen yaklaşık PGA hesabı güvenli tarafta kalıyor ancak fazla abartılı (overestimate) olabiliyor. TDTH verisine tam bağlanılamadığı için formülün saflığını (accuracy) ve kullanıcı panosuma yansımasını iyileştirme adımları planlanıyor.
+
 ## Tartışıldı Ama Koda Dökülmedi
 
-### Golden Runtime Testleri
-- Aktif v2 pipeline için sabit referans girdi/çıktı vakaları üreten ayrı bir golden regression katmanı planlandı.
-- Amaç: cleanup, cap review ve AFAD iyileştirmeleri öncesinde route-seviyesi operasyonel guardrail sağlamak.
-- **Durum:** Tasarlandı, bugün kodlanmadı.
+### Dinamik Baseline Kayıt İşlemi (Golden Tests İçin)
+- Orijinalde "Golden Runtime Testleri" için baseline'ları (çıktıları) otomatik kaydedip (capture) ilerleyen testlerde dosyadakilere karşı denetleyen bir sistem planlandı.
+- Ancak bu yaklaşımın, motor değiştirildiğinde sessizce kendi kendini doğrulayan bir regression anti-pattern'i üreteceğinden çekinildi.
+- **Durum:** Koda dökülmedi. Sabit (hardcoded) expectation yöntemi kesin standart olarak benimsendi. Yeni cap/kurallarda geliştiricinin manuel kırması/düzeltmesi beklentisi kabul edildi.
 
 ### AFAD Doğruluğu İyileştirmesi
 - AFAD/GMPE tarafında yaklaşık PGA hesabının daha güvenilir hale getirilmesi konuşuldu.

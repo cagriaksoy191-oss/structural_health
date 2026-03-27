@@ -153,9 +153,11 @@ services/
 
 - `tests/` — Pytest test klasörü
   - `tests/test_fuzzy_v2_faz1.py` (15 test) — Faz 1 v2 fuzzy motor doğrulama
-  - `tests/test_faz2_regression.py` (11 test) — Faz 2 route cutover regression
+  - `tests/test_faz2_regression.py` (12 test) — Faz 2 route cutover regression
   - `tests/test_faz3_validation.py` (38 test) — Faz 3 boundary/mono/determ/explain/guard/stab/cap
+  - `tests/test_golden_runtime.py` (6 test) — Faz 2/3'ten bağımsız, route bazlı E2E operasyonel sözleşme ve emergent behavior (cap presence, fallback, success) doğrulama
   - `tests/test_afad_integration.py` (21 test) — AFAD API entegrasyon testleri
+  - `tests/test_fallback_transparency.py` (11 test) — Dürüst fallback ve hata sızdırmazlık testleri
   - `tests/quick_afad_test.py` — Hızlı API uçtan uca testi
   - `tests/health_check.py` — Sistem sağlık kontrolü
 - `testsprite_tests/` (33 dosya) — TestSprite kapsamlı test suite
@@ -265,6 +267,13 @@ services/
 - **Cross-machine Venv:** `scripts/gunsonu.ps1` hem `.venv` hem de `venv` dizinlerini dinamik olarak algılar.
 
 ## Son Değişiklikler
+
+### Operasyonel Referans Katmanı (Golden Runtime Tests) (2026-03-27)
+
+- **Golden Runtime Suite:** Faz 2 (wiring) ve Faz 3 (matematiksel boundary) testlerinden izole, API'nin bütünleşik davranışını (emergent behavior) ve dış sözleşmesini (contract) donuklaştıran E2E koruma katmanı eklendi.
+- **Canonical Senaryolar:** `ROUTES.RISK` düzeyinde dış servisler (AFAD, LLM, DB, PDF) izole edildi; Sağlıklı, TBDY Cap Presence, ASTM Cap Presence, Dual Cap Presence, AFAD Success ve Statik Fallback olmak üzere 6 değişmez baseline expectation uygulandı. Test dinamiği kendini doğrulayan capture stratejisi yerine "hardcoded contract" ile regresyon zırhına dönüştürüldü.
+- **Semantik Doğruluk (Presence vs. Clamp):** Motor matematiğine göre raw_score'un cap eşiklerinin hep altında kaldığı düşük değer durumları tespit edildi. Bunlar hatalı `effective=True` (clamp) beklentisinden arındırılarak `*_cap_presence` isimleriyle yalnızca "trace varlığı" denetleyecek dürüst ve gerçekçi bir formata çekildi. 
+- **Durum:** Testler terminalde hatasız onaylandı (Total Suite: 88 PASS). Gelecekteki refactor ve cleanup operasyonları (eski risk_model ve v1_fuzzy tahliyesi) için birincil güvenlik kalkanı tamamlandı.
 
 ### Batch Script Modernizasyonu (2026-03-21)
 
