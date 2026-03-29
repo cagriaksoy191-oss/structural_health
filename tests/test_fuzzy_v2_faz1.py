@@ -10,9 +10,8 @@ from skfuzzy import control as ctrl
 
 
 def test_imports():
-    """v1 ve v2 birlikte import edilebiliyor mu?"""
+    """v2 sembolleri import edilebiliyor mu?"""
     from services.fuzzy_engine import (
-        fuzzy_control_system,
         fuzzy_control_system_v2,
         get_fuzzy_label,
         clamp,
@@ -26,21 +25,8 @@ def test_imports():
         TBDY_THRESHOLD,
         ASTM_THRESHOLD,
     )
-    print("[OK] Import basarili -- v1 ve v2 birlikte yuklu")
+    print("[OK] Import basarili -- v2 sembolleri yuklu")
 
-
-def test_v1_backward_compat():
-    """Mevcut v1 pipeline hala calisiyor mu?"""
-    from services.fuzzy_engine import fuzzy_control_system, clamp
-
-    sim = ctrl.ControlSystemSimulation(fuzzy_control_system)
-    sim.input["strength"] = 35.0
-    sim.input["corrosion"] = -200.0
-    sim.input["survey_risk"] = 15.0
-    sim.compute()
-    score = sim.output["health"]
-    assert 0 <= score <= 100, f"v1 skor aralik disi: {score}"
-    print(f"[OK] v1 backward-compat -- skor: {score:.2f}")
 
 
 def test_rule_matrix():
@@ -253,7 +239,6 @@ def test_engine_version():
 if __name__ == "__main__":
     tests = [
         test_imports,
-        test_v1_backward_compat,
         test_rule_matrix,
         test_v2_fuzzy_computation,
         test_get_fired_rules,

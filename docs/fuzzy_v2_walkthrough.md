@@ -2,7 +2,7 @@
 
 > **Motor versiyonu:** `v2_fuzzy27`
 > **Durum:** Aktif (Faz 3 doğrulaması tamamlandı, 85/85 test yeşil)
-> **Son güncelleme:** 2026-03-19
+> **Son güncelleme:** 2026-03-29
 
 ## Genel Bakış
 
@@ -20,7 +20,7 @@ Bu doküman, yapı sağlığı izleme sisteminin karar motorunun v1 ensemble'dan
 - `apply_policy_caps()` — TBDY/ASTM guardrail'leri
 - v1 kodu korundu (backward-compat)
 
-**Doğrulama:** 15/15 Faz 1 test + 21/21 AFAD regresyon testi yeşil.
+**Doğrulama:** 14/14 Faz 1 test + 21/21 AFAD regresyon testi yeşil.
 
 ## Faz 2 — Atomik Cutover
 
@@ -33,9 +33,9 @@ Bu doküman, yapı sağlığı izleme sisteminin karar motorunun v1 ensemble'dan
 - `services/pdf_report.py` — PDF footer'a motor versiyonu eklendi
 - `main.py` — Backward-compat re-export güncellemesi
 
-**Kritik karar:** RF ensemble (%60 fuzzy + %40 RF) **kalıcı olarak kaldırıldı**. `risk_model.joblib` dosyası repoda kalıyor (silindi → `DEPRECATED` ibaresiyle) ama aktif runtime'da kullanılmıyor.
+**Kritik karar:** RF ensemble (%60 fuzzy + %40 RF) **kalıcı olarak kaldırıldı**. Eski v1_ensemble kodları ve `risk_model.joblib` dosyası repodan tamamen temizlendi.
 
-**Doğrulama:** 11/11 Faz 2 regression test yeşil.
+**Doğrulama:** 12/12 Faz 2 regression test yeşil.
 
 ## Faz 3 — Doğrulama ve Kalibrasyon
 
@@ -56,8 +56,8 @@ Bu doküman, yapı sağlığı izleme sisteminin karar motorunun v1 ensemble'dan
 ### Toplam Test Durumu
 
 ```
-Faz 1 (test_fuzzy_v2_faz1.py)      :  15/15 PASSED
-Faz 2 (test_faz2_regression.py)    :  11/11 PASSED
+Faz 1 (test_fuzzy_v2_faz1.py)      :  14/14 PASSED
+Faz 2 (test_faz2_regression.py)    :  12/12 PASSED
 Faz 3 (test_faz3_validation.py)    :  38/38 PASSED
 AFAD  (test_afad_integration.py)   :  21/21 PASSED
 ─────────────────────────────────────────────────────
@@ -188,6 +188,6 @@ Adım 3: ALTER TABLE bina_analizleri ALTER COLUMN engine_version SET DEFAULT 'v2
 
 - [x] ~~Supabase `engine_version` migration (canlı DB)~~ — tamamlandı (2026-03-19)
 - [x] ~~Frontend'de `engineVersion` / `fuzzyTrace` gösterimi~~ — tamamlandı (App.jsx, engine-meta + trace-panel)
-- [ ] v1 fuzzy kodu temizliği (şu an backward-compat korunuyor)
-- [ ] `risk_model.joblib` dosyasının repodan kaldırılması (boyut optimizasyonu)
+- [x] ~~v1 fuzzy kodu temizliği~~ — tamamlandı (2026-03-29)
+- [x] ~~`risk_model.joblib` dosyasının repodan kaldırılması~~ — tamamlandı (2026-03-29)
 - [ ] Saha verileriyle CAP_SINGLE / CAP_DUAL kalibrasyon refinement

@@ -89,7 +89,6 @@ def check_models():
 
     models = [
         ("concrete_model.joblib", "Beton Dayanim Modeli (RF)"),
-        ("risk_model.joblib", "Risk Degerlendirme Modeli"),
         ("anfis_model_agirliklari.pth", "ANFIS Agirliklari"),
     ]
 

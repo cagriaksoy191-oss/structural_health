@@ -6,12 +6,13 @@ import skfuzzy.control as ctrl
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from main import fuzzy_control_system, clamp
+from services.fuzzy_engine import fuzzy_control_system_v2
+from main import clamp
 
 
 class TestFuzzyLogicConsistency(unittest.TestCase):
     def setUp(self):
-        self.sim = ctrl.ControlSystemSimulation(fuzzy_control_system)
+        self.sim = ctrl.ControlSystemSimulation(fuzzy_control_system_v2)
 
     def get_fuzzy_score(self, strength, corrosion, survey_risk):
         self.sim.input["strength"] = clamp(float(strength), 0.0, 80.0)

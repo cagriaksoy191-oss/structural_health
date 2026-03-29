@@ -33,8 +33,8 @@ services/
   earthquake.py            → 81 il deprem risk haritası + zemin sınıfı (Z1-Z4) + AFAD hybrid
   afad_api.py              → AFAD Event API client + PGA hesaplama + in-memory cache
   structural.py            → 14 kritere göre yapısal skor hesaplama
-  fuzzy_engine.py          → v1 (5 kural, backward-compat) + v2 (27 kural, RULE_MATRIX, policy layer)
-  ml_models.py             → RandomForest beton modeli (aktif) + risk modeli (DEPRECATED)
+  fuzzy_engine.py          → v2 fuzzy motoru (27 kural, RULE_MATRIX, policy layer)
+  ml_models.py             → RandomForest beton modeli (aktif) — risk_model cleanup ile kaldırıldı
   corrosion.py             → ASTM C876 korozyon olasılığı (sürekli interpolasyon)
   ai_comment.py            → Qwen3:8b LLM entegrasyonu (Ollama localhost:11434)
   data_service.py          → Supabase + CSV veri kayıt (kayit_ekle_supabase + kayit_ekle_csv)
@@ -71,8 +71,8 @@ services/
 ### ML Model Dosyaları
 
 - `concrete_model.joblib` (4.2 MB) — Beton dayanımı tahmini (RandomForest Regressor)
-- `risk_model.joblib` (8.5 MB) — Risk sınıflandırma (RandomForest Classifier) — **DEPRECATED, v2 fuzzy ile kullanılmıyor**
-- `etiket_encoder.joblib` — Label encoder
+- ~~`risk_model.joblib`~~ — **KALDIRILDI** (v1 cleanup ile repodan silindi, training scripti hâlâ üretebilir)
+- `etiket_encoder.joblib` — Label encoder (offline script bağımlılığı)
 - `anfis_model_agirliklari.pth` — ANFIS PyTorch ağırlıkları
 - `scaler_x.pkl`, `scaler_y.pkl` — ANFIS normalizasyon
 
@@ -152,7 +152,7 @@ services/
 ### Test Altyapısı
 
 - `tests/` — Pytest test klasörü
-  - `tests/test_fuzzy_v2_faz1.py` (15 test) — Faz 1 v2 fuzzy motor doğrulama
+  - `tests/test_fuzzy_v2_faz1.py` (14 test) — Faz 1 v2 fuzzy motor doğrulama
   - `tests/test_faz2_regression.py` (12 test) — Faz 2 route cutover regression
   - `tests/test_faz3_validation.py` (38 test) — Faz 3 boundary/mono/determ/explain/guard/stab/cap
   - `tests/test_golden_runtime.py` (6 test) — Faz 2/3'ten bağımsız, route bazlı E2E operasyonel sözleşme ve emergent behavior (cap presence, fallback, success) doğrulama
@@ -207,8 +207,8 @@ services/
 - [x] Supabase MCP integration + veri migrasyon
 - [x] TestSprite test coverage setup (33 test dosyası)
 - [x] Frontend (React/Vite) connected to backend API
-- [x] ML model training (concrete_model, risk_model, ANFIS)
-- [x] Fuzzy Logic sistemi (3 girdi, 5 kural, 5 çıktı seviyesi)
+- [x] ML model training (concrete_model, ANFIS) — risk_model KALDIRILDI
+- [x] Fuzzy Logic v2 sistemi (27 kural, RULE_MATRIX + policy layer) — v1 (5 kural) KALDIRILDI
 - [x] ASTM C876 korozyon modülü (sürekli interpolasyon)
 - [x] Qwen3:8b LLM entegrasyonu (Ollama üzerinden)
 - [x] Deprem haritası (81 il, ilçe bazlı risk + zemin sınıfı)
@@ -242,7 +242,7 @@ services/
 - MCP Memory-Bank ile dış hafıza kullanılacak
 - CLAUDE.md otomatik okunacak, PROJECT-RULES.md kaldırıldı
 - **Karar motoru: %100 v2 Fuzzy + Policy Layer** (eski RF ensemble kaldırıldı)
-- `concrete_model` (RF Regressor) aktif, `risk_model` (RF Classifier) DEPRECATED
+- `concrete_model` (RF Regressor) aktif, `risk_model` (RF Classifier) **KALDIRILDI** (v1 cleanup — repodan silindi, ml_models.py'den temizlendi)
 - **Fallback Transparency (availability-first):** Fuzzy motor exception durumunda response 200 korunur; `detaylar` ve `fuzzyTrace` üzerinden sanitize fallback sinyali döner, LLM yorumu ve `phase2_advice` deterministik fallback metnine geçer
 - **Beton fallback sinyali:** `tahmin_beton_dayanimi()` içsel olarak `(value, used_fallback)` döner; 25.0 MPa varsayılanı sessiz kalmaz, route katmanında kullanıcıya uyarı verilir
 - **PDF degrade modu:** PDF üretimi başarısız olursa ana risk response'u korunur; `pdfDownloadUrl=None` + detay uyarısı ile devam edilir, endpoint 500 vermez
@@ -251,7 +251,7 @@ services/
 - MF gap bölgelerinde (strength 15-20, 40-50) partition sum < 1.0 — fuzzy tasarımın doğal sonucu
 - TBDY 2018 minimum beton sınıfı (C25) policy cap olarak uygulanıyor
 - ASTM C876 sürekli interpolasyon (kesikli eşik yerine) + policy cap (≤ -350 mV)
-- Backward-compat: main.py'den eski importlar re-export ile korunuyor
+- Backward-compat: main.py'den aktif importlar re-export ile korunuyor (legacy `fuzzy_control_system` ve `rf_health_score` kaldırıldı)
 - Supabase yoksa uygulama yedek modda (CSV-only) çalışır
 - Fuzzy girdileri clamp ile sınırlandırılır, kullanıcıya uyarı verilir
 - AFAD API → Hybrid yaklaşım: API-first, hardcoded-fallback (TDTH e-Devlet gerektirdiği için Event API kullanılıyor)
@@ -268,12 +268,21 @@ services/
 
 ## Son Değişiklikler
 
+### v1 Fuzzy + risk_model.joblib Cleanup (2026-03-29)
+
+- **risk_model.joblib (8.5 MB) repodan kaldırıldı:** `services/ml_models.py` içinden `RISK_MODEL_PATH`, `risk_model` yükleme bloğu ve `rf_health_score()` fonksiyonu silindi. `concrete_model` ve `tahmin_beton_dayanimi()` korundu.
+- **v1 fuzzy engine kaldırıldı:** `services/fuzzy_engine.py` içinden `create_fuzzy_system()` (5 kural) ve `fuzzy_control_system` modül-seviye init silindi. v2 altyapısı (`compute_health_v2`, `RULE_MATRIX`, policy layer) korundu.
+- **main.py re-export temizliği:** `fuzzy_control_system` ve `rf_health_score` backward-compat re-export'ları kaldırıldı (grep ile 0 dış tüketici doğrulandı). Aktif semboller korundu.
+- **Test güncellemeleri:** `test_fuzzy_v2_faz1.py` v1 testleri kaldırıldı; `testsprite_tests/TC009` v2'ye migrase edildi; `health_check.py` model listesi güncellendi.
+- **Offline scriptler kapsam dışı:** `train_model.py`, `integrate_anfis_and_train.py`, `sentetik_veri_uret.py`, `etiket_encoder.joblib` — follow-up olarak kaydedildi.
+- **Doğrulama:** Golden Runtime (6), Faz 2 (12), Faz 3 (38), Faz 1 (14), Fallback (11), AFAD (21) test suiteleri geçirildi.
+
 ### Operasyonel Referans Katmanı (Golden Runtime Tests) (2026-03-27)
 
 - **Golden Runtime Suite:** Faz 2 (wiring) ve Faz 3 (matematiksel boundary) testlerinden izole, API'nin bütünleşik davranışını (emergent behavior) ve dış sözleşmesini (contract) donuklaştıran E2E koruma katmanı eklendi.
 - **Canonical Senaryolar:** `ROUTES.RISK` düzeyinde dış servisler (AFAD, LLM, DB, PDF) izole edildi; Sağlıklı, TBDY Cap Presence, ASTM Cap Presence, Dual Cap Presence, AFAD Success ve Statik Fallback olmak üzere 6 değişmez baseline expectation uygulandı. Test dinamiği kendini doğrulayan capture stratejisi yerine "hardcoded contract" ile regresyon zırhına dönüştürüldü.
 - **Semantik Doğruluk (Presence vs. Clamp):** Motor matematiğine göre raw_score'un cap eşiklerinin hep altında kaldığı düşük değer durumları tespit edildi. Bunlar hatalı `effective=True` (clamp) beklentisinden arındırılarak `*_cap_presence` isimleriyle yalnızca "trace varlığı" denetleyecek dürüst ve gerçekçi bir formata çekildi. 
-- **Durum:** Testler terminalde hatasız onaylandı (Total Suite: 88 PASS). Gelecekteki refactor ve cleanup operasyonları (eski risk_model ve v1_fuzzy tahliyesi) için birincil güvenlik kalkanı tamamlandı.
+- **Durum:** Testler terminalde hatasız onaylandı (Total Suite: 88 PASS). v1 fuzzy + risk_model cleanup operasyonu bu testlerin koruması altında tamamlandı.
 
 ### Batch Script Modernizasyonu (2026-03-21)
 

@@ -1,20 +1,30 @@
 # Progress — Açık Görevler ve Notlar
 
-> **Son güncelleme:** 2026-03-27
+> **Son güncelleme:** 2026-03-29
 
 ## Backlog — Açık Görevler
 
-### v1 Fuzzy Kodu Temizliği
+### ~~v1 Fuzzy Kodu Temizliği~~ ✅ TAMAMLANDI (2026-03-29)
 
-- `fuzzy_engine.py` içinde v1 kodu (5 kural) backward-compat amaçlı korunuyor
-- v2 artık %100 aktif → v1 güvenle silinebilir
-- **Risk:** Düşük — v1'i import eden harici test/script kalmadığı doğrulanmalı
+- `fuzzy_engine.py` içindeki v1 kodu (5 kural, `create_fuzzy_system`, `fuzzy_control_system`) kaldırıldı
+- `main.py` re-export'larından `fuzzy_control_system` silindi
+- `test_fuzzy_v2_faz1.py` v1 testleri kaldırıldı, `testsprite_tests/TC009` v2'ye migrase edildi
 
-### `risk_model.joblib` Kaldırma
+### ~~`risk_model.joblib` Kaldırma~~ ✅ TAMAMLANDI (2026-03-29)
 
-- 8.5 MB dosya repoda duruyor ama aktif runtime'da kullanılmıyor (DEPRECATED)
-- Repo boyut optimizasyonu için kaldırılabilir
-- **Risk:** Düşük — kullanılmıyor, silmek güvenli
+- 8.5 MB dosya repodan kaldırıldı (`git rm`)
+- `services/ml_models.py` içinden yükleme bloğu ve `rf_health_score()` silindi
+- `main.py` re-export'larından `rf_health_score` silindi
+- `tests/health_check.py` model listesinden çıkarıldı
+- Training capability korundu: `train_model.py` hâlâ yeni model üretebilir
+
+### Offline Eğitim Scripti Temizliği (Follow-up)
+
+- `train_model.py` risk_model referansları
+- `integrate_anfis_and_train.py` risk_model eğitim bölümü (concrete_model korunarak cerrahi düzenleme)
+- `sentetik_veri_uret.py` kırık import'lar (`genel_risk_seviyesi`) + risk_model bağımlılığı
+- `etiket_encoder.joblib` (sentetik_veri_uret.py ile birlikte)
+- **Risk:** Düşük — tümü offline araçlar, runtime'a sıfır etkisi
 
 ### CAP Kalibrasyon Refinement
 
@@ -24,9 +34,9 @@
 
 ## Yarının Görevleri / Sıradaki Adımlar
 
-### Cleanup ve Hijyen
-- `fuzzy_engine.py` içindeki v1 kodunun tamamen silinmesi. Harici bir test/script bağımlılığı kalmadığı doğrulandı, sadece operasyonel temizlik yapılacak.
-- `risk_model.joblib` makine öğrenmesi modelinin `services/ml_models.py`'den ve repodan tamamen çıkarılması (DEPRECATED). Golden testlerin korumasına güvenilecek.
+### ~~Cleanup ve Hijyen~~ ✅ TAMAMLANDI (2026-03-29)
+- ~~`fuzzy_engine.py` içindeki v1 kodunun tamamen silinmesi.~~ ✅
+- ~~`risk_model.joblib` makine öğrenmesi modelinin `services/ml_models.py`'den ve repodan tamamen çıkarılması.~~ ✅
 
 ### CAP Kalibrasyon Refinement
 - CAP_SINGLE=40, CAP_DUAL=25 gibi guardrail sınırlarının testleri ve varlığı `test_golden_runtime.py` ile korumaya alındı. Yarın veya sonraki adımlarda bu eşiklerin daha fazla saha senaryosu ile gözden geçirilmesi (heuristic review) değerlendirilecek.
