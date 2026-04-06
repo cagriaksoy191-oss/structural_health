@@ -3,6 +3,7 @@
 import sys
 import os
 import unittest
+import unittest.mock
 import asyncio
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
@@ -156,6 +157,49 @@ class TestHybridAnalysis(unittest.TestCase):
         self.assertIn("kaynak", result)
         self.assertIn(result["seviye"], ["yüksek", "orta", "düşük"])
         self.assertIn(result["puan"], [0, 1, 3])
+
+    @unittest.mock.patch("services.afad_api.calculate_seismic_hazard", new_callable=unittest.mock.AsyncMock)
+    def test_scenario_3_honest_fallback(self, mock_calc):
+        """Senaryo 3: AFAD düşük risk döndürürse, yüksek olan statik haritaya dürüst fallback yapılmalı."""
+        mock_calc.return_value = {
+            "pga": 0.15,
+            "risk_seviyesi": "düşük",
+            "deprem_sayisi": 2,
+            "kaynak": "AFAD",
+            "events": [{"magnitude": 4.1, "latitude": 41.0, "longitude": 28.0}],
+            "koordinat": {"lat": 41.0, "lon": 28.0}
+        }
+        
+        # Kadıköy statik haritada 'yüksek' düzeydir (Puan: 3)
+        result = asyncio.run(deprem_analizi_async("istanbul", "Kadıköy"))
+        
+        self.assertEqual(result["seviye"], "yüksek")
+        self.assertEqual(result["puan"], 3)
+        self.assertIsNone(result["pga"]) # Karmaşık sinyali önlemek için pga None
+        self.assertEqual(result["kaynak"], "Statik Harita")
+        self.assertEqual(result["deprem_sayisi"], 2)
+        # Events listesi dürüst bir şekilde içsözleşmeyle hedefe taşınmalı
+        self.assertEqual(len(result["events"]), 1)
+        self.assertEqual(result["events"][0]["magnitude"], 4.1)
+
+    @unittest.mock.patch("services.afad_api.calculate_seismic_hazard", new_callable=unittest.mock.AsyncMock)
+    def test_afad_normal_success(self, mock_calc):
+        """AFAD skoru statik skordan yüksek veya eşitse AFAD kullanılmalı."""
+        mock_calc.return_value = {
+            "pga": 0.45,
+            "risk_seviyesi": "yüksek",
+            "deprem_sayisi": 1,
+            "kaynak": "AFAD",
+            "events": [{"magnitude": 6.1}],
+            "koordinat": {"lat": 41.0, "lon": 28.0}
+        }
+        # Kadıköy statik haritada "yüksek"
+        result = asyncio.run(deprem_analizi_async("istanbul", "Kadıköy"))
+        
+        self.assertEqual(result["seviye"], "yüksek")
+        self.assertEqual(result["puan"], 3)
+        self.assertEqual(result["pga"], 0.45)
+        self.assertEqual(result["kaynak"], "AFAD")
 
 
 class TestBackwardCompatibility(unittest.TestCase):

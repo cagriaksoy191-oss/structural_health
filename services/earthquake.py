@@ -261,10 +261,16 @@ async def deprem_analizi_async(
         {
             "seviye": str,     # "yüksek" / "orta" / "düşük"
             "puan": int,       # 0, 1 veya 3
-            "pga": float|None, # PGA değeri (g), None ise API çalışmadı
+            "pga": float|None, # PGA değeri (g), None ise API çalışmadı veya dürüst fallback yapıldı
             "kaynak": str,     # "AFAD" veya "Statik Harita"
+            "events": list,    # AFAD API olay verileri (İç sözleşme taşıması, dış API'ye sızmaz)
+            "deprem_sayisi": int
         }
     """
+    # Önce baz statik seviyeyi bul
+    statik_seviye = deprem_seviyesi_bul(il, ilce)
+    statik_puan = deprem_seviyesi_puan(statik_seviye)
+
     # --- Önce AFAD API'yi dene ---
     try:
         from services.afad_api import calculate_seismic_hazard
@@ -272,32 +278,53 @@ async def deprem_analizi_async(
         afad_result = await calculate_seismic_hazard(il, ilce, lat, lon)
 
         if afad_result is not None:
-            seviye = afad_result["risk_seviyesi"]
-            puan = deprem_seviyesi_puan(seviye)
+            afad_seviye = afad_result["risk_seviyesi"]
+            afad_puan = deprem_seviyesi_puan(afad_seviye)
+            afad_events = afad_result.get("events", [])
+            deprem_sayisi = afad_result.get("deprem_sayisi", 0)
+
+            # --- Senaryo 3: Honest Fallback (Kalkan) ---
+            # AFAD aktivitesi statik haritadan daha düşük bir puan üretiyorsa, statik harita korunur.
+            # İç kontrat ile events taşınır ki external HTTP schema earthquakeClasses üretebilsin.
+            if statik_puan > afad_puan:
+                logger.info(
+                    f"Senaryo 3: AFAD düşük aktivite buldu ({afad_seviye}), "
+                    f"ancak statik risk daha yüksek ({statik_seviye}). Statik seviyeye çıkılıyor."
+                )
+                return {
+                    "seviye": statik_seviye,
+                    "puan": statik_puan,
+                    "pga": None,
+                    "kaynak": "Statik Harita",
+                    "events": afad_events,
+                    "deprem_sayisi": deprem_sayisi,
+                }
+
             logger.info(
                 f"AFAD veri başarılı: {il}/{ilce} → "
-                f"PGA={afad_result['pga']:.4f}g, Seviye={seviye}, "
-                f"Kaynak: AFAD ({afad_result['deprem_sayisi']} deprem)"
+                f"PGA={afad_result['pga']:.4f}g, Seviye={afad_seviye}, "
+                f"Kaynak: AFAD ({deprem_sayisi} deprem)"
             )
             return {
-                "seviye": seviye,
-                "puan": puan,
+                "seviye": afad_seviye,
+                "puan": afad_puan,
                 "pga": afad_result["pga"],
                 "kaynak": "AFAD",
-                "deprem_sayisi": afad_result["deprem_sayisi"],
+                "events": afad_events,
+                "deprem_sayisi": deprem_sayisi,
             }
     except Exception as e:
         logger.warning(f"AFAD API hatası, statik haritaya düşülüyor: {e}")
 
     # --- Fallback: Statik harita ---
-    seviye = deprem_seviyesi_bul(il, ilce)
-    puan = deprem_seviyesi_puan(seviye)
-    logger.info(f"Statik harita kullanıldı: {il}/{ilce} → Seviye={seviye}")
+    logger.info(f"Statik harita kullanıldı: {il}/{ilce} → Seviye={statik_seviye}")
 
     return {
-        "seviye": seviye,
-        "puan": puan,
+        "seviye": statik_seviye,
+        "puan": statik_puan,
         "pga": None,
         "kaynak": "Statik Harita",
+        "events": [],
+        "deprem_sayisi": 0,
     }
 

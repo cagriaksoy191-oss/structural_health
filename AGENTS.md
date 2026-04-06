@@ -235,6 +235,8 @@ services/
 - [x] Supabase migration hazirligi (scripts/migrate_engine_version.py - print-only SQL helper)
 - [x] Supabase canli migration (engine_version kolonu — legacy: v1_ensemble, yeni: v2_fuzzy27)
 - [x] Frontend engineVersion + fuzzyTrace gorunurlugu (App.jsx: engine-meta + trace-panel accordion)
+- [x] Heuristic Cap Review — `CAP_SINGLE=40` ve `CAP_DUAL=25` eşiklerinin güvenliği doğrulandı
+- [x] AFAD Doğruluğu İyileştirmesi (Scenario 3 - Honest Fallback) — 10km nominal odak, yüksek güvenlikli statik devir
 
 ## Mimari Kararlar
 
@@ -408,3 +410,15 @@ services/
 - **Güvenli Başlatma Akışı (Happy Path):** Hızlı Başlangıç bölümü Windows terminal (`kurulum.bat` ve `baslat.bat`) öncelikli olacak şekilde güncellendi.
 - **Venv/Interpreter Netliği:** Manuel başlatma komutlarına `.venv\Scripts\python.exe` / `venv\Scripts\python.exe` ibaresi eklendi; kullanıcıyı global Python yürütme hatasından koruyacak uyarılar dahil edildi.
 - **Doğrulama ve Test:** Dış bağımlılık gerektiren `pytest` komutu yerine, repodan out-of-the-box çıkan `python tests/health_check.py` smoke-check testi birincil doğrulama aracı olarak öne çıkarıldı.
+
+### Heuristic Cap Review (2026-04-06)
+
+- Değişiklik uygulanmadı, ancak "Masa başı" teknik değerlendirme tamamlandı. `CAP_SINGLE=40` ve `CAP_DUAL=25` değerleri, mevcut etiket skalası taban/tavan sınırlarında savunulabilir ve Faz 3 & Golden Runtime testleri ile %100 tutarlı bulundu. Ampirik saha verisi (ground truth) sağlanana kadar kod üzerinde oynama yapılmayacak.
+
+### AFAD Doğruluğu İyileştirmesi (Scenario 3 - Honest Fallback) (2026-04-06)
+
+- **Hypocentral Distance Düzeltmesi:** `services/afad_api.py` içerisinde PGA tahmini yapan GMPE fonksiyonuna 10 km nominal odak derinliği ($h=10$) eklendi. Bu sayede merkez üssü senaryosunda olası matematiksel sızıntılar (boundary explosions) durduruldu.
+- **Honest Fallback (Senaryo 3):** `services/earthquake.py` içerisinde, eğer AFAD'ın tespit ettiği anlık sismik risk, statik tehlike haritasının altındaysa, kullanıcıya yanlış güven aşılamamak adına sonuç otomatik olarak statik rejimine çekiliyor (`pga=None` atanarak karışık sinyal engelleniyor).
+- **İç/Dış Sözleşme Uyumu:** `depremKaynak` API sözleşmesi ("AFAD" / "Statik Harita") tamamen korundu. Toplanan AFAD event logları şeffaflık adına iç yapıda (UI `earthquakeClasses` seviyesi için) taşınıyor, fakat API Response'a `events` olarak sızdırılmıyor. UI üzerindeki "Son 50 Yıl" metni de gerçek API limiti olan "Son 1 Yıl" ile güncellendi.
+- **Golden Test Güvencesi:** Tüm "Honest Fallback" senaryoları mock ve sözleşme bazlı (90/90 passed) testlerle kilitli ve kanıtlı biçimde uyarlandı. Hiçbir regresyon söz konusu değil.
+

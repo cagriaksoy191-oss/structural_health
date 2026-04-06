@@ -1,6 +1,6 @@
 # Progress — Açık Görevler ve Notlar
 
-> **Son güncelleme:** 2026-03-29
+> **Son güncelleme:** 2026-04-06
 
 ## Backlog — Açık Görevler
 
@@ -26,23 +26,20 @@
 - `etiket_encoder.joblib` (sentetik_veri_uret.py ile birlikte)
 - **Risk:** Düşük — tümü offline araçlar, runtime'a sıfır etkisi
 
-### CAP Kalibrasyon Refinement
+### ~~CAP Kalibrasyon Refinement~~ ✅ TAMAMLANDI (2026-04-06)
 
-- CAP_SINGLE=40, CAP_DUAL=25 — provisional değerler
-- Saha verileriyle kalibre edilmesi önerilir
-- Faz 3 testleriyle mevcut değerler çelişmiyor
+- Masa başı teknik değerlendirme tamamlandı. `CAP_SINGLE=40` ve `CAP_DUAL=25` değerlerinin Faz 3 testleriyle çelişmediği ve etiket sınırlarında mantıklı olduğu doğrulandı. Saha verisi olmadan koda dokunulmadı.
+
+### ~~AFAD Doğruluğu İyileştirmesi~~ ✅ TAMAMLANDI (2026-04-06)
+
+- GMPE formülünde $h=10$ km nominal odak derinliği düzeltmesi uygulandı.
+- Senaryo 3 (Honest Fallback) uygulandı. Yüksek riskli statik bölgede düşük AFAD aktivitesi olursa, sessizce tehlikeli olan statik veri kullanılıyor. Testleri doğrulandı.
+- UI "Son 50 Yıl" metni 1 yıla düzeltildi.
 
 ## Yarının Görevleri / Sıradaki Adımlar
 
-### ~~Cleanup ve Hijyen~~ ✅ TAMAMLANDI (2026-03-29)
-- ~~`fuzzy_engine.py` içindeki v1 kodunun tamamen silinmesi.~~ ✅
-- ~~`risk_model.joblib` makine öğrenmesi modelinin `services/ml_models.py`'den ve repodan tamamen çıkarılması.~~ ✅
-
-### CAP Kalibrasyon Refinement
-- CAP_SINGLE=40, CAP_DUAL=25 gibi guardrail sınırlarının testleri ve varlığı `test_golden_runtime.py` ile korumaya alındı. Yarın veya sonraki adımlarda bu eşiklerin daha fazla saha senaryosu ile gözden geçirilmesi (heuristic review) değerlendirilecek.
-
-### AFAD Doğruluğu İyileştirmesi
-- Mevcut GMPE altyapısında üretilen yaklaşık PGA hesabı güvenli tarafta kalıyor ancak fazla abartılı (overestimate) olabiliyor. TDTH verisine tam bağlanılamadığı için formülün saflığını (accuracy) ve kullanıcı panosuma yansımasını iyileştirme adımları planlanıyor.
+### Offline Scriptlerin Bakımı (Opsiyonel)
+- Eğitim araçları (`train_model.py`, `sentetik_veri_uret.py`) `risk_model`'den tamamen temizlenebilir. Günlük işlemleri aksatmaz.
 
 ## Tartışıldı Ama Koda Dökülmedi
 
@@ -50,11 +47,6 @@
 - Orijinalde "Golden Runtime Testleri" için baseline'ları (çıktıları) otomatik kaydedip (capture) ilerleyen testlerde dosyadakilere karşı denetleyen bir sistem planlandı.
 - Ancak bu yaklaşımın, motor değiştirildiğinde sessizce kendi kendini doğrulayan bir regression anti-pattern'i üreteceğinden çekinildi.
 - **Durum:** Koda dökülmedi. Sabit (hardcoded) expectation yöntemi kesin standart olarak benimsendi. Yeni cap/kurallarda geliştiricinin manuel kırması/düzeltmesi beklentisi kabul edildi.
-
-### AFAD Doğruluğu İyileştirmesi
-- AFAD/GMPE tarafında yaklaşık PGA hesabının daha güvenilir hale getirilmesi konuşuldu.
-- Bu iş, veri/saha gerçekliği olmadan en fazla heuristic/teknik review düzeyinde ilerleyebilir.
-- **Durum:** Planlama seviyesinde, bugün kodlanmadı.
 
 ### Fallback Transparency Sonrası Kozmetik Follow-up
 - Fallback transparency tamamlandı, ancak fallback anında frontend/PDF başlıklarının "Yapay Zeka ..." ifadesini koruması küçük bir kozmetik tutarsızlık yaratabilir.

@@ -43,7 +43,7 @@ async def risk_hesapla(req: RiskRequest):
     )
     deprem_seviye = deprem_result["seviye"]
     deprem_puan = deprem_result["puan"]
-    pga_value = deprem_result.get("pga")  # None ise API çalışmadı
+    pga_value = deprem_result.get("pga")  # None ise API çalışmadı veya statik fallback uygulandı
     deprem_kaynak = deprem_result.get("kaynak", "Statik Harita")
 
     zemin_sinifi = (

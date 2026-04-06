@@ -234,15 +234,19 @@ def _estimate_pga_from_earthquake(magnitude: float, distance_km: float) -> float
     Basitleştirilmiş Ground Motion Prediction Equation (GMPE).
     Boore-Atkinson (2008) yaklaşımından esinlenilmiş basitleştirme.
 
-    PGA (g) = 10^(0.35 * M - 1.4 - 1.2 * log10(R + 10))
+    PGA (g) = 10^(0.35 * M - 1.4 - 1.2 * log10(R_hypo + 10))
+    * R_hypo: Hiposantr mesafesi (nominal odak derinliği h=10 km kabul edilmiştir)
 
     NOT: Bu resmi bir GMPE değildir, yaklaşık bir tahmindir.
     Gerçek PGA için TDTH verisi gereklidir.
     """
-    if distance_km < 1:
+    if distance_km < 1.0:
         distance_km = 1.0
+        
+    # Nominal hypocentral distance (odak derinliği h = 10 km)
+    r_hypo = math.sqrt(distance_km**2 + 10**2)
 
-    log_pga = 0.35 * magnitude - 1.4 - 1.2 * math.log10(distance_km + 10)
+    log_pga = 0.35 * magnitude - 1.4 - 1.2 * math.log10(r_hypo + 10)
     pga = 10**log_pga
 
     # Fiziksel sınırlar

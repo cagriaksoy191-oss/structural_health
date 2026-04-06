@@ -111,7 +111,7 @@ function App() {
 
               {result.earthquakeClasses && Object.keys(result.earthquakeClasses).length > 0 && (
                 <div className="ai-box" style={{ background: 'rgba(30, 41, 59, 0.5)', borderColor: '#334155' }}>
-                  <div className="ai-title">📡 AFAD Son 50 Yıl Deprem Verisi (Bölge)</div>
+                  <div className="ai-title">📡 AFAD Son 1 Yıl Deprem Verisi (Bölge)</div>
                   <div className="pill-row">
                     {Object.entries(result.earthquakeClasses).map(([cls, count]) => (
                       <span key={cls} className="pill" style={{ borderColor: '#475569', color: '#cbd5e1' }}>
