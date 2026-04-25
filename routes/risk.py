@@ -100,7 +100,7 @@ async def risk_hesapla(req: RiskRequest):
         raw_score = v2_result["raw_score"]
 
     except Exception as e:
-        logger.error("Fuzzy v2 hesaplama hatasi: %s", e, exc_info=True)
+        logger.error("Fuzzy v2 hesaplama hatasi: %s", type(e).__name__)
         health_score = 50.0
         fuzzy_label = get_fuzzy_label(50.0)
         fired_rules = []
@@ -348,7 +348,7 @@ async def risk_hesapla(req: RiskRequest):
             engine_version=ENGINE_VERSION,
         )
     except Exception as e:
-        logger.error("PDF rapor uretim hatasi: %s", e, exc_info=True)
+        logger.error("PDF rapor uretim hatasi: %s", type(e).__name__)
         pdf_url = None
         detaylar.append("⚠️ PDF raporu olusturulamadı.")
 

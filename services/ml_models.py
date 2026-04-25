@@ -20,7 +20,7 @@ try:
     else:
         print("[UYARI] Beton Modeli bulunamadı.")
 except Exception as e:
-    print(f"Model yükleme hatası: {e}")
+    print(f"Model yükleme hatası: {type(e).__name__}")
 
 
 
@@ -40,6 +40,6 @@ def tahmin_beton_dayanimi(upv: float, rn: float) -> tuple[float, bool]:
         res = concrete_model.predict(pd.DataFrame({"UPV": [upv], "RN": [rn]}))[0]
         return float(res), False
     except Exception as e:
-        logger.warning("Beton predict hatasi: %s", e)
+        logger.warning("Beton predict hatasi: %s", type(e).__name__)
         return 25.0, True
 
