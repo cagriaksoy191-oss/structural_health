@@ -58,7 +58,7 @@ def kayit_ekle_csv(record_dict: dict):
                     writer.writeheader()
                 writer.writerow(record_dict)
     except Exception as e:
-        logger.warning("CSV yazma hatasi: %s", e)
+        logger.warning("CSV yazma hatasi: %s", type(e).__name__)
 
 
 def kayit_ekle_supabase(record_dict: dict):
@@ -73,7 +73,7 @@ def kayit_ekle_supabase(record_dict: dict):
     try:
         # Arka planda (async değil ama hızlı) gönderim
         # .execute() sonucu bekler.
-        response = supabase.table("bina_analizleri").insert(record_dict).execute()
+        supabase.table("bina_analizleri").insert(record_dict).execute()
         # print(f"[BASARILI] Supabase Kayit Basarili: {response}")
     except Exception as e:
-        logger.warning("Supabase yazma hatasi: %s", e)
+        logger.warning("Supabase yazma hatasi: %s", type(e).__name__)

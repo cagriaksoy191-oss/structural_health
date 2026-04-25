@@ -79,8 +79,14 @@ def get_llm_comment(skor, risk_durumu, beton, korozyon=None, risk_puani=None, dt
                 "Analiz sonuclari gecerlidir; uzman yorumu icin lutfen tekrar deneyin."
             )
 
+    except requests.exceptions.RequestException as e:
+        logger.warning("Ollama istek hatasi: %s", type(e).__name__)
+        return (
+            "Yapay zeka yorum servisi su anda erisilemiyor. "
+            "Analiz sonuclari gecerlidir; uzman yorumu icin lutfen tekrar deneyin."
+        )
     except Exception as e:
-        logger.warning("Ollama baglanti hatasi: %s", e)
+        logger.warning("Ollama beklenmeyen hata: %s", type(e).__name__)
         return (
             "Yapay zeka yorum servisi su anda erisilemiyor. "
             "Analiz sonuclari gecerlidir; uzman yorumu icin lutfen tekrar deneyin."
