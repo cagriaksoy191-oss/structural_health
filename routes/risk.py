@@ -4,7 +4,7 @@ import asyncio
 import logging
 from datetime import datetime
 
-from fastapi import APIRouter
+from fastapi import APIRouter, BackgroundTasks
 
 logger = logging.getLogger(__name__)
 
@@ -33,7 +33,7 @@ router = APIRouter()
 
 
 @router.post("/api/risk-hesapla", response_model=RiskResponse)
-async def risk_hesapla(req: RiskRequest):
+async def risk_hesapla(req: RiskRequest, background_tasks: BackgroundTasks):
     # 1. Deprem ve Zemin Analizi (Hybrid: AFAD API + Statik Harita Fallback)
     deprem_result = await deprem_analizi_async(
         il=req.il,
@@ -379,8 +379,8 @@ async def risk_hesapla(req: RiskRequest):
         "ai_yorum": aciklama,
         "engine_version": ENGINE_VERSION,
     }
-    kayit_ekle_supabase(record_dict)
-    kayit_ekle_csv(record_dict)
+    background_tasks.add_task(kayit_ekle_supabase, record_dict)
+    background_tasks.add_task(kayit_ekle_csv, record_dict)
 
     # --- Explainability Trace (teknik JSON) ---
     fuzzy_trace = {
