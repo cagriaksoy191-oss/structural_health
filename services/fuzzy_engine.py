@@ -5,7 +5,7 @@ v2: 27 kural (RULE_MATRIX), trapmf çıktı, policy layer, explainability
 """
 
 import logging
-from typing import List, Tuple, Dict, Optional
+from typing import List, Tuple, Dict
 
 import numpy as np
 import skfuzzy as fuzz

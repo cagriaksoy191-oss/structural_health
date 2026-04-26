@@ -1,4 +1,4 @@
-import pandas as pd
+import csv
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
@@ -54,8 +54,10 @@ def testi_baslat():
         return
 
     try:
-        df = pd.read_csv(CSV_DOSYA_YOLU)
-        print(f"[BASARILI] Toplam {len(df)} bina verisi bulundu.")
+        with open(CSV_DOSYA_YOLU, mode="r", encoding="utf-8") as f:
+            reader = csv.DictReader(f)
+            data = list(reader)
+        print(f"[BASARILI] Toplam {len(data)} bina verisi bulundu.")
     except Exception as e:
         print(f"[HATA] CSV okuma hatasi: {e}")
         return
@@ -65,7 +67,7 @@ def testi_baslat():
 
     print(">> Analiz basliyor...")
 
-    for index, row in df.iterrows():
+    for index, row in enumerate(data):
         try:
             # CSV'den verileri çek
             upv_val = float(row[COL_UPV])
@@ -90,7 +92,7 @@ def testi_baslat():
     print("\n" + "=" * 50)
     print("   YATIRIMCI PERFORMANS RAPORU (V12 TITANIUM)")
     print("=" * 50)
-    print(f">> Test Edilen Bina Sayisi : {len(df)}")
+    print(f">> Test Edilen Bina Sayisi : {len(data)}")
     print(f">> MPS (Ortalama Sapma)    : {mps:.2f} MPa  (Dusuk olmasi iyidir)")
     print(f">> RMS (Hata Kararliligi)  : {rms:.2f}      (Dusuk olmasi iyidir)")
     print(f">> R2 (Basari Orani)       : %{r2*100:.1f}  (Yuksek olmasi iyidir)")

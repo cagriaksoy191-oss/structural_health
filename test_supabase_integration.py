@@ -1,6 +1,5 @@
 import requests
 import json
-import time
 
 # API URL
 url = "http://127.0.0.1:8000/api/risk-hesapla"

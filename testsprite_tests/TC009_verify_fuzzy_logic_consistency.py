@@ -1,7 +1,6 @@
 import sys
 import os
 import unittest
-import numpy as np
 import skfuzzy.control as ctrl
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
