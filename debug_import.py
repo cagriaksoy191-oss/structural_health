@@ -6,7 +6,6 @@ print(f"Python Version: {sys.version}")
 
 try:
     print("Attempting to import main...")
-    import main
 
     print("[BASARILI] Success: main imported")
 except Exception:

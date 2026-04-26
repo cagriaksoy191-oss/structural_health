@@ -1,4 +1,3 @@
-import pytest
 from services.normalize import normalize_key
 
 def test_normalize_key_none():

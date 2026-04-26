@@ -1,7 +1,4 @@
 import os
-import time
-from pinecone import Pinecone
-import hashlib
 
 # Pinecone Configuration
 # NOT: API Key'i environment variable'dan veya doğrudan buraya girmemiz gerekebilir.

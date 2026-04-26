@@ -12,14 +12,11 @@ from models.schemas import RiskRequest, RiskResponse
 from services.fuzzy_engine import (
     compute_health_v2,
     get_fuzzy_label,
-    clamp,
     ENGINE_VERSION,
 )
 from services.corrosion import korozyon_olasiligi
 from services.ml_models import tahmin_beton_dayanimi
 from services.earthquake import (
-    deprem_seviyesi_bul,
-    deprem_seviyesi_puan,
     tahmini_zemin_sinifi,
     deprem_analizi_async,
 )

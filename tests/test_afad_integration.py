@@ -10,9 +10,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from services.afad_api import (
     get_city_coordinates,
-    cache_get,
     cache_set,
-    cache_get as _cg,
     pga_to_risk_seviyesi,
     _haversine_km,
     _estimate_pga_from_earthquake,
