@@ -86,16 +86,7 @@ def csv_to_supabase():
             response = supabase.table("bina_analizleri").insert(batch).execute()
             print(f"[BASARILI] Batch {i//batch_size + 1} yuklendi ({len(batch)} kayit)")
         except Exception as e:
-            error_msg = f"[HATA] Hata (Batch {i//batch_size + 1}):\n"
-            if hasattr(e, "code"):
-                error_msg += f"Code: {e.code}\n"
-            if hasattr(e, "message"):
-                error_msg += f"Message: {e.message}\n"
-            if hasattr(e, "details"):
-                error_msg += f"Details: {e.details}\n"
-            if hasattr(e, "hint"):
-                error_msg += f"Hint: {e.hint}\n"
-            error_msg += f"Raw: {e}\n"
+            error_msg = f"[HATA] Hata (Batch {i//batch_size + 1}): {type(e).__name__}\n"
 
             print(error_msg)
             with open("migration_error.log", "w", encoding="utf-8") as f:
