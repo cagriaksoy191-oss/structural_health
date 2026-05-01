@@ -53,7 +53,7 @@ Sistemi Windows ortamında en hızlı şekilde kurmak ve başlatmak için aşağ
 
 Eğitim veya geliştirme için `.env` dosyanızda olması beklenen temel (ancak tamamen zorunlu olmayan) değişkenler şunlardır:
 *   `SUPABASE_URL` ve `SUPABASE_KEY`: Veritabanı entegrasyonu için.
-*   `ALLOWED_ORIGINS` (Opsiyonel): CORS kabul listesi.
+*   `ALLOWED_ORIGINS` (CORS için): Uygulamanın erişebileceği kökenlerin (origins) virgülle ayrılmış listesi (örn: `http://localhost:5173`). Boş bırakılırsa CORS kapalıdır (Hardcoded varsayılanlar güvenlik gereği kaldırılmıştır).
 *   `AFAD_TIMEOUT` ve `AFAD_CACHE_TTL` (Opsiyonel): Deprem API limitleri.
 *   `PINECONE_API_KEY`: Sadece takım içi akıllı senkronizasyon scripti (`/gunsonu`) için.
 
