@@ -15,7 +15,7 @@ Yapı Sağlığı İzleme (Structural Health Monitoring) — Web Tabanlı Ön Ta
 - **Konfigürasyon:** `config.py` — Supabase bağlantısı, CSV_LOCK (thread safety), AFAD API ayarları
 - **Ortam değişkenleri:** `.env` dosyası kullanılır (repoda şu anda `.env.example` şablonu bulunmuyor)
 - **Port:** `127.0.0.1:8000` (uvicorn)
-- **CORS:** `ALLOWED_ORIGINS` env var'ı ile virgülle ayrılmış origin listesi
+- **CORS:** `ALLOWED_ORIGINS` env var'ı ile virgülle ayrılmış origin listesi. Güvenlik gereği hardcoded varsayılan yoktur, boş bırakılırsa CORS kapalıdır.
 
 ### API Endpoint
 

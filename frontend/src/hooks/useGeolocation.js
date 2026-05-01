@@ -2,6 +2,10 @@ import { useState } from 'react';
 import { normalizeTR } from '../utils/utils';
 import { IL_ILCE_DATA } from '../constants/cityData';
 
+// Module-level cache for normalized districts to avoid repeated normalization
+// and to allow short-circuiting during lookup.
+const normalizedIlceCache = new Map();
+
 export const useGeolocation = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
@@ -54,7 +58,19 @@ export const useGeolocation = () => {
             }
 
             const targetIlce = normalizeTR(ilceText);
-            const match = ilObj.ilceler.find(x => normalizeTR(x) === targetIlce);
+
+            // Check cache for this il's normalized ilceler
+            let normalizedList = normalizedIlceCache.get(ilObj.slug);
+            if (!normalizedList) {
+                normalizedList = ilObj.ilceler.map(x => ({
+                    original: x,
+                    normalized: normalizeTR(x)
+                }));
+                normalizedIlceCache.set(ilObj.slug, normalizedList);
+            }
+
+            const matchObj = normalizedList.find(x => x.normalized === targetIlce);
+            const match = matchObj ? matchObj.original : null;
 
             setStatus(`✅ Konum bulundu: ${ilObj.ad}${match ? " / " + match : ""}`);
             setLoading(false);

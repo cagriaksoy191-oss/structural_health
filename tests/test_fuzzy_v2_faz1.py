@@ -11,7 +11,7 @@ from skfuzzy import control as ctrl
 
 def test_imports():
     """v2 sembolleri import edilebiliyor mu?"""
-    from services.fuzzy_engine import (
+    from services.fuzzy_engine import (  # noqa: F401
         fuzzy_control_system_v2,
         get_fuzzy_label,
         clamp,

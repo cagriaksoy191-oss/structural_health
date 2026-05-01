@@ -20,7 +20,7 @@ if SUPABASE_URL and SUPABASE_KEY:
         supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
         print("[BASARILI] Supabase baglantisi kuruldu.")
     except Exception as e:
-        print(f"[HATA] Supabase baglanti hatasi: {e}")
+        print(f"[HATA] Supabase baglanti hatasi: {type(e).__name__}")
 else:
     print(
         "[UYARI] SUPABASE_URL veya SUPABASE_KEY eksik! Veriler sadece CSV'ye yazilabilir (yedek mod)."

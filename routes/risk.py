@@ -4,7 +4,7 @@ import asyncio
 import logging
 from datetime import datetime
 
-from fastapi import APIRouter
+from fastapi import APIRouter, BackgroundTasks
 
 logger = logging.getLogger(__name__)
 
@@ -12,14 +12,11 @@ from models.schemas import RiskRequest, RiskResponse
 from services.fuzzy_engine import (
     compute_health_v2,
     get_fuzzy_label,
-    clamp,
     ENGINE_VERSION,
 )
 from services.corrosion import korozyon_olasiligi
 from services.ml_models import tahmin_beton_dayanimi
 from services.earthquake import (
-    deprem_seviyesi_bul,
-    deprem_seviyesi_puan,
     tahmini_zemin_sinifi,
     deprem_analizi_async,
 )
@@ -33,7 +30,7 @@ router = APIRouter()
 
 
 @router.post("/api/risk-hesapla", response_model=RiskResponse)
-async def risk_hesapla(req: RiskRequest):
+async def risk_hesapla(req: RiskRequest, background_tasks: BackgroundTasks):
     # 1. Deprem ve Zemin Analizi (Hybrid: AFAD API + Statik Harita Fallback)
     deprem_result = await deprem_analizi_async(
         il=req.il,
@@ -100,7 +97,7 @@ async def risk_hesapla(req: RiskRequest):
         raw_score = v2_result["raw_score"]
 
     except Exception as e:
-        logger.error("Fuzzy v2 hesaplama hatasi: %s", e, exc_info=True)
+        logger.error("Fuzzy v2 hesaplama hatasi: %s", type(e).__name__)
         health_score = 50.0
         fuzzy_label = get_fuzzy_label(50.0)
         fired_rules = []
@@ -348,7 +345,7 @@ async def risk_hesapla(req: RiskRequest):
             engine_version=ENGINE_VERSION,
         )
     except Exception as e:
-        logger.error("PDF rapor uretim hatasi: %s", e, exc_info=True)
+        logger.error("PDF rapor uretim hatasi: %s", type(e).__name__)
         pdf_url = None
         detaylar.append("⚠️ PDF raporu olusturulamadı.")
 
@@ -379,8 +376,8 @@ async def risk_hesapla(req: RiskRequest):
         "ai_yorum": aciklama,
         "engine_version": ENGINE_VERSION,
     }
-    kayit_ekle_supabase(record_dict)
-    kayit_ekle_csv(record_dict)
+    background_tasks.add_task(kayit_ekle_supabase, record_dict)
+    background_tasks.add_task(kayit_ekle_csv, record_dict)
 
     # --- Explainability Trace (teknik JSON) ---
     fuzzy_trace = {

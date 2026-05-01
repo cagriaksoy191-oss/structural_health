@@ -314,7 +314,7 @@ async def deprem_analizi_async(
                 "deprem_sayisi": deprem_sayisi,
             }
     except Exception as e:
-        logger.warning(f"AFAD API hatası, statik haritaya düşülüyor: {e}")
+        logger.warning(f"AFAD API hatası, statik haritaya düşülüyor: {type(e).__name__}")
 
     # --- Fallback: Statik harita ---
     logger.info(f"Statik harita kullanıldı: {il}/{ilce} → Seviye={statik_seviye}")

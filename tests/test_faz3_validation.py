@@ -16,7 +16,6 @@ import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import pytest
-import numpy as np
 from skfuzzy import control as ctrl
 
 from services.fuzzy_engine import (
@@ -25,13 +24,9 @@ from services.fuzzy_engine import (
     get_fired_rules,
     apply_policy_caps,
     get_fuzzy_label,
-    clamp,
-    ENGINE_VERSION,
     RULE_MATRIX,
     CAP_SINGLE,
     CAP_DUAL,
-    TBDY_THRESHOLD,
-    ASTM_THRESHOLD,
     _INPUT_MF_DEFS,
     _compute_membership,
 )

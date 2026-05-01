@@ -1,8 +1,11 @@
 import os
+import asyncio
 import pandas as pd
-from supabase import create_client, Client
+from supabase import create_async_client, AsyncClient
 from dotenv import load_dotenv
 import pathlib
+import json
+import numpy as np
 
 # .env dosyasını yükle
 load_dotenv()
@@ -14,12 +17,27 @@ if not url or not key:
     print("[HATA] .env dosyasinda SUPABASE_URL veya SUPABASE_KEY eksik!")
     exit(1)
 
-supabase: Client = create_client(url, key)
-
 CSV_FILE = "veri_kayitlari.csv"
 
 
-def csv_to_supabase():
+async def insert_batch(
+    supabase: AsyncClient, batch: list, batch_idx: int, semaphore: asyncio.Semaphore
+):
+    """Bir batch veriyi asenkron olarak Supabase'e yükler."""
+    async with semaphore:
+        try:
+            # .execute() asenkron client kullanıldığında await edilmelidir
+            await supabase.table("bina_analizleri").insert(batch).execute()
+            print(f"[BASARILI] Batch {batch_idx + 1} yuklendi ({len(batch)} kayit)")
+        except Exception as e:
+            error_msg = f"[HATA] Hata (Batch {batch_idx + 1}): {type(e).__name__}\n"
+            print(error_msg)
+            with open("migration_error.log", "a", encoding="utf-8") as f:
+                f.write(error_msg)
+            raise e
+
+
+async def csv_to_supabase():
     if not pathlib.Path(CSV_FILE).exists():
         print(f"[HATA] {CSV_FILE} bulunamadi!")
         return
@@ -31,8 +49,6 @@ def csv_to_supabase():
     df = df.where(pd.notnull(df), None)
 
     # Infinity veya -Infinity değerlerini temizle
-    import numpy as np
-
     df = df.replace([np.inf, -np.inf], None)
 
     # Sütun isimlerini veritabanı şemasına uygun hale getir (camelCase -> snake_case)
@@ -73,37 +89,35 @@ def csv_to_supabase():
     # JSON Serializasyonu ile temizlik (En sağlam yöntem)
     # Pandas to_json, NaN ve Inf değerlerini otomatik olarak null yapar.
     # Sonra json.loads ile tekrar Python list/dict yapısına çeviririz.
-    import json
-
     records = json.loads(df.to_json(orient="records", date_format="iso"))
 
-    print(f"🚀 {len(records)} kayıt Supabase'e yükleniyor (batch: 50)...")
+    print(f"🚀 {len(records)} kayıt Supabase'e yükleniyor (batch: 50, async)...")
+
+    # Async client oluştur
+    supabase: AsyncClient = create_async_client(url, key)
 
     batch_size = 50
+    # Eşzamanlılık sınırı (Aynı anda en fazla 5 istek)
+    semaphore = asyncio.Semaphore(5)
+
+    tasks = []
     for i in range(0, len(records), batch_size):
         batch = records[i : i + batch_size]
-        try:
-            response = supabase.table("bina_analizleri").insert(batch).execute()
-            print(f"[BASARILI] Batch {i//batch_size + 1} yuklendi ({len(batch)} kayit)")
-        except Exception as e:
-            error_msg = f"[HATA] Hata (Batch {i//batch_size + 1}):\n"
-            if hasattr(e, "code"):
-                error_msg += f"Code: {e.code}\n"
-            if hasattr(e, "message"):
-                error_msg += f"Message: {e.message}\n"
-            if hasattr(e, "details"):
-                error_msg += f"Details: {e.details}\n"
-            if hasattr(e, "hint"):
-                error_msg += f"Hint: {e.hint}\n"
-            error_msg += f"Raw: {e}\n"
+        tasks.append(insert_batch(supabase, batch, i // batch_size, semaphore))
 
-            print(error_msg)
-            with open("migration_error.log", "w", encoding="utf-8") as f:
-                f.write(error_msg)
+    if not tasks:
+        print("Yüklenecek kayıt bulunamadı.")
+        return
 
-            # Stop on first error to debug
-            break
+    try:
+        await asyncio.gather(*tasks)
+        print(f"\n[TAMAMLANDI] {len(records)} kayıt başarıyla aktarıldı.")
+    except Exception:
+        print("\n[DURDURULDU] Bir veya daha fazla batch yüklenirken hata oluştu.")
 
 
 if __name__ == "__main__":
-    csv_to_supabase()
+    try:
+        asyncio.run(csv_to_supabase())
+    except KeyboardInterrupt:
+        print("\nİşlem kullanıcı tarafından durduruldu.")

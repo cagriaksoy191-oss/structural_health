@@ -207,8 +207,11 @@ async def get_afad_earthquakes(
     except httpx.HTTPStatusError as e:
         logger.warning(f"AFAD API HTTP hatası: {e.response.status_code}")
         return []
+    except httpx.RequestException as e:
+        logger.warning(f"AFAD API istek hatası: {type(e).__name__}")
+        return []
     except Exception as e:
-        logger.warning(f"AFAD API bağlantı hatası: {e}")
+        logger.warning(f"AFAD API beklenmeyen hata: {type(e).__name__}")
         return []
 
 

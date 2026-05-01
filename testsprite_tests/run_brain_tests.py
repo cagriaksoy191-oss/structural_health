@@ -1,6 +1,5 @@
 import unittest
 import sys
-import os
 
 # Import specific brain test modules
 import TC006_verify_building_year_scoring
