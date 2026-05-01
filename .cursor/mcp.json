@@ -3,6 +3,9 @@
     "playwright": {
       "command": "npx",
       "args": ["@playwright/mcp@latest"]
+    },
+    "supabase": {
+      "serverURL": "https://mcp.supabase.com/mcp"
     }
   }
 }
