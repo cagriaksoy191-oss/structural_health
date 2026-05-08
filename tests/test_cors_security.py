@@ -1,6 +1,5 @@
 import os
 import unittest
-import sys
 
 # Simplified test that doesn't depend on FastAPI being installed in the environment
 # since we only care about how _parse_origins works and how it's called in main.py
