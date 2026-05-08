@@ -49,9 +49,12 @@ def mock_externals(monkeypatch):
     )
 
     # Ollama LLM — routes.risk'teki imported referansı patchle
+    async def mock_llm(**kwargs):
+        return "Mock AI yorum — test amaçlı."
+
     monkeypatch.setattr(
         "routes.risk.get_llm_comment",
-        lambda **kwargs: "Mock AI yorum — test amaçlı.",
+        mock_llm,
     )
 
     # PDF — routes.risk'teki imported referansı patchle
@@ -116,7 +119,9 @@ class TestFuzzyFallback:
 
     def test_fuzzy_fallback_skips_llm(self, client, monkeypatch):
         """Fuzzy fallback → LLM çağrılmamalı, aciklama sabit metin olmalı."""
-        mock_llm = MagicMock(return_value="Bu metin görünmemeli.")
+        async def mock_llm_func(**kwargs):
+            return "Bu metin görünmemeli."
+        mock_llm = MagicMock(side_effect=mock_llm_func)
         # routes.risk namespace'indeki referansı patchle (imported by name)
         monkeypatch.setattr("routes.risk.get_llm_comment", mock_llm)
         monkeypatch.setattr(
@@ -222,13 +227,15 @@ class TestOllamaFallback:
 
     def test_ollama_fail_returns_clean_message(self, client, monkeypatch):
         """Ollama unavailable → sanitize Türkçe metin."""
+        async def mock_llm_fail(**kwargs):
+            return (
+                "Yapay zeka yorum servisi su anda erisilemiyor. "
+                "Analiz sonuclari gecerlidir; uzman yorumu icin lutfen tekrar deneyin."
+            )
         # routes.risk namespace'indeki referansı patchle
         monkeypatch.setattr(
             "routes.risk.get_llm_comment",
-            lambda **kwargs: (
-                "Yapay zeka yorum servisi su anda erisilemiyor. "
-                "Analiz sonuclari gecerlidir; uzman yorumu icin lutfen tekrar deneyin."
-            ),
+            mock_llm_fail,
         )
         resp = client.post("/api/risk-hesapla", json=VALID_PAYLOAD)
         data = resp.json()

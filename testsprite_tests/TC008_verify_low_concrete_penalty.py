@@ -1,7 +1,8 @@
 import sys
 import os
 import unittest
-from unittest.mock import patch
+import asyncio
+from unittest.mock import patch, AsyncMock
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
@@ -10,13 +11,13 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from main import risk_hesapla, RiskRequest
 
 
-class TestLowConcretePenalty(unittest.TestCase):
+class TestLowConcretePenalty(unittest.IsolatedAsyncioTestCase):
     @patch("main.kayit_ekle_supabase")
-    @patch("main.get_llm_comment")
+    @patch("main.get_llm_comment", new_callable=AsyncMock)
     @patch("main.tahmin_beton_dayanimi")
-    def test_low_concrete_adds_penalty(self, mock_beton, mock_ai, mock_db):
+    async def test_low_concrete_adds_penalty(self, mock_beton, mock_ai, mock_db):
         # Setup mocks
-        mock_beton.return_value = 20.0  # Below 25 MPa
+        mock_beton.return_value = (20.0, False)  # (value, used_fallback) - Below 25 MPa
         mock_ai.return_value = "Test yorumu"
 
         req = RiskRequest(
@@ -39,7 +40,9 @@ class TestLowConcretePenalty(unittest.TestCase):
             crackPuan=0,
         )
 
-        response = risk_hesapla(req)
+        # Mocking background tasks to avoid errors
+        mock_background_tasks = MagicMock()
+        response = await risk_hesapla(req, mock_background_tasks)
 
         # Check for penalty details
         detaylar = response.detaylar

@@ -236,8 +236,7 @@ async def risk_hesapla(req: RiskRequest, background_tasks: BackgroundTasks):
             "Lütfen analizi tekrar çalıştırın veya sonuçları bir uzmanla doğrulayın."
         )
     else:
-        aciklama = await asyncio.to_thread(
-            get_llm_comment,
+        aciklama = await get_llm_comment(
             skor=int(health_score),
             risk_durumu=fuzzy_label,
             beton=round(basinc_dayanimi, 1),

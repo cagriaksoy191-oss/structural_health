@@ -32,10 +32,13 @@ def mock_externals(monkeypatch):
         MagicMock(exists=lambda: False, stat=lambda: MagicMock(st_size=0)),
     )
 
-    # Ollama LLM — senkron fonksiyon, mock string dönsün
+    # Ollama LLM — async fonksiyon, mock string dönsün
+    async def mock_llm(**kwargs):
+        return "Mock AI yorum — test amaçlı."
+
     monkeypatch.setattr(
         "services.ai_comment.get_llm_comment",
-        lambda **kwargs: "Mock AI yorum — test amaçlı.",
+        mock_llm,
     )
 
     # PDF — dosya üretmesin, URL dönsün
@@ -244,7 +247,9 @@ class TestLlmContext:
         expected_context = f"{test_corrosion_value:.0f} mV (%{kor_yuzde} - {kor_seviye})"
         
         # routes.risk modülünde import edilmiş referansı mock/spy yap
-        mock_get_llm_comment = MagicMock(return_value="Mock AI yorum.")
+        async def mock_llm_func(**kwargs):
+            return "Mock AI yorum."
+        mock_get_llm_comment = MagicMock(side_effect=mock_llm_func)
         monkeypatch.setattr("routes.risk.get_llm_comment", mock_get_llm_comment)
         
         resp = client.post("/api/risk-hesapla", json=payload)

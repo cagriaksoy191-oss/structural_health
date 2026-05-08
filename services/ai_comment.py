@@ -2,12 +2,12 @@
 
 import logging
 
-import requests
+import httpx
 
 logger = logging.getLogger(__name__)
 
 
-def get_llm_comment(skor, risk_durumu, beton, korozyon=None, risk_puani=None, dts=None, bys=None, phase2_advice=None, korozyon_metni=None, ana_risk_kaynagi=None):
+async def get_llm_comment(skor, risk_durumu, beton, korozyon=None, risk_puani=None, dts=None, bys=None, phase2_advice=None, korozyon_metni=None, ana_risk_kaynagi=None):
     # Geriye dönük uyumluluk (Backward Compat)
     if korozyon_metni is None:
         korozyon_metni = f"{korozyon} mV" if korozyon is not None else "Bilinmiyor"
@@ -53,21 +53,22 @@ def get_llm_comment(skor, risk_durumu, beton, korozyon=None, risk_puani=None, dt
 
     try:
         # ARTIK '/api/chat' KULLANIYORUZ (Daha kararlı)
-        response = requests.post(
-            "http://localhost:11434/api/chat",
-            json={
-                "model": MODEL_ADI,
-                "messages": [
-                    {"role": "system", "content": system_message},
-                    {"role": "user", "content": user_message},
-                ],
-                "stream": False,
-                "options": {
-                    "temperature": 0.7
-                },  # Biraz yaratıcılık verelim ki konuşsun
-            },
-            timeout=120,
-        )
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                "http://localhost:11434/api/chat",
+                json={
+                    "model": MODEL_ADI,
+                    "messages": [
+                        {"role": "system", "content": system_message},
+                        {"role": "user", "content": user_message},
+                    ],
+                    "stream": False,
+                    "options": {
+                        "temperature": 0.7
+                    },  # Biraz yaratıcılık verelim ki konuşsun
+                },
+                timeout=120.0,
+            )
 
         if response.status_code == 200:
             # Chat modunda cevap 'message' -> 'content' içindedir
@@ -79,7 +80,7 @@ def get_llm_comment(skor, risk_durumu, beton, korozyon=None, risk_puani=None, dt
                 "Analiz sonuclari gecerlidir; uzman yorumu icin lutfen tekrar deneyin."
             )
 
-    except requests.exceptions.RequestException as e:
+    except httpx.RequestError as e:
         logger.warning("Ollama istek hatasi: %s", type(e).__name__)
         return (
             "Yapay zeka yorum servisi su anda erisilemiyor. "
