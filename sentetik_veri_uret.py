@@ -4,12 +4,19 @@ from pathlib import Path
 import csv
 import random
 
+from services.security_utils import verify_file_integrity
+
 MODEL_PATH = Path("risk_model.joblib")
 ENCODER_PATH = Path("etiket_encoder.joblib")
 
 try:
-    ml_pipeline = joblib.load(MODEL_PATH)
-    label_encoder = joblib.load(ENCODER_PATH)
+    ml_pipeline = None
+    if MODEL_PATH.exists() and verify_file_integrity(MODEL_PATH):
+        ml_pipeline = joblib.load(MODEL_PATH)
+
+    label_encoder = None
+    if ENCODER_PATH.exists() and verify_file_integrity(ENCODER_PATH):
+        label_encoder = joblib.load(ENCODER_PATH)
 except Exception:
     ml_pipeline = None
     label_encoder = None
