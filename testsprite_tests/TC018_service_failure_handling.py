@@ -1,24 +1,24 @@
 import sys
 import os
 import unittest
-from unittest.mock import MagicMock, patch
-import requests
+from unittest.mock import MagicMock, patch, AsyncMock
+import httpx
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from main import get_llm_comment, kayit_ekle_supabase
 
 
-class TestServiceFailureHandling(unittest.TestCase):
-    @patch("requests.post")
-    def test_ollama_failure_handling(self, mock_post):
+class TestServiceFailureHandling(unittest.IsolatedAsyncioTestCase):
+    @patch("httpx.AsyncClient.post")
+    async def test_ollama_failure_handling(self, mock_post):
         # Simulator Ollama connection error (e.g. ConnectionRefusedError)
-        mock_post.side_effect = requests.exceptions.ConnectionError(
+        mock_post.side_effect = httpx.RequestError(
             "Connection refused"
         )
 
         # Call the function
-        comment = get_llm_comment(
+        comment = await get_llm_comment(
             skor=50, risk_durumu="Orta", beton=25, korozyon=-200, risk_puani=5
         )
 
