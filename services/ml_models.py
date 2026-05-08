@@ -7,6 +7,7 @@ from pathlib import Path
 import pandas as pd
 import joblib
 
+from services.security_utils import verify_file_integrity
 
 # -------------------------------------------------
 #  BETON MODELİ
@@ -15,8 +16,11 @@ CONCRETE_MODEL_PATH = Path("concrete_model.joblib")
 concrete_model = None
 try:
     if CONCRETE_MODEL_PATH.exists():
-        concrete_model = joblib.load(CONCRETE_MODEL_PATH)
-        print("[BASARILI] Beton Modeli (RandomForest) yüklendi.")
+        if verify_file_integrity(CONCRETE_MODEL_PATH):
+            concrete_model = joblib.load(CONCRETE_MODEL_PATH)
+            print("[BASARILI] Beton Modeli (RandomForest) yüklendi.")
+        else:
+            print("[GUVENLIK HATASI] Beton Modeli bütünlük kontrolünden geçemediği için yüklenmedi.")
     else:
         print("[UYARI] Beton Modeli bulunamadı.")
 except Exception as e:

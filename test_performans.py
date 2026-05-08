@@ -4,6 +4,8 @@ import matplotlib.pyplot as plt
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 import joblib
 import os
+from pathlib import Path
+from services.security_utils import verify_file_integrity
 
 # --- 1. DOSYA AYARLARI ---
 # CSV dosyanın tam adı
@@ -23,9 +25,14 @@ MODEL_DOSYASI = "concrete_model.joblib"
 print(">> Yapay Zeka Modeli Yukleniyor...")
 # Bu kısım senin "Asıl Formülünü" otomatik çeker.
 try:
-    if os.path.exists(MODEL_DOSYASI):
-        model = joblib.load(MODEL_DOSYASI)
-        print(f"[BASARILI] Model basariyla yuklendi: {MODEL_DOSYASI}")
+    model_path = Path(MODEL_DOSYASI)
+    if model_path.exists():
+        if verify_file_integrity(model_path):
+            model = joblib.load(MODEL_DOSYASI)
+            print(f"[BASARILI] Model basariyla yuklendi: {MODEL_DOSYASI}")
+        else:
+            print(f"[GUVENLIK HATASI] '{MODEL_DOSYASI}' bütünlük kontrolünden geçemedi!")
+            exit()
     else:
         print(f"[HATA] '{MODEL_DOSYASI}' dosyasi bulunamadi!")
         print(
