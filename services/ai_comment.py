@@ -1,8 +1,9 @@
 """Yapı Sağlığı — Qwen3 LLM Entegrasyonu"""
 
 import logging
-
 import httpx
+
+from services.http_client import http_client
 
 logger = logging.getLogger(__name__)
 
@@ -53,10 +54,10 @@ async def get_llm_comment(skor, risk_durumu, beton, korozyon=None, risk_puani=No
 
     try:
         # ARTIK '/api/chat' KULLANIYORUZ (Daha kararlı)
-        async with httpx.AsyncClient() as client:
-            response = await client.post(
-                "http://localhost:11434/api/chat",
-                json={
+        client = http_client.get_client()
+        response = await client.post(
+            "http://localhost:11434/api/chat",
+            json={
                     "model": MODEL_ADI,
                     "messages": [
                         {"role": "system", "content": system_message},

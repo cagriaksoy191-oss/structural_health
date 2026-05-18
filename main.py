@@ -1,6 +1,7 @@
 """Yapı Sağlığı Ön Tarama API — Ana Giriş Noktası"""
 
 import os
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -12,6 +13,19 @@ if not os.path.exists("static"):
 
 # --- Route İmport ---
 from routes.risk import router as risk_router
+from services.http_client import http_client
+
+
+# -------------------------------------------------
+#  LIFESPAN
+# -------------------------------------------------
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup
+    http_client.start()
+    yield
+    # Shutdown
+    await http_client.stop()
 
 
 # -------------------------------------------------
@@ -32,7 +46,7 @@ def _parse_origins(raw: str) -> list:
     return safe_origins
 
 
-app = FastAPI(title="Yapı Sağlığı Ön Tarama API")
+app = FastAPI(title="Yapı Sağlığı Ön Tarama API", lifespan=lifespan)
 
 # --- STATIC FILES ---
 app.mount("/static", StaticFiles(directory="static"), name="static")
