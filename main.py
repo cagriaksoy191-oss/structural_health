@@ -18,8 +18,18 @@ from routes.risk import router as risk_router
 #  FASTAPI APP & CORS
 # -------------------------------------------------
 def _parse_origins(raw: str) -> list:
-    """ALLOWED_ORIGINS env var'ını virgülle ayırıp listeye çevirir."""
-    return [o.strip() for o in raw.split(",") if o.strip()]
+    """
+    ALLOWED_ORIGINS env var'ını virgülle ayırıp listeye çevirir.
+    Güvenlik: '*' (wildcard) kullanımını engeller ve sadece http/https protokollerine izin verir.
+    """
+    raw_list = [o.strip() for o in raw.split(",") if o.strip()]
+    safe_origins = []
+    for o in raw_list:
+        if o == "*":
+            continue  # Güvenlik gereği wildcard'a izin verilmez
+        if o.startswith(("http://", "https://")):
+            safe_origins.append(o)
+    return safe_origins
 
 
 app = FastAPI(title="Yapı Sağlığı Ön Tarama API")
