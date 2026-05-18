@@ -12,6 +12,7 @@ from datetime import datetime, timedelta
 from typing import Optional, Dict, Tuple, List
 
 import httpx
+from services.http_client import http_client
 
 from config import AFAD_API_BASE_URL, AFAD_TIMEOUT, AFAD_CACHE_TTL
 
@@ -187,19 +188,19 @@ async def get_afad_earthquakes(
     }
 
     try:
-        async with httpx.AsyncClient(timeout=AFAD_TIMEOUT) as client:
-            response = await client.get(AFAD_API_BASE, params=params)
-            response.raise_for_status()
-            data = response.json()
+        client = http_client.get_client()
+        response = await client.get(AFAD_API_BASE, params=params, timeout=AFAD_TIMEOUT)
+        response.raise_for_status()
+        data = response.json()
 
-            if isinstance(data, list):
-                logger.info(
-                    f"AFAD API: {len(data)} deprem bulundu ({lat:.2f}, {lon:.2f})"
-                )
-                return data
-            else:
-                logger.warning(f"AFAD API beklenmeyen format: {type(data)}")
-                return []
+        if isinstance(data, list):
+            logger.info(
+                f"AFAD API: {len(data)} deprem bulundu ({lat:.2f}, {lon:.2f})"
+            )
+            return data
+        else:
+            logger.warning(f"AFAD API beklenmeyen format: {type(data)}")
+            return []
 
     except httpx.TimeoutException:
         logger.warning(f"AFAD API timeout ({AFAD_TIMEOUT}s)")
@@ -207,7 +208,7 @@ async def get_afad_earthquakes(
     except httpx.HTTPStatusError as e:
         logger.warning(f"AFAD API HTTP hatası: {e.response.status_code}")
         return []
-    except httpx.RequestException as e:
+    except httpx.RequestError as e:
         logger.warning(f"AFAD API istek hatası: {type(e).__name__}")
         return []
     except Exception as e:
